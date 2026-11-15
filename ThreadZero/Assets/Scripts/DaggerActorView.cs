@@ -7,6 +7,15 @@ namespace ThreadZero
     {
         private static Texture2D body, weapon;
         private static bool loaded;
+        private static bool missingReported;
+        public static bool Ready(out string failure)
+        {
+            if(!loaded) {loaded=true;body=Resources.Load<Texture2D>("Art/V12/StarterDagger/Body");weapon=Resources.Load<Texture2D>("Art/V12/StarterDagger/Weapon");}
+            failure=body==null?"Art/V12/StarterDagger/Body.png":weapon==null?"Art/V12/StarterDagger/Weapon.png":null;
+            if(failure==null && (body.width!=1536 || body.height!=768 || weapon.width!=1536 || weapon.height!=768)) failure="StarterDagger atlas must be 1536x768; texture import size changed";
+            if(failure!=null && !missingReported){missingReported=true;Debug.LogError("THREAD ZERO: V12 art unavailable: "+failure);}
+            return failure==null;
+        }
         public static bool CanDraw(GameModel model)
         {
             bool defaultHead=model.Equipped(Slot.Head)==null && string.IsNullOrEmpty(model.state.appearance[(int)Slot.Head]);
@@ -21,8 +30,7 @@ namespace ThreadZero
         }
         private static bool Render(Rect rect,int frame,Color tint)
         {
-            if(!loaded) {loaded=true;body=Resources.Load<Texture2D>("Art/V12/StarterDagger/Body");weapon=Resources.Load<Texture2D>("Art/V12/StarterDagger/Weapon");}
-            if(body==null || weapon==null)return false;
+            string failure;if(!Ready(out failure))return false;
             frame=Mathf.Clamp(frame,0,17);
             Rect uv=new Rect((frame%6)/6f,1-(frame/6+1)/3f,1/6f,1/3f);
             Color old=GUI.color;GUI.color=tint;

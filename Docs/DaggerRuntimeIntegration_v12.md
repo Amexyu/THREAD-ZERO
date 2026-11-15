@@ -39,3 +39,21 @@
 - 透明图集alpha为0至255；共835386个全透明像素；浅深背景叠图见 `Deliverables/ArtPack_v12/Review/RuntimeLayers_QA.png`。
 - 后台Unity启动日志出现 `LicenseClient-Administrator refused`，许可IPC连接失败并退出1；未成功导入/打包或进行实机截图。日志为 `Artifacts/DaggerUnityBuild.log`。原始环境中正常启动Unity后仍需跑上述测试局确认。
 - 源码接入前备份在 `Backups/DaggerIntegration_20261116`。
+
+## ScreenCapture 编译依赖修复（2026-11-16）
+
+用户在Unity中报告CS0103：ScreenCapture不存在。根因是新增截图测试使用该API，但工程Packages/manifest.json没有启用com.unity.modules.screencapture。此前独立编译脚本直接引用已安装编辑器的ScreenCapture DLL，因此没有检测到项目依赖缺失；“独立源码编译通过”不能作为Unity实际编译通过的证据。
+
+已添加内置screencapture 1.0.0，并在锁文件记录其imageconversion 1.0.0依赖；版本与依赖已读取本机Unity6000.6.9f1内置模块package.json核实。仓库工程与外层保留副本的Packages均修复。仓库CompileSources.ps1增加项目模块启用检查，防止仅靠手动DLL引用掩盖这一缺失。修订后独立编译及manifest/lock解析校验通过，仍待用户Unity包刷新后验证。
+
+后台许可连接失败另有原因：日志为LicenseClient-Administrator连接被拒绝、WMI初始化断言失败并退出1。可能涉及后台执行环境限制，当前证据不能认定必须管理员权限，也没有更改系统权限。
+
+## 直接播放仍显示旧素材：入口修正（2026-11-16）
+
+用户实际打开后仍见旧人物。原因是旧存档配置不满足严格样本条件，普通Play没有进入隔离测试局，继续走旧角色回退；此前仅宣称“已接入”不足以说明用户默认入口仍是旧图。
+
+现Editor默认开启 `Thread Zero > Preview Starter Dagger on Play`。停止再播放会自动创建普通w1/c0/b0/默认头的隔离测试局，提示“本局不读写正式存档”；这仅是让当前一套素材样本在默认编辑器入口可见，不代表全装备外观替换已经完成。取消该菜单勾选后Play恢复读取原存档。独立构建的默认存档行为不变。
+
+`Review Starter Dagger (Unsaved)` 菜单在已经播放时会停止并重新进入测试，不再无声返回。新增资源就绪与尺寸检查，缺图会在Console明确报路径；准备正确时日志为 `DAGGER_REVIEW_READY`。仓库与外层旧副本中上述三个文件已在确认旧副本等于Git基线后同步修复。
+
+编译检查新增UNITY_EDITOR条件分支的编译，以便检查EditorPrefs/SessionState逻辑，而非仅验证播放器分支。仍未把后台独立编译宣称为Unity实机图像验收。

@@ -8,11 +8,15 @@ namespace ThreadZero
     public sealed partial class GameApp
     {
         private bool daggerReview;
+        public const string DaggerAutoReviewKey="ThreadZero.StarterDagger.AutoReview.v12";
         private static bool DaggerReviewRequested()
         {
 #if UNITY_EDITOR
             if(UnityEditor.SessionState.GetBool("ThreadZero.DaggerReview",false))
             {UnityEditor.SessionState.SetBool("ThreadZero.DaggerReview",false);return true;}
+            // The current art milestone is one complete outfit. Plain Play must show it,
+            // rather than silently loading an unrelated gun/helmet from a prior save.
+            if(UnityEditor.EditorPrefs.GetBool(DaggerAutoReviewKey,true))return true;
 #endif
             return Array.IndexOf(Environment.GetCommandLineArgs(),"-dagger-review")>=0;
         }
@@ -23,6 +27,11 @@ namespace ThreadZero
         }
         private void BeginDaggerReviewCapture()
         {
+            string failure;
+            if(!DaggerActorView.CanDraw(model) || !DaggerActorView.Ready(out failure))
+                Debug.LogError("DAGGER_REVIEW_NOT_READY: check outfit and Resources/Art/V12/StarterDagger assets");
+            else Debug.Log("DAGGER_REVIEW_READY: new V12 artwork selected");
+            Notify("初始匕首素材测试 · 本局不读写正式存档",10);
             combat.OnDaggerHit=(index,damage)=>Debug.Log("DAGGER_HIT "+index+" age="+combat.DaggerAge+" damage="+damage);
             Debug.Log("DAGGER_REVIEW: isolated unsaved model; w1 Common, c0, default head, b0");
             string[] args=Environment.GetCommandLineArgs();int pos=Array.IndexOf(args,"-dagger-capture");
