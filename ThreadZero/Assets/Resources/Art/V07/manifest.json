@@ -1,0 +1,1081 @@
+{
+  "version": "0.7",
+  "status": "integration_candidate",
+  "runtimeIntegrated": false,
+  "uiFilesModified": false,
+  "rendering": "whole_frame_swap",
+  "supportsIndependentFourSlotMixing": false,
+  "playerLookIds": [
+    "c0",
+    "c1",
+    "c2",
+    "c3",
+    "c4"
+  ],
+  "playerPoseOrder": [
+    "idle",
+    "ranged_aim",
+    "ranged_fire",
+    "melee_ready",
+    "melee_windup",
+    "melee_strike"
+  ],
+  "playerAtlas": {
+    "columns": 3,
+    "rows": 2,
+    "cellSize": [
+      512,
+      512
+    ],
+    "textureSize": [
+      1536,
+      1024
+    ]
+  },
+  "coordinates": "top_left_pixels",
+  "feetPivotPx": [
+    256,
+    470
+  ],
+  "unityPivotNormalized": [
+    0.5,
+    0.08203125
+  ],
+  "reviewed": {
+    "lightAndDarkAlpha": true,
+    "opaqueBorderClipping": 0,
+    "neighborFootContaminationCorrected": true,
+    "enemyHammerSamplingCorrected": true,
+    "wholeFramePreviewFrameCount": 24
+  },
+  "missing": [
+    "independent_weapon_head_back_wearable_layers",
+    "full_inbetween_animation_frames",
+    "enemy_attack_frames",
+    "dedicated_hit_and_repair_frames"
+  ],
+  "assets": [
+    {
+      "id": "c0.idle",
+      "kind": "player",
+      "file": "Runtime/Players/c0/idle.png",
+      "canvasSize": [
+        512,
+        512
+      ],
+      "pivotPx": [
+        256,
+        470
+      ],
+      "sourceOpaqueBounds": [
+        173,
+        10,
+        198,
+        474
+      ],
+      "sourceFeetPx": [
+        281.5,
+        484.0
+      ],
+      "uniformScale": 0.88,
+      "sha256": "eeb3eb0e0aa1fefcc6873f7edf61f8d07f5d8654afc1e6a8664d046617c32087"
+    },
+    {
+      "id": "c0.ranged_aim",
+      "kind": "player",
+      "file": "Runtime/Players/c0/ranged_aim.png",
+      "canvasSize": [
+        512,
+        512
+      ],
+      "pivotPx": [
+        256,
+        470
+      ],
+      "sourceOpaqueBounds": [
+        622,
+        21,
+        295,
+        458
+      ],
+      "sourceFeetPx": [
+        747.5,
+        479.0
+      ],
+      "uniformScale": 0.88,
+      "sha256": "9ae6d5d96b305a8e2594d4d5d08d3e9702dbf3b44046a797c37885543b80cdf5"
+    },
+    {
+      "id": "c0.ranged_fire",
+      "kind": "player",
+      "file": "Runtime/Players/c0/ranged_fire.png",
+      "canvasSize": [
+        512,
+        512
+      ],
+      "pivotPx": [
+        256,
+        470
+      ],
+      "sourceOpaqueBounds": [
+        1096,
+        21,
+        337,
+        458
+      ],
+      "sourceFeetPx": [
+        1221.5,
+        479.0
+      ],
+      "uniformScale": 0.88,
+      "sha256": "cde7a67b88f16c8916fba5bce2f7af9c7f7039d1f839f24ea5bcabd1a9b44c8a"
+    },
+    {
+      "id": "c0.melee_ready",
+      "kind": "player",
+      "file": "Runtime/Players/c0/melee_ready.png",
+      "canvasSize": [
+        512,
+        512
+      ],
+      "pivotPx": [
+        256,
+        470
+      ],
+      "sourceOpaqueBounds": [
+        150,
+        524,
+        267,
+        480
+      ],
+      "sourceFeetPx": [
+        266.0,
+        1004.0
+      ],
+      "uniformScale": 0.88,
+      "sha256": "fd29a3ac9749a171f1094701e6c9af975b9920e59b08510daf2136e4268bdaa4"
+    },
+    {
+      "id": "c0.melee_windup",
+      "kind": "player",
+      "file": "Runtime/Players/c0/melee_windup.png",
+      "canvasSize": [
+        512,
+        512
+      ],
+      "pivotPx": [
+        256,
+        470
+      ],
+      "sourceOpaqueBounds": [
+        590,
+        500,
+        298,
+        501
+      ],
+      "sourceFeetPx": [
+        738.5,
+        1001.0
+      ],
+      "uniformScale": 0.88,
+      "sha256": "5b55493b2edc6aa5558451d868733ef8c067b44bb7dd8b376faa5336339d301a"
+    },
+    {
+      "id": "c0.melee_strike",
+      "kind": "player",
+      "file": "Runtime/Players/c0/melee_strike.png",
+      "canvasSize": [
+        512,
+        512
+      ],
+      "pivotPx": [
+        256,
+        470
+      ],
+      "sourceOpaqueBounds": [
+        1035,
+        551,
+        436,
+        449
+      ],
+      "sourceFeetPx": [
+        1190.0,
+        1000.0
+      ],
+      "uniformScale": 0.88,
+      "sha256": "4cb7d547ad8b2bafe25df6d719cadd809d6473cbe5615fd8d8e70c0076728e12"
+    },
+    {
+      "id": "c1.idle",
+      "kind": "player",
+      "file": "Runtime/Players/c1/idle.png",
+      "canvasSize": [
+        512,
+        512
+      ],
+      "pivotPx": [
+        256,
+        470
+      ],
+      "sourceOpaqueBounds": [
+        169,
+        7,
+        205,
+        477
+      ],
+      "sourceFeetPx": [
+        282.5,
+        484.0
+      ],
+      "uniformScale": 0.88,
+      "sha256": "41d5d9da39c203eef960cdfab532f12c1c2ca81eb68e4443dd5fbf1f26e0f9c8"
+    },
+    {
+      "id": "c1.ranged_aim",
+      "kind": "player",
+      "file": "Runtime/Players/c1/ranged_aim.png",
+      "canvasSize": [
+        512,
+        512
+      ],
+      "pivotPx": [
+        256,
+        470
+      ],
+      "sourceOpaqueBounds": [
+        588,
+        19,
+        332,
+        459
+      ],
+      "sourceFeetPx": [
+        746.0,
+        478.0
+      ],
+      "uniformScale": 0.88,
+      "sha256": "73c0b9574639211092cca5f15e6cc71547f1ab385eed898d29b7e055ce8dd147"
+    },
+    {
+      "id": "c1.ranged_fire",
+      "kind": "player",
+      "file": "Runtime/Players/c1/ranged_fire.png",
+      "canvasSize": [
+        512,
+        512
+      ],
+      "pivotPx": [
+        256,
+        470
+      ],
+      "sourceOpaqueBounds": [
+        1053,
+        18,
+        389,
+        461
+      ],
+      "sourceFeetPx": [
+        1210.0,
+        479.0
+      ],
+      "uniformScale": 0.88,
+      "sha256": "57fe841a850940aaa60c580563f2e72a206f22e990b062eff6c5ad13f8dd3c23"
+    },
+    {
+      "id": "c1.melee_ready",
+      "kind": "player",
+      "file": "Runtime/Players/c1/melee_ready.png",
+      "canvasSize": [
+        512,
+        512
+      ],
+      "pivotPx": [
+        256,
+        470
+      ],
+      "sourceOpaqueBounds": [
+        127,
+        521,
+        295,
+        483
+      ],
+      "sourceFeetPx": [
+        264.5,
+        1004.0
+      ],
+      "uniformScale": 0.88,
+      "sha256": "aaee79af1f1283c31eb89f6d5a8dc5c257b630d5037d547d17c498968406a845"
+    },
+    {
+      "id": "c1.melee_windup",
+      "kind": "player",
+      "file": "Runtime/Players/c1/melee_windup.png",
+      "canvasSize": [
+        512,
+        512
+      ],
+      "pivotPx": [
+        256,
+        470
+      ],
+      "sourceOpaqueBounds": [
+        565,
+        499,
+        323,
+        503
+      ],
+      "sourceFeetPx": [
+        737.5,
+        1002.0
+      ],
+      "uniformScale": 0.88,
+      "sha256": "a85b22c21cc1ed9eca254384d0b384222be1d7fa9aed6ad16319d24767137568"
+    },
+    {
+      "id": "c1.melee_strike",
+      "kind": "player",
+      "file": "Runtime/Players/c1/melee_strike.png",
+      "canvasSize": [
+        512,
+        512
+      ],
+      "pivotPx": [
+        256,
+        470
+      ],
+      "sourceOpaqueBounds": [
+        1023,
+        547,
+        454,
+        454
+      ],
+      "sourceFeetPx": [
+        1189.0,
+        1001.0
+      ],
+      "uniformScale": 0.88,
+      "sha256": "f9d7d91d6fb608c29f31e9d4a8b2794b4e810f35046716cac9d37dbe1b6ff6c0"
+    },
+    {
+      "id": "c2.idle",
+      "kind": "player",
+      "file": "Runtime/Players/c2/idle.png",
+      "canvasSize": [
+        512,
+        512
+      ],
+      "pivotPx": [
+        256,
+        470
+      ],
+      "sourceOpaqueBounds": [
+        166,
+        7,
+        207,
+        479
+      ],
+      "sourceFeetPx": [
+        281.5,
+        486.0
+      ],
+      "uniformScale": 0.88,
+      "sha256": "b4caab713d5869f2a1b437f46eba924c62a125c03cbb50d5da307c5b03e9c310"
+    },
+    {
+      "id": "c2.ranged_aim",
+      "kind": "player",
+      "file": "Runtime/Players/c2/ranged_aim.png",
+      "canvasSize": [
+        512,
+        512
+      ],
+      "pivotPx": [
+        256,
+        470
+      ],
+      "sourceOpaqueBounds": [
+        601,
+        18,
+        295,
+        463
+      ],
+      "sourceFeetPx": [
+        729.5,
+        481.0
+      ],
+      "uniformScale": 0.88,
+      "sha256": "a82339cb872c870e26f1e5efc101076d7b9ce2fd061aa5732b5c72c224e0e958"
+    },
+    {
+      "id": "c2.ranged_fire",
+      "kind": "player",
+      "file": "Runtime/Players/c2/ranged_fire.png",
+      "canvasSize": [
+        512,
+        512
+      ],
+      "pivotPx": [
+        256,
+        470
+      ],
+      "sourceOpaqueBounds": [
+        1080,
+        18,
+        351,
+        463
+      ],
+      "sourceFeetPx": [
+        1209.0,
+        481.0
+      ],
+      "uniformScale": 0.88,
+      "sha256": "9ca3049da074465c33ddf3ae60414c7b6dbb7a8d2f7007df77f0353c8e244d53"
+    },
+    {
+      "id": "c2.melee_ready",
+      "kind": "player",
+      "file": "Runtime/Players/c2/melee_ready.png",
+      "canvasSize": [
+        512,
+        512
+      ],
+      "pivotPx": [
+        256,
+        470
+      ],
+      "sourceOpaqueBounds": [
+        148,
+        519,
+        268,
+        487
+      ],
+      "sourceFeetPx": [
+        265.5,
+        1006.0
+      ],
+      "uniformScale": 0.88,
+      "sha256": "23bc8ef8a54ed382705c1b3f22f238a1667ee270193f8d51aec5b1d1a0b337d0"
+    },
+    {
+      "id": "c2.melee_windup",
+      "kind": "player",
+      "file": "Runtime/Players/c2/melee_windup.png",
+      "canvasSize": [
+        512,
+        512
+      ],
+      "pivotPx": [
+        256,
+        470
+      ],
+      "sourceOpaqueBounds": [
+        576,
+        495,
+        307,
+        509
+      ],
+      "sourceFeetPx": [
+        729.0,
+        1004.0
+      ],
+      "uniformScale": 0.88,
+      "sha256": "61fca11540ac147861426c54f090da3e98fea838210095dec954efa46c6e6d8b"
+    },
+    {
+      "id": "c2.melee_strike",
+      "kind": "player",
+      "file": "Runtime/Players/c2/melee_strike.png",
+      "canvasSize": [
+        512,
+        512
+      ],
+      "pivotPx": [
+        256,
+        470
+      ],
+      "sourceOpaqueBounds": [
+        1004,
+        548,
+        448,
+        454
+      ],
+      "sourceFeetPx": [
+        1164.0,
+        1002.0
+      ],
+      "uniformScale": 0.88,
+      "sha256": "f6b77b2229c5e4ec3e8d35a4cfba7305e48314dce9f604c7b1bf87dfecf5c3f5"
+    },
+    {
+      "id": "c3.idle",
+      "kind": "player",
+      "file": "Runtime/Players/c3/idle.png",
+      "canvasSize": [
+        512,
+        512
+      ],
+      "pivotPx": [
+        256,
+        470
+      ],
+      "sourceOpaqueBounds": [
+        163,
+        6,
+        212,
+        480
+      ],
+      "sourceFeetPx": [
+        281.5,
+        486.0
+      ],
+      "uniformScale": 0.88,
+      "sha256": "3a4a4a67843c2f20aee178311bcee6cc6329825cc5fd09e902e885b4deeb134f"
+    },
+    {
+      "id": "c3.ranged_aim",
+      "kind": "player",
+      "file": "Runtime/Players/c3/ranged_aim.png",
+      "canvasSize": [
+        512,
+        512
+      ],
+      "pivotPx": [
+        256,
+        470
+      ],
+      "sourceOpaqueBounds": [
+        601,
+        18,
+        293,
+        464
+      ],
+      "sourceFeetPx": [
+        729.0,
+        482.0
+      ],
+      "uniformScale": 0.88,
+      "sha256": "1bd32692f936ff95a632687afb64f8ea2dab8641f7807bac606945bc237b1643"
+    },
+    {
+      "id": "c3.ranged_fire",
+      "kind": "player",
+      "file": "Runtime/Players/c3/ranged_fire.png",
+      "canvasSize": [
+        512,
+        512
+      ],
+      "pivotPx": [
+        256,
+        470
+      ],
+      "sourceOpaqueBounds": [
+        1048,
+        18,
+        356,
+        464
+      ],
+      "sourceFeetPx": [
+        1177.0,
+        482.0
+      ],
+      "uniformScale": 0.88,
+      "sha256": "9a7f84436554f44767da0d1f824ffecdca854112b17489899d16da2367914d71"
+    },
+    {
+      "id": "c3.melee_ready",
+      "kind": "player",
+      "file": "Runtime/Players/c3/melee_ready.png",
+      "canvasSize": [
+        512,
+        512
+      ],
+      "pivotPx": [
+        256,
+        470
+      ],
+      "sourceOpaqueBounds": [
+        147,
+        518,
+        270,
+        488
+      ],
+      "sourceFeetPx": [
+        265.5,
+        1006.0
+      ],
+      "uniformScale": 0.88,
+      "sha256": "9964b14e3acd753d7278612494dcf11635bf3bd4d2d60635cbcf67444b36d850"
+    },
+    {
+      "id": "c3.melee_windup",
+      "kind": "player",
+      "file": "Runtime/Players/c3/melee_windup.png",
+      "canvasSize": [
+        512,
+        512
+      ],
+      "pivotPx": [
+        256,
+        470
+      ],
+      "sourceOpaqueBounds": [
+        576,
+        494,
+        308,
+        511
+      ],
+      "sourceFeetPx": [
+        729.5,
+        1005.0
+      ],
+      "uniformScale": 0.88,
+      "sha256": "1d4dcc75b8d92756e1c097b447d99b50b8312079c49a79450ef69ee678e60708"
+    },
+    {
+      "id": "c3.melee_strike",
+      "kind": "player",
+      "file": "Runtime/Players/c3/melee_strike.png",
+      "canvasSize": [
+        512,
+        512
+      ],
+      "pivotPx": [
+        256,
+        470
+      ],
+      "sourceOpaqueBounds": [
+        969,
+        547,
+        452,
+        456
+      ],
+      "sourceFeetPx": [
+        1131.0,
+        1003.0
+      ],
+      "uniformScale": 0.88,
+      "sha256": "a4c22bd8bba26bfcc23b4319b73c22a0711ddb8b4aa774b275a980eef6c264e6"
+    },
+    {
+      "id": "c4.idle",
+      "kind": "player",
+      "file": "Runtime/Players/c4/idle.png",
+      "canvasSize": [
+        512,
+        512
+      ],
+      "pivotPx": [
+        256,
+        470
+      ],
+      "sourceOpaqueBounds": [
+        174,
+        8,
+        203,
+        474
+      ],
+      "sourceFeetPx": [
+        281.0,
+        482.0
+      ],
+      "uniformScale": 0.88,
+      "sha256": "7efcd8514274ce90b13d663140bd88ed4f7ebd03bd34b0c5e6591f9298fed188"
+    },
+    {
+      "id": "c4.ranged_aim",
+      "kind": "player",
+      "file": "Runtime/Players/c4/ranged_aim.png",
+      "canvasSize": [
+        512,
+        512
+      ],
+      "pivotPx": [
+        256,
+        470
+      ],
+      "sourceOpaqueBounds": [
+        593,
+        19,
+        322,
+        459
+      ],
+      "sourceFeetPx": [
+        747.5,
+        478.0
+      ],
+      "uniformScale": 0.88,
+      "sha256": "f22e2c40e269e0ad0ec5bf831bc72f53ec39b4fde9aa3726e4c0f1c694f76765"
+    },
+    {
+      "id": "c4.ranged_fire",
+      "kind": "player",
+      "file": "Runtime/Players/c4/ranged_fire.png",
+      "canvasSize": [
+        512,
+        512
+      ],
+      "pivotPx": [
+        256,
+        470
+      ],
+      "sourceOpaqueBounds": [
+        1065,
+        19,
+        372,
+        460
+      ],
+      "sourceFeetPx": [
+        1221.5,
+        479.0
+      ],
+      "uniformScale": 0.88,
+      "sha256": "6f49525df3d6447862a67f3134876102ca362e1904167687391866d731b7e663"
+    },
+    {
+      "id": "c4.melee_ready",
+      "kind": "player",
+      "file": "Runtime/Players/c4/melee_ready.png",
+      "canvasSize": [
+        512,
+        512
+      ],
+      "pivotPx": [
+        256,
+        470
+      ],
+      "sourceOpaqueBounds": [
+        132,
+        520,
+        289,
+        484
+      ],
+      "sourceFeetPx": [
+        266.0,
+        1004.0
+      ],
+      "uniformScale": 0.88,
+      "sha256": "a257747ebb4ddb5900b7534113276d780ce1ea3af740f2aac33a18753b9f024c"
+    },
+    {
+      "id": "c4.melee_windup",
+      "kind": "player",
+      "file": "Runtime/Players/c4/melee_windup.png",
+      "canvasSize": [
+        512,
+        512
+      ],
+      "pivotPx": [
+        256,
+        470
+      ],
+      "sourceOpaqueBounds": [
+        572,
+        500,
+        317,
+        500
+      ],
+      "sourceFeetPx": [
+        739.0,
+        1000.0
+      ],
+      "uniformScale": 0.88,
+      "sha256": "2142da2b2146ed241dd801cbbb46077c385f47234ce24c2effc9f98f5139936b"
+    },
+    {
+      "id": "c4.melee_strike",
+      "kind": "player",
+      "file": "Runtime/Players/c4/melee_strike.png",
+      "canvasSize": [
+        512,
+        512
+      ],
+      "pivotPx": [
+        256,
+        470
+      ],
+      "sourceOpaqueBounds": [
+        1034,
+        548,
+        439,
+        453
+      ],
+      "sourceFeetPx": [
+        1190.0,
+        1001.0
+      ],
+      "uniformScale": 0.88,
+      "sha256": "a0e7def248c47ad043e528e8c7dfa50b9f8a2142248e167f2825910462aee617"
+    },
+    {
+      "id": "patrol.idle",
+      "kind": "enemy",
+      "file": "Runtime/Enemies/patrol.png",
+      "canvasSize": [
+        512,
+        512
+      ],
+      "pivotPx": [
+        256,
+        470
+      ],
+      "sourceOpaqueBounds": [
+        81,
+        90,
+        307,
+        338
+      ],
+      "sourceFeetPx": [
+        254.5,
+        428.0
+      ],
+      "uniformScale": 1.230769,
+      "sha256": "53463333b66d2eb67860d36ff06f019b4f25bc31610585de1b47b2075abd805e"
+    },
+    {
+      "id": "salvager.idle",
+      "kind": "enemy",
+      "file": "Runtime/Enemies/salvager.png",
+      "canvasSize": [
+        512,
+        512
+      ],
+      "pivotPx": [
+        256,
+        470
+      ],
+      "sourceOpaqueBounds": [
+        551,
+        21,
+        441,
+        414
+      ],
+      "sourceFeetPx": [
+        729.5,
+        435.0
+      ],
+      "uniformScale": 0.9342403,
+      "sha256": "933e9bba489003c30c8c7d333ff0305c22cb701b41337dc4c8c370670c794b7b"
+    },
+    {
+      "id": "jammer.idle",
+      "kind": "enemy",
+      "file": "Runtime/Enemies/jammer.png",
+      "canvasSize": [
+        512,
+        512
+      ],
+      "pivotPx": [
+        256,
+        470
+      ],
+      "sourceOpaqueBounds": [
+        1131,
+        18,
+        296,
+        397
+      ],
+      "sourceFeetPx": [
+        1277.0,
+        415.0
+      ],
+      "uniformScale": 1.047859,
+      "sha256": "421d7f018cc2a2ac5e921d2b33012c176ba54c8636cc6af368fdec279c503385"
+    },
+    {
+      "id": "patrol_commander.idle",
+      "kind": "enemy",
+      "file": "Runtime/Enemies/patrol_commander.png",
+      "canvasSize": [
+        512,
+        512
+      ],
+      "pivotPx": [
+        256,
+        470
+      ],
+      "sourceOpaqueBounds": [
+        16,
+        485,
+        410,
+        508
+      ],
+      "sourceFeetPx": [
+        246.0,
+        993.0
+      ],
+      "uniformScale": 0.8188977,
+      "sha256": "d04e7fed2e021cac2c5e8ac7da430b2be409d12fa9d3692d4328ec450ee94718"
+    },
+    {
+      "id": "furnace_foreman.idle",
+      "kind": "enemy",
+      "file": "Runtime/Enemies/furnace_foreman.png",
+      "canvasSize": [
+        512,
+        512
+      ],
+      "pivotPx": [
+        256,
+        470
+      ],
+      "sourceOpaqueBounds": [
+        440,
+        486,
+        566,
+        508
+      ],
+      "sourceFeetPx": [
+        756.0,
+        994.0
+      ],
+      "uniformScale": 0.7279152,
+      "sha256": "6587f56f124429bd6d94bde2d71b5bb7f7560925dab6563df374cd777b901bca"
+    },
+    {
+      "id": "blackout_broadcaster.idle",
+      "kind": "enemy",
+      "file": "Runtime/Enemies/blackout_broadcaster.png",
+      "canvasSize": [
+        512,
+        512
+      ],
+      "pivotPx": [
+        256,
+        470
+      ],
+      "sourceOpaqueBounds": [
+        1041,
+        463,
+        479,
+        498
+      ],
+      "sourceFeetPx": [
+        1265.0,
+        961.0
+      ],
+      "uniformScale": 0.8353414,
+      "sha256": "f27f5df437908325a3367a4b7d140def5d76faf67111ba56b829f9557c4f46b8"
+    }
+  ],
+  "icons": [
+    {
+      "templateId": "w0",
+      "file": "Runtime/Icons/w0.png",
+      "use": "icon_only",
+      "sha256": "4693cd7dc04c2b588caf3d6f5deb12097b8bd262bc33fd6e172e26abef1b009f"
+    },
+    {
+      "templateId": "w1",
+      "file": "Runtime/Icons/w1.png",
+      "use": "icon_only",
+      "sha256": "ea05358c5abc5fa433030547de57532ed39d8b1f0a829088bcdf407a0411e4cc"
+    },
+    {
+      "templateId": "w2",
+      "file": "Runtime/Icons/w2.png",
+      "use": "icon_only",
+      "sha256": "8a364d9713e026f3dff0c5d311b427652cbd3f100f514d37e275ae718579edda"
+    },
+    {
+      "templateId": "w3",
+      "file": "Runtime/Icons/w3.png",
+      "use": "icon_only",
+      "sha256": "1a86a1a346df57bfda4d02e55cd6933564600e938c667d9b4fa0db4a65485d07"
+    },
+    {
+      "templateId": "w4",
+      "file": "Runtime/Icons/w4.png",
+      "use": "icon_only",
+      "sha256": "67ecf0893ddf954ea3c8509f8ec8932c15d0f25910393f477c495c38d71fc360"
+    },
+    {
+      "templateId": "h0",
+      "file": "Runtime/Icons/h0.png",
+      "use": "icon_only",
+      "sha256": "fc15f3e4a8fe15e1e11b4042daa3ee3d575a3834af2d9c5d5ca4002f523ab74f"
+    },
+    {
+      "templateId": "h1",
+      "file": "Runtime/Icons/h1.png",
+      "use": "icon_only",
+      "sha256": "505650bb6d14653b9aa89ce467118e8a1aabd743aaa86c22e11f98b83e5ccb19"
+    },
+    {
+      "templateId": "h2",
+      "file": "Runtime/Icons/h2.png",
+      "use": "icon_only",
+      "sha256": "9b2e0fdb980b11ca5ec1fbee1e1e3e640b7453054e16d43b3eff24ca53165683"
+    },
+    {
+      "templateId": "h3",
+      "file": "Runtime/Icons/h3.png",
+      "use": "icon_only",
+      "sha256": "abd33da09a428edbeaf114893a060beb501bc0b13c7671b8a3c9b855c72b8303"
+    },
+    {
+      "templateId": "h4",
+      "file": "Runtime/Icons/h4.png",
+      "use": "icon_only",
+      "sha256": "e39242a5b1140d67c0906b47e87d56770d97f4f770b02cc32e7431f4c69727fe"
+    },
+    {
+      "templateId": "c0",
+      "file": "Runtime/Icons/c0.png",
+      "use": "icon_only",
+      "sha256": "0c49a1f5a68b833121215b369e939efafab62a2b4b5a45326723b6b6a890ca40"
+    },
+    {
+      "templateId": "c1",
+      "file": "Runtime/Icons/c1.png",
+      "use": "icon_only",
+      "sha256": "c870b82af9163d471faa2a327348f17e7106492f70bf4e3a0194f68e7de6daa0"
+    },
+    {
+      "templateId": "c2",
+      "file": "Runtime/Icons/c2.png",
+      "use": "icon_only",
+      "sha256": "950e9074bb95be1818093eee8d4cd39040484e1a406caa8ba08c5632e11d5878"
+    },
+    {
+      "templateId": "c3",
+      "file": "Runtime/Icons/c3.png",
+      "use": "icon_only",
+      "sha256": "a39d7e4a8987b8cb9a05e006d90eaf31c8029215ba97a21329392f89b83ff95d"
+    },
+    {
+      "templateId": "c4",
+      "file": "Runtime/Icons/c4.png",
+      "use": "icon_only",
+      "sha256": "2fe3bb66d295668b8de69b0ba0985ef03f66edf454a95cedebffbb301f3a1591"
+    },
+    {
+      "templateId": "b0",
+      "file": "Runtime/Icons/b0.png",
+      "use": "icon_only",
+      "sha256": "7f49367791b29f5d1452ed2e671ece9e78152330e398b56f7933e35b6a7b14ae"
+    },
+    {
+      "templateId": "b1",
+      "file": "Runtime/Icons/b1.png",
+      "use": "icon_only",
+      "sha256": "ab0a4db3dc66f2b4667795ee6a00b830b5b8c877fdc96c6f40356069d9c31c9a"
+    },
+    {
+      "templateId": "b2",
+      "file": "Runtime/Icons/b2.png",
+      "use": "icon_only",
+      "sha256": "9642ab23b0e9bd42c6a918c99389743e6712aedaee45493e6228935c03995b7c"
+    },
+    {
+      "templateId": "b3",
+      "file": "Runtime/Icons/b3.png",
+      "use": "icon_only",
+      "sha256": "426061b3e08bfef8d0076eb5b16fbe33f161b9a1eca27f21bb1b1fe925ea663f"
+    },
+    {
+      "templateId": "b4",
+      "file": "Runtime/Icons/b4.png",
+      "use": "icon_only",
+      "sha256": "053530bcde2bbca1ba1ae2ced3399ab28882d2950fbc15182e2179460b22ac87"
+    }
+  ]
+}

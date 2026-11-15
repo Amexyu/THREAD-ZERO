@@ -1,0 +1,33 @@
+{
+  "project": "THREAD ZERO",
+  "contractVersion": "0.6-draft",
+  "status": "draft",
+  "assetOwner": "本会话：全部美术及质量检查",
+  "implementationOwner": "另一 AI：程序与引擎集成",
+  "coordinateSystem": "top-left pixel coordinates",
+  "proposedCanvasSize": [
+    512,
+    512
+  ],
+  "measuredPivotPx": null,
+  "requiredStates": [
+    "Idle",
+    "AttackRanged",
+    "AttackMelee",
+    "Hit",
+    "Repair"
+  ],
+  "requiredAnchors": [
+    "feet",
+    "weaponGrip",
+    "muzzle",
+    "bladeTip",
+    "backModule"
+  ],
+  "approvedAnimationAssets": [],
+  "notes": [
+    "画布为建议值，实际锚点尚未量测。",
+    "完整六姿势图为 reference，不是连续帧动画。",
+    "旧六部件拼装路线已被用户否决。"
+  ]
+}

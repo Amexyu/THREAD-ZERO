@@ -107,3 +107,21 @@ InitTestScene*.unity*
 
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
+
+# THREAD ZERO project folder (Unity project is nested one level down)
+/ThreadZero/[Ll]ibrary/
+/ThreadZero/[Tt]emp/
+/ThreadZero/[Oo]bj/
+/ThreadZero/[Ll]ogs/
+/ThreadZero/[Uu]ser[Ss]ettings/
+/ThreadZero/[Mm]emoryCaptures/
+/ThreadZero/[Rr]ecordings/
+/ThreadZero/.vs/
+/Artifacts/
+/Backups/
+/Builds/
+/.codex/
+/Tools/LibraryComboTransfer/
+__pycache__/
+*.pyc
+*.b64

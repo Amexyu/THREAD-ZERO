@@ -1,0 +1,15 @@
+{
+  "version": "v12-starter-dagger-integration-1",
+  "status": "fixed-outfit runtime sample; not a universal equipment rig",
+  "weapon": {"baseId": "w1", "quality": "Common"},
+  "appearance": {"weapon": "w1", "coat": "c0", "back": "b0", "head": "_default"},
+  "resources": "Art/V12/StarterDagger",
+  "atlas": {"width":1536,"height":768,"columns":6,"rows":3,"cell":256,"pivotTopLeft":[128,238]},
+  "layers": [
+    {"file":"Body.png","scope":"whole fixed outfit and gripping fist; exposed blade partition removed"},
+    {"file":"Weapon.png","scope":"exposed dagger blade partition in matched poses; grip remains occluded by fist, not a complete freestanding weapon"}
+  ],
+  "combo": {"id":"starter_dagger_rapid_cut","duration":0.68,"contactSeconds":[0.23,0.32,0.51],"damageMultipliers":[0.8,0.8,0.8],"cooldown":5.0},
+  "basic": {"duration":0.35,"framesZeroBased":[11,12,13,14,15,16,17],"contactSeconds":0.14},
+  "limitations":["Not skeletal animation","Head/coat/back are not individually replaceable in this sample","Other outfits use prior renderer","Higher-quality weapon skills are not implemented by this sample"]
+}
