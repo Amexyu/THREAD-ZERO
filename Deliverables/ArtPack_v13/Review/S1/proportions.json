@@ -1,0 +1,62 @@
+{
+  "proportion_profile": "s1_revised",
+  "scale": 4,
+  "rig": {
+    "hip": [
+      -5,
+      -26
+    ],
+    "head": [
+      0,
+      -47
+    ],
+    "pack": [
+      -27,
+      -26
+    ],
+    "leg_near": [
+      -11,
+      0
+    ],
+    "leg_far": [
+      11,
+      0
+    ]
+  },
+  "shoulder": [
+    -22,
+    -26
+  ],
+  "shoulderF": [
+    20,
+    -26
+  ],
+  "rest_pose": {
+    "dx": 0,
+    "dy": 0,
+    "sx": 1,
+    "sy": 1,
+    "lean": 0,
+    "head": 0,
+    "pack": 0,
+    "A": 0,
+    "Af": 0,
+    "L": 0,
+    "Lf": 0,
+    "W": 0,
+    "wt": 0,
+    "fx": false
+  },
+  "rest_has_weapon": false,
+  "rest_pixels_per_unit": 3,
+  "ground_origin_in_idle_rest_pixels": [
+    212,
+    455
+  ],
+  "height_units": 140.33333333333334,
+  "head_visible_height_units": 72.0,
+  "head_height_ratio": 0.513064133016627,
+  "dagger_visible_height_units": 36.0,
+  "dagger_height_ratio": 0.2565320665083135,
+  "future_parts": "h1-h4/c1-c4/b1-b4 and other weapons must use this revised S1 unit scale and attachment coordinates; no per-part fit-to-frame scaling."
+}

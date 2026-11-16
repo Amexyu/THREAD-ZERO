@@ -22,13 +22,31 @@
    "pivot": [
     12.0,
     8.0
+   ],
+   "hand": [
+    12.0,
+    23.0
    ]
   },
-  "legs": {
-   "file": "legs.png",
+  "leg_near": {
+   "file": "leg_near.png",
    "pivot": [
     13.0,
     6.0
+   ]
+  },
+  "leg_far": {
+   "file": "leg_far.png",
+   "pivot": [
+    13.0,
+    6.0
+   ]
+  },
+  "hand": {
+   "file": "hand.png",
+   "pivot": [
+    11.0,
+    11.0
    ]
   },
   "head": {

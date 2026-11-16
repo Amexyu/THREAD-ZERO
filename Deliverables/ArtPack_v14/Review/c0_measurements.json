@@ -1,0 +1,109 @@
+{
+  "step": "C0",
+  "status": "awaiting_user_review",
+  "files": [
+    {
+      "file": "c0_A_waste_channel.png",
+      "pixels": [
+        1600,
+        468
+      ],
+      "sha256": "465c63a6a585dcf769bdfe96428367c16bfcb5a723b8ed4ffe360d19d1be915b",
+      "mirror_equal": true
+    },
+    {
+      "file": "c0_B_stacked_shanties.png",
+      "pixels": [
+        1600,
+        468
+      ],
+      "sha256": "94b63296c91dba50325c880a9c9dd3ce59fa9fa6b63f47e4b442980b6c787c75",
+      "mirror_equal": true
+    },
+    {
+      "file": "c0_C_pump_gallery.png",
+      "pixels": [
+        1600,
+        468
+      ],
+      "sha256": "44dd9a2e4ef6d9e340fef689b0d6d7b47877c316afca2f12ea8ec5759f3fc9b3",
+      "mirror_equal": true
+    },
+    {
+      "file": "c0_D_central_floodgate.png",
+      "pixels": [
+        1600,
+        468
+      ],
+      "sha256": "0ce9c63fc3be12f0355d0c785996e237073a36b588f0ddcc13cd2bc5ee19bba1",
+      "mirror_equal": true
+    },
+    {
+      "file": "c0_action_ch1.png",
+      "pixels": [
+        1600,
+        900
+      ],
+      "sha256": "896b461924c148c05efd2c46b7c96c56a40f363faf3bf362fe14dc33d7a3b84d",
+      "mirror_equal": true
+    },
+    {
+      "file": "c0_readability.png",
+      "pixels": [
+        800,
+        936
+      ],
+      "sha256": "69804850f7858b53d3b11ec1d210b562edeae994ea9e065ff63827b109ddf4f1",
+      "mirror_equal": true
+    }
+  ],
+  "action_actors": [
+    {
+      "source": "Deliverables/ArtPack_v13/Review/S1/idle_rest.png",
+      "visible_height_px": 210,
+      "visible_top_left_px": [
+        620,
+        372
+      ],
+      "foot_y_px": 582
+    },
+    {
+      "source": "ThreadZero/Assets/Resources/Art/V07/Enemies/patrol.png",
+      "visible_height_px": 198,
+      "visible_top_left_px": [
+        830,
+        384
+      ],
+      "foot_y_px": 582
+    },
+    {
+      "source": "ThreadZero/Assets/Resources/Art/V07/Enemies/salvager.png",
+      "visible_height_px": 206,
+      "visible_top_left_px": [
+        1030,
+        376
+      ],
+      "foot_y_px": 582
+    }
+  ],
+  "route_nodes": 7,
+  "current_stage": "1-3",
+  "route_states": [
+    "passed",
+    "passed",
+    "current_elite",
+    "normal",
+    "normal",
+    "elite",
+    "boss"
+  ],
+  "nine_slice": "TBD: C0 is a flattened concept, not the C2 production UI kit",
+  "source_assets": [
+    "Deliverables/ArtPack_v13/Review/S1/idle_rest.png",
+    "ThreadZero/Assets/Resources/Art/V07/Enemies/patrol.png",
+    "ThreadZero/Assets/Resources/Art/V07/Enemies/salvager.png",
+    "Deliverables/ArtPack_v13/Character/starter/weapon.png"
+  ],
+  "task_document_sha256": "6eae3dd83993210f67dea0e0f7645216e7933f9bfcc1fda2bf83c2f186b3d061",
+  "task_document_has_section_4_5": false
+}

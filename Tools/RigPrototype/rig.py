@@ -4,10 +4,10 @@ Angle convention: arm/leg/weapon angle a: direction (0,1)->(sin a, cos a); + = s
 """
 import math, sys
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image, ImageOps, ImageDraw
 
 R = 3                      # render scale (1x -> R px)
-CELL_W, CELL_H = 315, 300  # 1x cell size
+CELL_W, CELL_H = 360, 300  # 1x cell size
 ROOT_X, GROUND = 96, 222   # 1x
 INK = (18, 20, 22, 255)
 TILE = (40, 44, 48, 255)
@@ -65,7 +65,7 @@ def armor_light():
     t.rr(15, 9, 37, 23, 4, TILE); t.ell(23, 13, 29, 19, ORANGE, ow=0)
     t.rr(3, 28, 49, 33, 2, ORANGE, ow=0)
     a = Part(20, 32, (10, 6)); a.rr(3, 2, 17, 29, 6, (112, 128, 144, 255)); a.rr(3, 22, 17, 26, 1, ORANGE, ow=0)
-    return dict(torso=t, arm=a, armF=a, legs=legs((54, 60, 66, 255), TILE), shoulder=(11, -26), shoulderF=(-4, -26))
+    return dict(torso=t, arm=a, armF=a, legN=legs((54, 60, 66, 255), TILE), legF=legs((54, 60, 66, 255), TILE), shoulder=(11, -26), shoulderF=(-4, -26))
 
 def armor_heavy():
     t = Part(60, 42, (30, 40))
@@ -77,7 +77,7 @@ def armor_heavy():
     a.rr(5, 7, 25, 33, 7, (96, 108, 120, 255))
     a.rr(1, 1, 29, 15, 8, STEEL)       # shoulder pad
     a.rr(1, 11, 29, 14, 1, ORANGE, ow=0)
-    return dict(torso=t, arm=a, armF=a, legs=legs(STEEL2, TILE), shoulder=(13, -29), shoulderF=(-6, -29))
+    return dict(torso=t, arm=a, armF=a, legN=legs(STEEL2, TILE), legF=legs(STEEL2, TILE), shoulder=(13, -29), shoulderF=(-6, -29))
 
 # --- heads (big: ~half of total height)
 def head_cap():
@@ -169,12 +169,25 @@ def set_from_manifest(path, defaults=None):
     def L(key):
         e = m["parts"][key]
         return part_from_png(os.path.join(base, e["file"]), e["pivot"], sc, e.get("tip"))
+    P = m["parts"]
     def armor():
-        return dict(torso=L("torso"), arm=L("arm"), armF=L("armF") if "armF" in m["parts"] else L("arm"),
-                    legs=L("legs"), shoulder=tuple(m.get("shoulder", (11, -26))),
-                    shoulderF=tuple(m.get("shoulderF", (-4, -26))))
-    return dict(armor=armor, head=lambda: L("head"), pack=lambda: L("pack"), wpn=lambda: L("weapon"),
-                kind=m.get("weapon_class", "dagger"))
+        sh_a = tuple(m.get("shoulder", (11, -26))); sh_b = tuple(m.get("shoulderF", (-4, -26)))
+        # manifest 'shoulder' = weapon (near) arm, drawn in front; 'shoulderF' = far arm, drawn behind the torso
+        d = dict(torso=L("torso"), arm=L("arm"), armF=L("armF") if "armF" in P else L("arm"),
+                 shoulder=sh_a, shoulderF=sh_b)
+        if "leg_near" in P:
+            d["legN"] = L("leg_near"); d["legF"] = L("leg_far")
+        else:
+            d["legN"] = d["legF"] = L("legs")
+        if "hand" in P["arm"]:
+            hx, hy = P["arm"]["hand"]; px, py = P["arm"]["pivot"]
+            d["hand_pt"] = (hx - px, hy - py)
+        if "rig" in m: d["rig"] = m["rig"]
+        return d
+    sp = dict(armor=armor, head=lambda: L("head"), pack=lambda: L("pack"), wpn=lambda: L("weapon"),
+              kind=m.get("weapon_class", "dagger"))
+    if "hand" in P: sp["hand"] = lambda: L("hand")
+    return sp
 
 # ---------- animation ----------
 def sm(x): x = max(0., min(1., x)); return x * x * (3 - 2 * x)
@@ -186,36 +199,42 @@ def kf(t, keys):
 
 def pose(kind, anim, t):
     ph = 2 * math.pi * t
-    p = dict(dx=0, dy=0, sx=1, sy=1, lean=4, head=0, pack=0, A=8, Af=-8, L=0, Lf=0, W=None, wt=0, fx=False)
+    p = dict(dx=0, dy=0, sx=1, sy=1, tilt=0, lean=1, head=0, pack=0, A=8, Af=-8, L=0, Lf=0, W=None, wt=0, fx=False)
     if anim == "idle":
-        p['dy'] = -4 * (0.5 - 0.5 * math.cos(ph)); sq = math.cos(ph)
-        p['sy'] = 1 - 0.035 * sq; p['sx'] = 1 + 0.03 * sq
-        p['lean'] = 3 + 1.5 * math.sin(ph - .5)
-        p['head'] = -2.5 * math.sin(ph - 1.0); p['pack'] = -5 * math.sin(ph - 1.6)
-        p['A'] = 8 + 6 * math.sin(ph - .7); p['Af'] = -8 - 6 * math.sin(ph - .7)
+        p['dy'] = -5 * (0.5 - 0.5 * math.cos(ph)); sq = math.cos(ph)
+        p['sy'] = 1 - 0.04 * sq; p['sx'] = 1 + 0.035 * sq; p['tilt'] = 1.6 * math.sin(ph)
+        p['lean'] = 0.5 + 1.2 * math.sin(ph - .5)
+        p['head'] = -2.5 * math.sin(ph - 1.0); p['pack'] = -2 * math.sin(ph - 1.6)
+        p['A'] = 1 + 3 * math.sin(ph - .7); p['Af'] = -1 - 3 * math.sin(ph - .7)
     elif anim == "walk":
-        p['dy'] = -9 * abs(math.sin(ph)); sq = math.cos(2 * ph)
-        p['sy'] = 1 - 0.06 * sq; p['sx'] = 1 + 0.05 * sq
-        p['lean'] = 7 + 2 * math.sin(2 * ph); p['head'] = -4 * math.sin(2 * ph - 1.0)
-        p['pack'] = -9 * math.sin(2 * ph - 1.6)
-        p['L'] = 7 * math.sin(ph) - 3 * abs(math.sin(ph)); p['Lf'] = -7 * math.sin(ph) - 3 * abs(math.sin(ph))
-        p['A'] = -10 * math.sin(2 * ph - .6) + 6; p['Af'] = 10 * math.sin(2 * ph - .6) - 6
+        sv = abs(math.sin(ph)); p['dy'] = -9 * sv
+        k = sm((sv - .15) / .45)                      # 0 at landing, 1 in the air
+        p['sy'] = .965 + .06 * k; p['sx'] = 2 - p['sy']  # landing squash / airborne stretch
+        p['tilt'] = 3.2 * math.sin(ph)                 # whole-body rock about the feet
+        p['lean'] = 1; p['head'] = -4 * math.sin(ph - 1.0); p['pack'] = -4 * math.sin(ph - 1.6)
+        p['L'] = 7 * math.sin(ph) - 3 * sv; p['Lf'] = -7 * math.sin(ph) - 3 * sv
+        p['A'] = -6 * math.sin(ph - .6) + 1; p['Af'] = 6 * math.sin(ph - .6) - 1
+        p['dust'] = sv < .15
     elif anim == "attack":
         t2 = t
         if kind == "dagger":
-            p['dx'] = kf(t2, [(0, 0), (.30, -10), (.46, 30), (.62, 30), (1, 0)])
-            p['lean'] = kf(t2, [(0, 4), (.30, -12), (.46, 20), (.62, 16), (1, 4)])
-            p['A'] = kf(t2, [(0, 8), (.30, -75), (.44, 92), (.62, 80), (1, 8)])
-            p['W'] = kf(t2, [(0, 110), (.30, 215), (.44, 38), (.62, 50), (1, 110)])
-            p['Af'] = kf(t2, [(0, -8), (.30, 40), (.44, -50), (.62, -40), (1, -8)])
-            p['head'] = kf(t2, [(0, 0), (.30, 6), (.46, -8), (1, 0)])
-            p['pack'] = kf(t2, [(0, 0), (.30, 10), (.5, -16), (.7, 6), (1, 0)])
-            p['L'] = kf(t2, [(0, 0), (.30, -18), (.46, 38), (.62, 38), (1, 0)])
-            p['Lf'] = kf(t2, [(0, 0), (.30, 14), (.46, -26), (.62, -26), (1, 0)])
-            p['dy'] = kf(t2, [(0, 0), (.30, 2), (.40, -14), (.50, 0), (1, 0)])
-            p['sy'] = kf(t2, [(0, 1), (.30, .93), (.40, 1.06), (.50, .94), (.7, 1), (1, 1)])
-            p['sx'] = 2 - p['sy'] if False else 1 + (1 - p['sy']) * .8
-            p['fx'] = .32 < t2 < .72
+            p['dx'] = kf(t2, [(0, 0), (.28, -8), (.42, 26), (.62, 26), (1, 0)])
+            p['tilt'] = kf(t2, [(0, 0), (.28, -5), (.42, 8), (.62, 6), (1, 0)])
+            p['lean'] = kf(t2, [(0, 1), (.28, -4), (.42, 6), (.62, 4), (1, 1)])
+            p['A'] = kf(t2, [(0, 1), (.28, -16), (.42, 92), (.62, 86), (1, 1)])
+            p['shx'] = kf(t2, [(0, 0), (.28, -3), (.42, 13), (.62, 11), (1, 0)])   # torso twist: weapon shoulder comes forward
+            p['W'] = kf(t2, [(0, 58), (.28, 92), (.42, 95), (.62, 92), (1, 58)])
+            p['wt'] = 0   # weapon never slides in the grip
+            p['Af'] = kf(t2, [(0, -1), (.28, 10), (.42, -14), (.62, -12), (1, -1)])   # off hand stays behind the body, swings back as counterweight
+            p['head'] = kf(t2, [(0, 0), (.28, 5), (.42, -6), (1, 0)])
+            p['pack'] = kf(t2, [(0, 0), (.28, 3), (.46, -5), (.7, 2), (1, 0)])
+            # front foot steps forward, rear leg pushes back: legs never cross (see matrices: L drives the leg with larger x)
+            p['L'] = kf(t2, [(0, 0), (.28, -8), (.42, 24), (.62, 24), (1, 0)])    # L = front leg
+            p['Lf'] = kf(t2, [(0, 0), (.28, 6), (.42, -20), (.62, -20), (1, 0)])   # Lf = rear leg
+            p['dy'] = kf(t2, [(0, 0), (.28, 2), (.36, -6), (.46, 0), (1, 0)])
+            p['sy'] = kf(t2, [(0, 1), (.28, .95), (.36, 1.04), (.46, .95), (.7, 1), (1, 1)])
+            p['sx'] = 2 - p['sy']
+            p['fx'] = .36 < t2 < .62
         elif kind == "spear":
             p['dx'] = kf(t2, [(0, 0), (.32, -12), (.46, 30), (.64, 30), (1, 0)])
             p['lean'] = kf(t2, [(0, 4), (.32, -10), (.46, 14), (.64, 12), (1, 4)])
@@ -244,26 +263,62 @@ def pose(kind, anim, t):
             p['sy'] = kf(t2, [(0, 1), (.30, .92), (.38, 1.07), (.52, .90), (.62, .96), (.8, 1), (1, 1)])
             p['sx'] = 1 + (1 - p['sy']) * .8
             p['fx'] = .40 < t2 < .78
+    elif anim == "combo":   # 迅切连击 = three thrusts, the last one a dash; hits at t = .338/.471/.75 (DaggerSkill.Hits / .68s)
+        p['dx'] = kf(t, [(0, 0), (.16, -8), (.26, -4), (.338, 20), (.40, 14), (.471, 32), (.60, 18), (.75, 66), (.86, 66), (1, 0)])
+        p['A'] = kf(t, [(0, 1), (.16, -18), (.26, -10), (.338, 92), (.40, 30), (.471, 94), (.60, -22), (.75, 96), (.86, 92), (1, 1)])
+        p['W'] = kf(t, [(0, 58), (.16, 88), (.26, 86), (.338, 94), (.40, 80), (.471, 94), (.60, 90), (.75, 95), (.86, 92), (1, 58)])
+        p['shx'] = kf(t, [(0, 0), (.16, -4), (.26, -3), (.338, 12), (.40, 6), (.471, 13), (.60, -4), (.75, 15), (.86, 13), (1, 0)])
+        p['tilt'] = kf(t, [(0, 0), (.16, -6), (.338, 6), (.40, 3), (.471, 7), (.60, -7), (.75, 11), (.86, 9), (1, 0)])
+        p['lean'] = kf(t, [(0, 1), (.16, -5), (.338, 6), (.40, 3), (.471, 7), (.60, -6), (.75, 10), (.86, 8), (1, 1)])
+        p['Af'] = kf(t, [(0, -1), (.16, 8), (.338, -12), (.40, -6), (.471, -14), (.60, 10), (.75, -20), (1, -1)])
+        p['head'] = kf(t, [(0, 0), (.16, 5), (.338, -5), (.471, -5), (.60, 5), (.75, -7), (1, 0)])
+        p['pack'] = kf(t, [(0, 0), (.16, 3), (.36, -4), (.48, -4), (.60, 3), (.78, -6), (1, 0)])
+        p['L'] = kf(t, [(0, 0), (.16, -8), (.338, 20), (.40, 16), (.471, 24), (.60, -8), (.75, 30), (.86, 30), (1, 0)])
+        p['Lf'] = kf(t, [(0, 0), (.16, 8), (.338, -18), (.40, -14), (.471, -20), (.60, 8), (.75, -26), (.86, -26), (1, 0)])
+        p['dy'] = kf(t, [(0, 0), (.16, 3), (.338, 0), (.60, 3), (.68, -6), (.75, 0), (1, 0)])
+        p['sy'] = kf(t, [(0, 1), (.16, .92), (.30, 1.03), (.40, .97), (.47, 1.03), (.60, .91), (.72, 1.06), (.80, .95), (.92, 1), (1, 1)])
+        p['sx'] = 2 - p['sy']
+        p['fx'] = .29 < t < .36 or .42 < t < .49 or .66 < t < .80
+        p['ghost'] = .28 < t < .50 or .64 < t < .84          # orange afterimages while dashing
+        p['glint'] = .08 < t < .20 or .54 < t < .62           # blade flash on wind-up
     if p['W'] is None:  # weapon rides along with the arm
-        base = {"dagger": 95, "spear": 168, "hammer": 112}[kind]
-        p['W'] = p['A'] * (1 if kind != "spear" else .35) + base
+        base = {"dagger": 58, "spear": 168, "hammer": 112}[kind]
+        p['W'] = p['A'] * (0.3 if kind == "dagger" else (1 if kind != "spear" else .35)) + base
     return p
 
 def matrices(parts, p):
-    root = T((ROOT_X + p['dx']) * R, (GROUND + p['dy']) * R) @ S(p['sx'], p['sy'])
-    torso = root @ T(0, -21 * R) @ Rm(-p['lean'])
-    head = torso @ T(2 * R, -29 * R) @ Rm(-p['head'])
-    pack = torso @ T(-21 * R, -20 * R) @ Rm(-p['pack'])
+    rg = parts['armor'].get('rig') or {}
+    hip = rg.get('hip', (0, -21)); hd = rg.get('head', (2, -29)); pk = rg.get('pack', (-21, -20))
+    ln = rg.get('leg_near', (5, 0)); lf = rg.get('leg_far', (-5, 0))
+    root = T((ROOT_X + p['dx']) * R, (GROUND + p['dy']) * R) @ Rm(-p.get('tilt', 0)) @ S(p['sx'], p['sy'])
+    torso = root @ T(hip[0] * R, hip[1] * R) @ Rm(-p['lean'])
+    head = torso @ T(hd[0] * R, hd[1] * R) @ Rm(-p['head']) @ S(1 / p['sx'], 1 / p['sy'])  # head keeps its shape; only the body squashes
+    pack = torso @ T(pk[0] * R, pk[1] * R) @ Rm(-p['pack'])
     sh, shf = parts['armor']['shoulder'], parts['armor']['shoulderF']
-    armN = torso @ T(sh[0] * R, sh[1] * R) @ Rm(p['A'])
+    armN = torso @ T((sh[0] + p.get('shx', 0)) * R, sh[1] * R) @ Rm(p['A'])
     armF = torso @ T(shf[0] * R, shf[1] * R) @ Rm(p['Af'])
     ap = parts['armor']['arm']
-    handM = armN @ T(0, (ap.img.size[1] / R - 11) * R - ap.pivot[1])  # hand point = 11 units above image bottom
+    hp = parts['armor'].get('hand_pt')
+    if hp: handM = armN @ T(hp[0] * R, hp[1] * R)   # explicit hand point from manifest (arm.hand)
+    else: handM = armN @ T(0, (ap.img.size[1] / R - 11) * R - ap.pivot[1])  # default: 11 units above image bottom
+    handF = armF @ T(*((hp[0] * R, hp[1] * R) if hp else (0, (ap.img.size[1] / R - 11) * R - ap.pivot[1])))
     wM = handM @ Rm(p['W'] - p['A']) @ T(0, p['wt'] * R)
-    legN = root @ T(5 * R, -21 * R) @ Rm(p['L'])
-    legF = root @ T(-5 * R, -21 * R) @ Rm(p['Lf'])
-    return dict(root=root, torso=torso, head=head, pack=pack, armN=armN, armF=armF, hand=handM, wpn=wM,
+    aN, aF = (p['L'], p['Lf']) if ln[0] >= lf[0] else (p['Lf'], p['L'])   # pose L/Lf = front/rear leg
+    legN = root @ T((hip[0] + ln[0]) * R, (hip[1] + ln[1]) * R) @ Rm(aN)
+    legF = root @ T((hip[0] + lf[0]) * R, (hip[1] + lf[1]) * R) @ Rm(aF)
+    return dict(root=root, torso=torso, head=head, pack=pack, armN=armN, armF=armF, hand=handM, handF=handF, wpn=wM,
                 legN=legN, legF=legF)
+
+def far_side(part, shade=0.62):
+    """Far-side copy of a limb: mirrored (so it is not a clone of the near limb) and darkened (reads as further away)."""
+    q = Part.__new__(Part); q.d = None
+    im = ImageOps.mirror(part.img)
+    r, g, b, a = im.split()
+    r, g, b = [c.point(lambda v: int(v * shade)) for c in (r, g, b)]
+    q.img = Image.merge("RGBA", (r, g, b, a))
+    q.pivot = (part.img.size[0] - part.pivot[0], part.pivot[1])
+    q.tip = None if part.tip is None else (-part.tip[0], part.tip[1])
+    return q
 
 def blit(canvas, part, M):
     full = M @ T(-part.pivot[0], -part.pivot[1])
@@ -278,8 +333,27 @@ def tip_of(parts, kind, anim, t):
     v = m['wpn'] @ np.array([tp[0], tp[1], 1.])
     return v[0], v[1]
 
+COMBO_HITS = (.338, .471, .75)
+ORANGE = (255, 74, 18)
+
+def silhouette(parts, m, color, alpha):
+    """Solid-colour copy of the whole body (afterimage)."""
+    lay = Image.new("RGBA", (300 * R, 260 * R), (0, 0, 0, 0))
+    a = parts['armor']
+    for part, key in ((parts['pack'], 'pack'), (a['legF'], 'legF'), (a['legN'], 'legN'), (a['torso'], 'torso'),
+                      (parts['head'], 'head'), (a['arm'], 'armN'), (parts['wpn'], 'wpn'), (parts['hand'], 'hand')):
+        blit(lay, part, m[key])
+    al = lay.split()[3].point(lambda v: int(v * alpha))
+    solid = Image.new("RGBA", lay.size, color + (255,)); solid.putalpha(al)
+    return solid
+
+def star(d, x, y, r, w, col):
+    for ang in (0, 90, 45, 135):
+        c, s_ = math.cos(math.radians(ang)), math.sin(math.radians(ang)); rr = r if ang % 90 == 0 else r * .55
+        d.line([(x - c * rr, y - s_ * rr), (x + c * rr, y + s_ * rr)], fill=col, width=max(1, int(w if ang % 90 == 0 else w * .6)))
+
 def render(sp, anim, t):
-    parts = dict(armor=sp['armor'](), head=sp['head'](), pack=sp['pack'](), wpn=sp['wpn'](), hand=hand())
+    parts = dict(armor=sp['armor'](), head=sp['head'](), pack=sp['pack'](), wpn=sp['wpn'](), hand=sp['hand']() if 'hand' in sp else hand())
     kind = sp['kind']
     p = pose(kind, anim, t); m = matrices(parts, p)
     cv = Image.new("RGBA", (300 * R, 260 * R), BG)
@@ -290,26 +364,55 @@ def render(sp, anim, t):
     cx = (ROOT_X + p['dx']) * R
     d.ellipse([cx - sw / 2, GROUND * R - sh_ / 2, cx + sw / 2, GROUND * R + sh_ / 2], fill=(18, 20, 22, 70))
     a = parts['armor']
+    if p.get('ghost'):
+        for k, al in ((2, .12), (1, .22)):
+            gp = pose(kind, anim, max(0, t - k * .03)); gm = matrices(parts, gp)
+            cv.alpha_composite(silhouette(parts, gm, ORANGE, al))
     blit(cv, parts['pack'], m['pack'])
-    blit(cv, a['armF'], m['armF'])
-    blit(cv, a['legs'], m['legF'])
-    blit(cv, a['legs'], m['legN'])
+    blit(cv, a['legF'], m['legF'])
+    # far-side arm: behind the torso, mirrored + darkened so it reads as the other arm, not a copy of the near one
+    blit(cv, far_side(a['armF']), m['armF'])
+    blit(cv, far_side(parts['hand']), m['handF'])
+    blit(cv, a['legN'], m['legN'])
     blit(cv, a['torso'], m['torso'])
     blit(cv, parts['head'], m['head'])
-    blit(cv, a['arm'], m['armN'])
-    blit(cv, parts['wpn'], m['wpn'])
-    blit(cv, parts['hand'], m['hand'])
-    # tip trail
+    # tip trail: drawn BEHIND arm/blade so the dagger itself always stays visible in the hand
     if p['fx']:
         pts = []
-        for k in range(17):
+        for k in range(10):
             tt = t - k * 0.009
             pts.append(tip_of(parts, kind, anim, max(0, tt)))
         for i in range(len(pts) - 1):
-            al = int(230 * (1 - i / 16)); wd = int((9 - i * .5) * R * (0.9 if kind != "spear" else 0.55))
+            al = int(230 * (1 - i / 9)); wd = int((5 - i * .4) * R * (0.9 if kind != "spear" else 0.55))
             d.line([pts[i], pts[i + 1]], fill=(255, 120, 40, al), width=max(2, wd))
             d.line([pts[i], pts[i + 1]], fill=(255, 255, 255, int(al * .8)), width=max(1, wd // 3))
-    cv = cv.crop((20 * R, 50 * R, 230 * R, 250 * R))
+    blit(cv, a['arm'], m['armN'])
+    blit(cv, parts['wpn'], m['wpn'])
+    blit(cv, parts['hand'], m['hand'])
+    if p.get('glint'):
+        tx, ty = tip_of(parts, kind, anim, t); ph = math.sin(math.pi * ((t - .08) / .12 if t < .3 else (t - .54) / .08))
+        star(d, tx, ty, 9 * R * ph, 2 * R, (255, 255, 255, 240)); star(d, tx, ty, 5 * R * ph, 1 * R, ORANGE + (255,))
+    if anim == "combo":                                  # hit spark: white core + radiating rays, bigger on the finisher
+        for i, h in enumerate(COMBO_HITS):
+            k = (t - h) / .08
+            if 0 <= k < 1:
+                big = 1.7 if i == 2 else 1.0; fade = 1 - k
+                hx, hy = tip_of(parts, kind, anim, h)
+                core = (7 * (1 - k * .6)) * R * big
+                d.ellipse([hx - core, hy - core, hx + core, hy + core], fill=(255, 255, 255, int(240 * fade)))
+                for j in range(8):
+                    ang = math.radians(j * 45 + 22 * i + (0 if j % 2 else 10))
+                    r0 = (6 + 14 * k) * R * big; r1 = r0 + (16 if j % 2 == 0 else 9) * R * big * fade
+                    c_, s_ = math.cos(ang), math.sin(ang)
+                    d.line([(hx + c_ * r0, hy + s_ * r0), (hx + c_ * r1, hy + s_ * r1)], fill=ORANGE + (int(255 * fade),), width=max(1, int(3 * R * fade * big)))
+                if i == 2:
+                    r_ = (10 + 34 * k) * R
+                    d.ellipse([hx - r_, hy - r_ * .55, hx + r_, hy + r_ * .55], outline=(255, 255, 255, int(200 * fade)), width=max(1, int(2 * R * fade)))
+    if p.get('dust'):
+        for k in range(3):
+            r_ = (4 + k * 3) * R; x_ = (ROOT_X + p['dx'] - 26 - k * 12) * R
+            d.ellipse([x_ - r_, (GROUND - 3) * R - r_, x_ + r_, (GROUND - 3) * R + r_], fill=(196, 199, 193, 200))
+    cv = cv.crop((20 * R, 50 * R, 260 * R, 250 * R))
     return cv.resize((CELL_W, CELL_H), Image.LANCZOS)
 
 def sheet(anim, nframes, sets, path, dur=70):
@@ -327,8 +430,8 @@ if __name__ == "__main__":
     # python rig.py [outdir] [manifest1.json manifest2.json ...]
     out = sys.argv[1] if len(sys.argv) > 1 else "."
     sets = SETS if len(sys.argv) <= 2 else {os.path.basename(os.path.dirname(os.path.abspath(a))): set_from_manifest(a) for a in sys.argv[2:]}
-    for anim, n in (("idle", 14), ("walk", 14), ("attack", 20)):
-        fr = sheet(anim, n, sets, f"{out}/rig_{anim}.gif", dur=70 if anim != "idle" else 90)
+    for anim, n in (("idle", 14), ("walk", 14), ("attack", 20), ("combo", 34)):
+        fr = sheet(anim, n, sets, f"{out}/rig_{anim}.gif", dur={"idle": 90, "combo": 40}.get(anim, 70))
         fr[n // 2].save(f"{out}/rig_{anim}_mid.png")
         print(anim, "ok", len(fr))
 
@@ -348,7 +451,8 @@ def export_selftest(outdir):
             ent = dict(file=key + ".png", pivot=[part.pivot[0] / R + 2, part.pivot[1] / R + 2])
             if part.tip: ent["tip"] = [part.tip[0] / R + part.pivot[0] / R + 2, part.tip[1] / R + part.pivot[1] / R + 2]
             parts[key] = ent
-        save("torso", ar['torso']); save("arm", ar['arm']); save("legs", ar['legs'])
+        save("torso", ar['torso']); save("arm", ar['arm']); save("leg_near", ar['legN']); save("leg_far", ar['legF']); save("hand", hand())
         save("head", sp['head']()); save("pack", sp['pack']()); save("weapon", sp['wpn']())
+        parts["arm"]["hand"] = [parts["arm"]["pivot"][0], parts["arm"]["pivot"][1] + ar['arm'].img.size[1] / R - 11 - ar['arm'].pivot[1] / R]
         json.dump(dict(scale=4, weapon_class=sp['kind'], shoulder=list(ar['shoulder']), shoulderF=list(ar['shoulderF']),
                        parts=parts), open(os.path.join(d, "parts.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)

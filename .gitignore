@@ -125,3 +125,7 @@ InitTestScene*.unity*
 __pycache__/
 *.pyc
 *.b64
+
+# Unity crash-recovery scenes
+/ThreadZero/Assets/_Recovery/
+/ThreadZero/Assets/_Recovery.meta

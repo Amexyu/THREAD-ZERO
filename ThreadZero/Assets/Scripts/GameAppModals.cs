@@ -29,17 +29,19 @@ namespace ThreadZero
             EquipmentBase target = Catalog.Find(model.state.recoveryTarget);
             for (int r = 0; r < Catalog.RegionNames.Length; r++)
             {
-                float top = y + 88 + r * 102; bool unlocked = r <= model.state.unlockedRegion, here = r == model.state.region;
-                Ui.Fill(x + 28, top, w - 56, 92, here ? Ui.Ink : Ui.Stage); Ui.Frame(x + 28, top, w - 56, 92, here ? 2 : 1, here ? Ui.Ink : Ui.Rule);
+                float top = y + 84 + r * 84; bool unlocked = r <= model.state.unlockedRegion, here = r == model.state.region;
+                StageDef stage = Chapters.Stage(r);
+                Ui.Fill(x + 28, top, w - 56, 76, here ? Ui.Ink : Ui.Stage); Ui.Frame(x + 28, top, w - 56, 76, here ? 2 : 1, here ? Ui.Ink : Ui.Rule);
                 Color main = here ? Ui.Panel : unlocked ? Ui.Ink : Ui.Grey, sub = here ? Ui.MuteOnInk : Ui.Mute;
-                Ui.Text(x + 48, top, 110, 92, "0" + (r + 1), 50, here ? Ui.Orange : main, TextAnchor.MiddleLeft, true, true);
-                Ui.Text(x + 160, top + 10, 420, 32, Catalog.RegionNames[r], 21, main, TextAnchor.MiddleLeft, true);
-                string hint = unlocked ? "回收等级 " + (r + 1) + " · 首领：" + Catalog.BossNames[r] : "击败上一关首领后开放";
-                Ui.Text(x + 160, top + 42, 420, 22, hint, 14, sub, TextAnchor.MiddleLeft);
-                if (target != null && Catalog.SourceRegion(target.id) == Catalog.District(r))
-                    Ui.Text(x + 160, top + 64, 420, 22, "回收目标产地 · " + target.name, 13, here ? Ui.Orange : Ui.OrangeInk, TextAnchor.MiddleLeft, true);
+                Ui.Text(x + 48, top, 110, 76, Catalog.StageCode(r), 36, here ? Ui.Orange : main, TextAnchor.MiddleLeft, true, true);
+                string kind = stage.kind == StageKind.Boss ? "  · 首领" : stage.kind == StageKind.Elite ? "  · 精英" : "";
+                Ui.Text(x + 160, top + 6, 420, 30, Catalog.RegionNames[r] + kind, 20, main, TextAnchor.MiddleLeft, true);
+                int count = 0; foreach (WaveDef wd in stage.waves) count += wd.Count;
+                string hint = !unlocked ? "通过上一关后开放" : stage.kind == StageKind.Boss ? "首领：" + Catalog.BossNames[r] + " · 会呼叫支援" : stage.waves.Length + " 波 · 约 " + count + " 只";
+                if (target != null && Catalog.SourceRegion(target.id) == Catalog.District(r)) hint += " · 回收目标产地";
+                Ui.Text(x + 160, top + 38, 420, 24, hint, 14, sub, TextAnchor.MiddleLeft);
                 string label = here ? "正在行动" : unlocked ? "前往" : "未解锁";
-                if (Ui.Button(x + w - 208, top + 22, 160, 48, label, here ? 3 : 1, unlocked && !here, 16)) { ChangeRegion(r); return; }
+                if (Ui.Button(x + w - 208, top + 14, 160, 48, label, here ? 3 : 1, unlocked && !here, 16)) { ChangeRegion(r); return; }
             }
         }
 

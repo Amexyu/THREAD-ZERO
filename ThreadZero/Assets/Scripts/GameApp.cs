@@ -9,7 +9,7 @@ namespace ThreadZero
     // 页面绘制分在 GameAppAction / GameAppLoadout / GameAppWardrobe / GameAppModals 四个文件里。
     public sealed partial class GameApp : MonoBehaviour
     {
-        private struct Floater { public float value, born, drift; public bool critical, onEnemy; }
+        private struct Floater { public float value, born, drift, lift, x; public bool critical, onEnemy; }
 
         private GameModel model;
         private CombatSession combat;
@@ -33,6 +33,8 @@ namespace ThreadZero
         private int travelKind, wreckDistrict;
         private bool wreckShown, wreckBoss, autoAdvance = true;
         private int packShiftsSeen; private float packShiftAt = -10;
+        // v0.14 关卡转场：transitionLeft > 0 时战斗暂停，播放约 2 秒的转场，中点切换关卡。
+        private float transitionLeft, clearedFor; private int transitionFrom, transitionTo; private bool transitionSwapped;
         private float TravelProgress { get { float p = 1 - travelLeft / Mathf.Max(.01f, travelTotal); return p * p * (3 - 2 * p); } }
 
         private void Awake()
@@ -54,6 +56,7 @@ namespace ThreadZero
             combat.OnBasicAttack = () => animationState.TriggerAttack(model.IsMelee);
             combat.OnAdvance = dt => animationState.Tick(dt);
             combat.OnHit = () => animationState.TriggerHit();
+            combat.OnDamage = (value, critical, x) => AddFloater(value, critical, true, x);
             combat.OnCheckpoint = Save;
             combat.OnMessage = message => Notify(message, 4);
             combat.OnDrop = (item, fresh) =>
@@ -61,7 +64,7 @@ namespace ThreadZero
                 if (TryAutoSalvage(item, fresh)) { Save(); return; }
                 string title = Catalog.QualityNames[(int)item.quality] + (fresh ? " · 新外观" : "");
                 Notify(title, (int)item.quality >= 2 ? 5 : 2.5f, item.uid);
-                lastDrop = item; dropWorldX = combat.MovementEnabled?combat.Movement.EnemyX:worldX; dropEffectFrom = clock; dropEffectUntil = clock + QualityVisual.DropDuration(item.quality);
+                lastDrop = item; dropWorldX = combat.lastKillX; dropEffectFrom = clock; dropEffectUntil = clock + QualityVisual.DropDuration(item.quality);
                 recentDrops.Insert(0, item.uid); if (recentDrops.Count > 5) recentDrops.RemoveAt(5);
                 unseen.Add(item.uid);
                 Play((int)item.quality >= 2 ? rareSound : dropSound); Save();
@@ -88,37 +91,38 @@ namespace ThreadZero
             float budget = paused ? 0 : Mathf.Min(.15f, delta) * speed;
             for (int guard = 0; guard < 64 && budget > .0001f; guard++)
             {
-                if (travelLeft > 0)
+                if (transitionLeft > 0)
                 {
-                    float part = Mathf.Min(travelLeft, budget); budget -= part; travelLeft -= part;
+                    float part = Mathf.Min(transitionLeft, budget); budget -= part; transitionLeft -= part;
                     animationState.Tick(part);
-                    worldX = travelFrom + travelDistance * TravelProgress;
-                    if(travelLeft<=0 && combat.MovementEnabled)combat.Movement.ResetAtCamera(worldX);
+                    if (!transitionSwapped && transitionLeft <= Chapters.StageTransition * .5f)
+                    {
+                        transitionSwapped = true;
+                        model.ChangeRegion(transitionTo);
+                        combat.ResetRegion(); animationState.Clear(); floaters.Clear(); Save();
+                    }
                     continue;
                 }
                 float step = Mathf.Min(.05f, budget); budget -= step;
-                int wave = combat.wave, bosses = model.state.bosses, region = model.state.region; bool wasBoss = combat.Boss, wasDown = combat.recovery > 0;
-                int targetVersion=combat.Movement.TargetVersion;float oldEnemyWorld=combat.Movement.EnemyX;
+                int region = model.state.region;
                 combat.Tick(step);
-                if(combat.MovementEnabled)
-                {
-                    worldX=combat.Movement.CameraX;
-                    if(targetVersion!=combat.Movement.TargetVersion && !wasDown)
-                    {wreckShown=true;wreckWorldX=oldEnemyWorld;wreckDistrict=Catalog.District(region);wreckBoss=wasBoss;}
-                }
+                worldX = combat.Movement.CameraX;
                 if (combat.packShifts != packShiftsSeen) { packShiftsSeen = combat.packShifts; packShiftAt = clock; }
-                if (wasDown && combat.recovery <= 0)
-                {if(combat.MovementEnabled)combat.Movement.ResetAtCamera(worldX);else BeginTravel(1,region,false,false);}
-                else if (model.state.bosses != bosses)
+                if (combat.RetreatRequested)
                 {
-                    // 首领回收：开着自动推进且下一关已解锁就直接前往，否则回到本关入口继续刷。
-                    if (autoAdvance && region < model.state.unlockedRegion) ChangeRegion(region + 1, false);
-                    else BeginTravel(2, region, true, true);
+                    // 被打倒：撤回上一关刷（开着自动推进时，过关后会自动再挑战）。
+                    combat.RetreatRequested = false;
+                    BeginStageTransition(Mathf.Max(0, region - 1));
                 }
-                else if (combat.wave != wave && !combat.MovementEnabled) BeginTravel(1, region, false, true);
+                else if (combat.StageCleared)
+                {
+                    // 过关：先让角色往前走一小段，再转场。开着自动推进就去下一关，否则重刷本关。
+                    clearedFor += step;
+                    if (clearedFor >= .8f)
+                        BeginStageTransition(autoAdvance && region < model.state.unlockedRegion ? region + 1 : region);
+                }
             }
-            if (combat.hitFlash > previousHit + .001f) AddFloater(combat.lastPlayerDamage, combat.lastCritical, true);
-            if (combat.hurtFlash > previousHurt + .001f) AddFloater(combat.lastEnemyDamage, false, false);
+            if (combat.hurtFlash > previousHurt + .001f) AddFloater(combat.lastEnemyDamage, false, false, combat.Movement.HeroX);
             previousHit = combat.hitFlash; previousHurt = combat.hurtFlash;
             float ease = 1 - Mathf.Exp(-12 * delta);
             healthShown = Mathf.Lerp(healthShown, Mathf.Clamp01(combat.health / Mathf.Max(1, model.Total().health)), ease);
@@ -126,10 +130,17 @@ namespace ThreadZero
             for (int i = floaters.Count - 1; i >= 0; i--) if (clock - floaters[i].born > .9f) floaters.RemoveAt(i);
             saveTimer += delta; if (saveTimer >= 30) Save();
         }
-        private void AddFloater(float value, bool critical, bool onEnemy)
+        private void AddFloater(float value, bool critical, bool onEnemy, float x)
         {
-            if (floaters.Count > 12) floaters.RemoveAt(0);
-            floaters.Add(new Floater { value = value, born = clock, critical = critical, onEnemy = onEnemy, drift = (floaters.Count % 3 - 1) * 26 });
+            if (floaters.Count > 16) floaters.RemoveAt(0);
+            // 群怪时一帧里会有很多伤害：横向随机散开、纵向错层，避免数字叠成一团。
+            floaters.Add(new Floater { value = value, born = clock, critical = critical, onEnemy = onEnemy, x = x, drift = UnityEngine.Random.Range(-46f, 46f), lift = UnityEngine.Random.Range(0f, 56f) });
+        }
+        private void BeginStageTransition(int to)
+        {
+            if (transitionLeft > 0) return;
+            transitionFrom = model.state.region; transitionTo = Mathf.Clamp(to, 0, model.state.unlockedRegion);
+            transitionLeft = Chapters.StageTransition; transitionSwapped = false; clearedFor = 0;
         }
         private void BeginTravel(int kind, int region, bool boss, bool leaveWreck)
         {
@@ -140,6 +151,23 @@ namespace ThreadZero
         private void Save() { if (!daggerReview && model != null && saves != null) lastSaveOk = saves.Save(model.state); saveTimer = 0; }
         private void OnApplicationQuit() { Save(); }
         private void OnApplicationPause(bool value) { if (value) Save(); }
+        // 测试用：F2 依次换上第一章的整套外观（不用等掉落）：h0c1 → A → B → C → D → 循环。
+        private int testOutfit;
+        private static readonly string[][] TestOutfits = {
+            new[] { "h0", "c1", "b0", "w1" }, new[] { "h1", "c2", "b1", "w0" }, new[] { "h2", "c3", "b2", "w2" },
+            new[] { "h3", "c4", "b3", "w3" }, new[] { "h4", "c2", "b4", "w4" } };
+        private void GrantTestOutfit()
+        {
+            string[] set = TestOutfits[testOutfit++ % TestOutfits.Length];
+            foreach (string id in set)
+            {
+                Item item = model.state.items.FirstOrDefault(x => x.baseId == id);
+                if (item == null) { item = model.Create(id, Quality.Common, 1); model.state.items.Add(item); model.Unlock(id); }
+                model.Equip(item.uid);
+            }
+            Notify("测试外观：" + string.Join(" / ", set), 3);
+        }
+
         private void Notify(string value, float duration = 3, string item = null)
         { toast = value; toastFrom = clock; toastUntil = clock + duration; toastItem = item; }
 
@@ -160,10 +188,9 @@ namespace ThreadZero
         // show：玩家手动换关时跳回行动页；自动推进时不打断玩家正在看的页面。
         private void ChangeRegion(int region, bool show = true)
         {
-            if (!model.ChangeRegion(region)) return;
-            combat.ResetRegion(); animationState.Clear(); floaters.Clear(); Save();
+            if (region < 0 || region > model.state.unlockedRegion) return;
             if (show) { navigation.Close(); Go(GameScreen.Action); }
-            BeginTravel(3, region, false, false);
+            BeginStageTransition(region);
         }
 
         private void OnGUI()
@@ -179,6 +206,7 @@ namespace ThreadZero
                 else if (!navigation.HasModal && current.keyCode == KeyCode.Alpha2) { Go(GameScreen.Loadout); current.Use(); }
                 else if (!navigation.HasModal && current.keyCode == KeyCode.Alpha3) { Go(GameScreen.Wardrobe); current.Use(); }
                 else if (!navigation.HasModal && current.keyCode == KeyCode.Alpha4) { Go(GameScreen.Workshop); current.Use(); }
+                else if (!navigation.HasModal && current.keyCode == KeyCode.F2) { GrantTestOutfit(); current.Use(); }
             }
             Ui.FillScreen(Ui.Ground);
             bool modal = navigation.HasModal;
@@ -190,7 +218,13 @@ namespace ThreadZero
                 case GameScreen.Wardrobe: WardrobePage(); break;
                 case GameScreen.Workshop: WorkshopPage(); break;
             }
-            Rail(); Toast();
+            // 行动页：左侧导航栏跟着终端界面一起滑出 / 收起（纯净模式时藏在屏幕外）。
+            Matrix4x4 railMatrix = GUI.matrix;
+            if (navigation.Screen == GameScreen.Action)
+                GUI.matrix = Matrix4x4.Translate(new Vector3(-(1 - (1 - Mathf.Pow(1 - hudShow, 3))) * 110 * Ui.K, 0, 0)) * railMatrix;
+            Rail();
+            GUI.matrix = railMatrix;
+            Toast();
             Ui.Blocked = false;
             if (modal && navigation.HasModal) Modal();
         }
@@ -250,6 +284,7 @@ namespace ThreadZero
         // 整备和衣柜里的角色预览：按外套外观显示整帧，持近战武器外观时用持刃站姿。缺图时退回旧绘制。
         private void PreviewHero(float feetX, float feetY, float canvas, float oldX, float oldY, float oldW, float oldH)
         {
+            if(LayeredRigView.CanDraw(model)){LayeredRigView.Draw(model,feetX,feetY,canvas/HeroCanvas,LayeredRigView.Anim.Idle,clock/1.2f,Color.white);return;}
             if(DaggerActorView.Draw(model,feetX,feetY,canvas,0,Color.white))return;
             bool blade = model.Appearance(Slot.Weapon).attackStyle == AttackStyle.Melee;
             string headId = model.Equipped(Slot.Head) == null && model.state.appearance[(int)Slot.Head] == null

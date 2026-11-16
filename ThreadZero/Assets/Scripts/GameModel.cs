@@ -77,10 +77,19 @@ namespace ThreadZero
         public static readonly string[] QualityNames = Balance.Qualities.Select(q=>q.name).ToArray();
         // v0.8：六个关卡 = 三个街区 × 两层。后三关是同一街区的深层，敌人更强，掉落等级更高。
         public const int Districts = 3;
-        public static readonly string[] RegionNames = { "雨巷边界", "物流高架", "信号禁区", "雨巷深层", "高架深层", "禁区核心" };
+        // v0.14：region = 第一章的第几关（0..6 = 1-1..1-7）。名字是场景占位名，正式关卡名待定。
+        public static readonly string[] RegionNames = { "废液沟渠", "废液沟渠", "叠层棚户", "叠层棚户", "泵站管廊", "泵站管廊", "抽水总闸" };
+        public static string StageCode(int region) { return "1-" + (region + 1); }
+        /// 某件装备在第一章哪几关掉落（按 District 轮换），例如 "1-1 / 1-4 / 1-7"。
+        public static string SourceStages(string id)
+        {
+            int source = SourceRegion(id); var list = new System.Collections.Generic.List<string>();
+            for (int r = 0; r < RegionNames.Length; r++) if (District(r) == source) list.Add(StageCode(r));
+            return string.Join(" / ", list.ToArray());
+        }
         public static int LastRegion { get { return RegionNames.Length - 1; } }
         public static int District(int region) { return ((region % Districts) + Districts) % Districts; }
-        public static readonly string[] BossNames = { "巡检核心", "运输壁垒", "断讯监视者", "巡检核心·改", "运输壁垒·改", "断讯监视者·改" };
+        public static readonly string[] BossNames = { "巡检核心", "巡检核心", "运输壁垒", "运输壁垒", "断讯监视者", "断讯监视者", "运输壁垒" };
         public static readonly string[] StatNames = { "生命", "攻击", "防御", "攻速", "暴击", "幸运" };
         public static readonly float[] Multipliers = Balance.Qualities.Select(q=>q.multiplier).ToArray();
         public static readonly EquipmentBase[] All = {
@@ -139,7 +148,7 @@ namespace ThreadZero
             Validate();
             if (state.items.Count == 0)
             {
-                foreach (string id in new[] { "w0", "h0", "c0", "b0" })
+                foreach (string id in new[] { "w1", "h0", "c0", "b0" })   // v0.14：初始武器是 w1 匕首（带迅切连击）
                 {
                     Item item = Create(id, Quality.Common, 1);
                     state.items.Add(item);
@@ -191,6 +200,18 @@ namespace ThreadZero
                 // 旧存档的装备等级是 1–6（关卡序号），换算到新等级段的中间值。
                 foreach (Item item in state.items) item.level = Math.Min(Balance.MaxLicense, (item.level - 1) * Balance.LicenseStep + 3);
                 state.schema = 2;
+            }
+            if (state.schema < 3)
+            {
+                // v0.14：初始武器从 w0 短铳改成 w1 匕首。老存档补一把普通 w1；如果还拿着初始 w0 就顺手换上。
+                if (state.items.Count > 0 && !state.items.Any(x => x.baseId == "w1"))
+                {
+                    Item dagger = Create("w1", Quality.Common, 1);
+                    state.items.Add(dagger); Unlock("w1");
+                    Item held = state.items.FirstOrDefault(x => x.uid == state.equipped[(int)Slot.Weapon]);
+                    if (held == null || (held.baseId == "w0" && held.quality == Quality.Common)) state.equipped[(int)Slot.Weapon] = dagger.uid;
+                }
+                state.schema = 3;
             }
             state.collection = state.collection.Where(id => Catalog.Find(id) != null).Distinct().ToList();
             foreach (Item item in state.items) Unlock(item.baseId);
@@ -353,7 +374,7 @@ namespace ThreadZero
         }
         public bool Chance(double chance) { return rng.NextDouble() < chance; }
         // certain：精英必掉一件，但品质仍按普通规则抽取。
-        public Item Drop(bool boss, bool certain = false)
+        public Item Drop(bool boss, bool certain = false, bool elite = false)
         {
             if (!boss && !certain && !Chance(Balance.NormalDropChance)) return null;
             Quality q = RollQuality(boss);
@@ -366,7 +387,8 @@ namespace ThreadZero
             if (baseId == state.recoveryTarget) state.targetBossMisses = 0;
             else if (boss && TargetActive) state.targetBossMisses++;
             // 掉落等级落在本关的等级段里：首领偏高，其余随击败数小幅浮动（不额外消耗随机数）。
-            Item item = Create(baseId, q, state.region * Balance.LicenseStep + 1 + (boss ? 2 : 0) + state.kills % 3);
+            // v0.14：掉落等级由关卡决定（每关一个等级段），精英/首领掉段内偏高的等级。等级比品质更重要。
+            Item item = Create(baseId, q, Chapters.DropLevel(state.region, boss, elite, rng.NextDouble()));
             state.items.Add(item); Unlock(item.baseId); return item;
         }
         public Quality RollQuality(bool boss)

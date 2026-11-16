@@ -15,11 +15,16 @@ namespace ThreadZero
     public static class Balance
     {
         public const int Revision = 3;
+        // v0.15 武器类型的攻击方式：霰弹 = 多颗弹丸（多段伤害，可分散到身后的怪），手炮 = 落点爆炸范围伤害，重锤 = 前方横扫范围伤害。
+        public const int ShotgunPellets = 6; public const float ShotgunPellet = .2f, ShotgunSpread = 150;
+        public const float CannonSplash = .6f, CannonRadius = 120;
+        public const float HeavySplash = .7f, HeavyReach = 140;
         public const float BaseHealth=140, BaseAttack=16, BaseDefense=4, BaseCrit=.05f;
         public const float TrainingHealth=8, TrainingAttack=1.5f;
         public const int TrainingCap=20, MaxItemLevel=100;
         public const float CritCap=.75f, CritMultiplier=1.75f, HasteCap=2, LuckCap=30;
-        public const float ItemLevelGrowth=.03f, AffixLevelGrowth=.024f;
+        // v0.14：等级权重调高（每级 +8% / 词条 +6%），高两关的量产装备大致能打平低两关的特装。
+        public const float ItemLevelGrowth=.08f, AffixLevelGrowth=.06f;
         public const double NormalDropChance=.65, FeaturedBossChance=.35, TargetBossChance=.4;
         public const int RarePity=12, EpicPity=45, LegendaryPity=120, TargetBossGuarantee=8;
         public const float DroneInterval=2.4f, DroneDamage=.3f, MarkedDroneMultiplier=1.5f;

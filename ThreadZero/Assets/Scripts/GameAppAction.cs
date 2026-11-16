@@ -5,67 +5,68 @@ namespace ThreadZero
 {
     public sealed partial class GameApp
     {
-        private const float StageX = 128, StageY = 104, StageW = 1440, StageH = 624, GroundY = 572;
+        private const float StageX = 0, StageY = 0, StageW = 1600, StageH = 900, GroundY = 690;   // v0.15：战斗画面铺满全屏；界面平时隐藏（纯净模式），鼠标移到边缘才滑出
         // v0.8：镜头拉远。角色与敌人缩小，舞台里能看到更长的一段路。
         private const float HeroRestX = 428, HeroCanvas = 260, EnemyX = 1060, EnemyCanvas = 220, EnemyEliteCanvas = 260, EnemyBossCanvas = 300, PackSpacing = 136;
+        private LayeredRigView.Anim lastRigAnim; private float lastRigT;
         private float liveEnemyX=EnemyX;
+        private float hudShow, hudWantAt = -10;   // 0 = 纯净模式，1 = 终端界面完全滑出
 
+        private static float EaseOutBack(float x) { const float c1 = 1.70158f, c3 = c1 + 1; return 1 + c3 * Mathf.Pow(x - 1, 3) + c1 * Mathf.Pow(x - 1, 2); }
         private static float Wrap(float value, float period) { value %= period; return value < 0 ? value + period : value; }
         private static float Noise(int n) { n = (n << 13) ^ n; return ((n * (n * n * 15731 + 789221) + 1376312589) & 0x7fffffff) / 2147483647f; }
 
         private void ActionPage()
         {
             Stats stats = model.Total();
-            ActionHeader();
+            // 鼠标停在上 / 下边缘或左侧导航栏 → 呼出终端；离开 1.5 秒后收回。暂停、维修、弹窗时常驻。
+            bool wantHud = Ui.Hover(0, 0, 1600, 104) || Ui.Hover(0, 724, 1600, 176) || Ui.Hover(0, 0, 104, 900)
+                || paused || combat.recovery > 0 || navigation.HasModal;
+            if (wantHud) hudWantAt = clock;
+            if (Event.current.type == EventType.Repaint)
+                hudShow = Mathf.MoveTowards(hudShow, clock - hudWantAt < 1.5f ? 1 : 0, Time.unscaledDeltaTime * 6);
             int region = model.state.region, district = Catalog.District(region);
             bool deep = region >= Catalog.Districts, moving = travelLeft > 0;
             bool boss = combat.Boss, melee = model.IsMelee, down = combat.recovery > 0;
-            // 行进途中战斗逻辑暂停，上一场战斗残留的闪光不参与显示。
-            bool nearCombat=combat.HeroInRange || combat.EnemyInRange;
+            bool nearCombat = combat.HeroInRange || combat.EnemyInRange;
             float hit = moving || !nearCombat ? 0 : combat.hitFlash, dash = moving || !nearCombat ? 0 : combat.dashFlash;
 
             Ui.Fill(StageX, StageY, StageW, StageH, deep ? Ui.Hex(0xE9EAE5) : Ui.Stage);
             Ui.BeginClip(StageX, StageY, StageW, StageH, 0);
             Backdrop(region, district, deep);
 
-            float enemyCanvas = boss ? EnemyBossCanvas : combat.Elite ? EnemyEliteCanvas : EnemyCanvas;
-            float enemyTop = GroundY - enemyCanvas * .82f, enemyMid = GroundY - enemyCanvas * .42f;
-            // 敌人固定在世界里：行进时它随着地面从右侧进入画面。
-            float enemyX = !moving && combat.MovementEnabled?combat.Movement.EnemyScreenX:EnemyX + (moving ? travelFrom + travelDistance - worldX : 0);
-            liveEnemyX=enemyX;
-            bool heroWalking=moving || (!down && combat.MovementEnabled && combat.Movement.HeroMoving);
-            bool enemyWalking=!moving && !down && combat.MovementEnabled && combat.Movement.EnemyMoving;
-            float heroWalkPhase=moving?worldX/24f:combat.Movement.HeroTravel/24f;
-            float enemyWalkPhase=combat.Movement.EnemyTravel/21f;
-
-            if (wreckShown)
+            // v0.14 群怪：每只怪各自的世界坐标 → 屏幕坐标。depth 让怪群前后错开、互相重叠。
+            Enemy target = combat.Target;
+            float targetCanvas = target != null ? target.canvas : EnemyCanvas;
+            float enemyMid = GroundY - targetCanvas * .42f;
+            liveEnemyX = target != null ? target.x - worldX : StageX + StageW + 100;
+            var back = new List<Enemy>(); var front = new List<Enemy>();
+            foreach (Enemy e in combat.enemies)
             {
-                float wreckX = combat.MovementEnabled?wreckWorldX-worldX:EnemyX - (worldX - wreckWorldX);
-                if (wreckX < StageX - 360) wreckShown = false; else DrawWreck(wreckX);
+                if (!e.Alive) { DrawEnemyWreck(e); continue; }
+                if (e.depth < .5f) back.Add(e); else front.Add(e);
             }
+            back.Sort((a, b) => a.depth.CompareTo(b.depth)); front.Sort((a, b) => a.depth.CompareTo(b.depth));
+            foreach (Enemy e in back) DrawEnemyUnit(e, e == target, deep);
 
-            float lunge = !combat.MovementEnabled && dash > 0 ? 90 * Mathf.Sin(dash / .4f * Mathf.PI) : 0;
+            bool heroWalking = !down && combat.Movement.HeroMoving;
+            float heroWalkPhase = combat.Movement.HeroTravel / 24f;
             DollPose pose = animationState.Pose(down);
-            bool daggerSample = DaggerActorView.CanDraw(model);
-            float approach = !combat.MovementEnabled && !moving && melee && pose.attackProgress > 0 ? Mathf.Sin(pose.attackProgress * Mathf.PI) * (EnemyX - enemyCanvas * .30f - HeroRestX - 125) : 0;
-            if(daggerSample && !combat.MovementEnabled)
-            {
-                float age=combat.DaggerAge, contact=combat.DaggerCombo?.23f:DaggerSkill.BasicHit;
-                float recover=combat.DaggerCombo?.56f:.18f, duration=combat.DaggerCombo?DaggerSkill.Duration:DaggerSkill.BasicDuration;
-                float reach=age<contact?Mathf.SmoothStep(0,1,age/contact):age<recover?1:Mathf.SmoothStep(1,0,(age-recover)/(duration-recover));
-                approach=!moving && !down && combat.DaggerActive?reach*(EnemyX-enemyCanvas*.30f-HeroRestX-HeroCanvas*.42f):0;
-            }
-            float stride = heroWalking?Mathf.Abs(Mathf.Sin(heroWalkPhase))*7:0;
-            float heroFeetX = !moving && combat.MovementEnabled?combat.Movement.HeroScreenX:HeroRestX+lunge+approach;
-            float heroFeetY = GroundY + 2 - stride;
-            Ui.Fill(heroFeetX - 56, GroundY - 3, 112, 5, Ui.Alpha(Ui.Ink, .16f));
+            float stride = heroWalking ? Mathf.Abs(Mathf.Sin(heroWalkPhase)) * 7 : 0;
+            float heroFeetX = combat.Movement.HeroScreenX;
+            // 登场：转场后从地面检修舱口爬上来（先落到地面以下，再弹起落地）。
+            float entry = combat.EntryLeft > 0 ? 1 - combat.EntryLeft / CombatSession.EntryTime : 1;
+            float rise = entry < 1 ? (1 - EaseOutBack(Mathf.Clamp01(entry / .75f))) * 210 : 0;
+            float heroFeetY = GroundY + 2 - stride + rise;
+            if (entry < 1) Ui.Fill(heroFeetX - 60, GroundY - 2, 120, 8, Ui.Ink);   // 打开的舱口
+            else Ui.Fill(heroFeetX - 56, GroundY - 3, 112, 5, Ui.Alpha(Ui.Ink, .16f));
             if (heroWalking)
                 for (int k = 0; k < 3; k++)
                 {
                     float phase = Wrap(worldX / 70f + k * .33f, 1), size = 3 + 7 * (1 - phase);
                     Ui.Fill(heroFeetX - 34 - phase * 46, GroundY - 4 - phase * 12 - size, size, size, Ui.Alpha(Ui.Grey, .55f * (1 - phase)));
                 }
-            if (dash > 0) Ui.Stroke(HeroRestX - 150, GroundY - 44, heroFeetX - 36, GroundY - 44, 4, Ui.Orange);
+            if (dash > 0) Ui.Stroke(heroFeetX - 190, GroundY - 44, heroFeetX - 36, GroundY - 44, 4, Ui.Orange);
             Color heroTint = down ? new Color(.6f, .65f, .68f) : pose.damageTint > 0 ? new Color(1, 1 - pose.damageTint, 1 - pose.damageTint) : Color.white;
             int heroFrame = down || heroWalking ? ActorView.IdleFrame(melee) : ActorView.CombatFrame(pose.attackProgress, melee);
             float shake = down || heroWalking || pose.attackProgress > 0 ? 0 : pose.rootX;
@@ -78,15 +79,37 @@ namespace ThreadZero
             string rigWeapon = walkReview ? "w0" : model.Appearance(Slot.Weapon).id;
             string rigBack = walkReview ? "b0" : model.Appearance(Slot.Back).id;
             int daggerFrame=!heroWalking && !down && combat.DaggerActive?DaggerSkill.Frame(combat.DaggerAge,combat.DaggerCombo):0;
+            // V13 layered starter rig (parts + rig.py motion). Hold F7 to compare with the old V12 frames.
+            bool layered = LayeredRigView.CanDraw(model);
+            if (layered)
+            {
+                // 动作：走路 / 初始匕首（普攻+迅切连击）/ 其他武器按类别（射击、重砸）/ 待机。
+                LayeredRigView.Anim rigAnim = LayeredRigView.Anim.Idle; float rigT = clock / 1.2f;
+                if (heroWalking && !down) { rigAnim = LayeredRigView.Anim.Walk; rigT = heroWalkPhase / (2 * Mathf.PI); }
+                else if (!down && combat.DaggerActive) { rigAnim = LayeredRigView.DaggerAnim(combat.DaggerCombo); rigT = LayeredRigView.DaggerT(combat.DaggerAge, combat.DaggerCombo); }
+                else if (!down && pose.attackProgress > 0) { rigAnim = LayeredRigView.ClassAttack(model); rigT = pose.attackProgress; }
+                LayeredRigView.Draw(model, heroFeetX, GroundY + 2 + rise, 1, rigAnim, rigT, heroTint);
+                if (Event.current.type == EventType.Repaint)
+                {
+                    // 动作走到开火 / 落锤那一帧时放特效（弹道、光束、炮弹、冲击波），起点是枪口 / 锤头的实际位置。
+                    float prevT = rigAnim == lastRigAnim ? lastRigT : 0;
+                    if (rigAnim == LayeredRigView.Anim.Shoot && prevT < LayeredRigView.FireT && rigT >= LayeredRigView.FireT && target != null)
+                        WeaponFx.Fire(LayeredRigView.Kind, clock, LayeredRigView.Muzzle, LayeredRigView.MuzzleDir,
+                            new Vector2(liveEnemyX - targetCanvas * .2f, enemyMid + UnityEngine.Random.Range(-14f, 14f)));
+                    if (rigAnim == LayeredRigView.Anim.Smash && prevT < .42f && rigT >= .42f)
+                        WeaponFx.Slam(clock, new Vector2(LayeredRigView.Muzzle.x, GroundY));
+                    lastRigAnim = rigAnim; lastRigT = rigT;
+                }
+            }
             Matrix4x4 heroMatrix=GUI.matrix;
-            if(heroWalking && !down)
+            if(!layered && heroWalking && !down)
             {
                 Vector2 pivot=Ui.P(heroFeetX,heroFeetY);
                 float squash=Mathf.Cos(heroWalkPhase*2)*.018f;
                 GUIUtility.RotateAroundPivot(2.5f+Mathf.Sin(heroWalkPhase)*.6f,pivot);
                 GUIUtility.ScaleAroundPivot(new Vector2(1+squash,1-squash),pivot);
             }
-            bool newDagger = DaggerActorView.Draw(model,heroFeetX+shake,heroFeetY,HeroCanvas,daggerFrame,heroTint);
+            bool newDagger = layered || DaggerActorView.Draw(model,heroFeetX+shake,heroFeetY,HeroCanvas,daggerFrame,heroTint);
             bool skeletal = !newDagger && SkeletalActorView.Draw(heroFeetX + shake, heroFeetY, HeroCanvas,
                 rigCoat, rigHead, rigWeapon, rigBack,
                 heroFrame, heroWalking || walkReview, walkReview ? clock * 6f : heroWalkPhase,
@@ -96,37 +119,27 @@ namespace ThreadZero
             const float oldW = 300, oldH = 240;
             if (!wholeFrame) CharacterView.Draw(model, Ui.R(heroFeetX - oldW / 2, heroFeetY - oldH + 6, oldW, oldH), clock, Mathf.Abs(pose.weaponAngle) > .1f, moving ? 0 : combat.hurtFlash, down, dash, pose);
             GUI.matrix=heroMatrix;
+            if (entry < 1)
+            {
+                // 地面以下的部分被地面挡住；舱盖竖在一旁，最后 0.25 秒合上。
+                Ui.Fill(heroFeetX - 110, GroundY + 4, 220, StageY + StageH - GroundY - 4, Ui.Floor);
+                Ui.Fill(heroFeetX - 110, GroundY, 220, 4, Ui.Ink);
+                float close = Mathf.Clamp01((entry - .75f) / .25f);
+                if (close <= 0) Ui.Fill(heroFeetX + 62, GroundY - 56, 8, 56, Ui.Steel);
+                else Ui.Fill(heroFeetX - 60, GroundY - 4, 120 * close, 6, Ui.Steel);
+            }
 
-            // 敌人：信号禁区的两种是悬浮单位，会上下浮动。深层敌人带冷色调。
-            // 怪群：最前面一只在 enemyX，同伴依次排在它身后。前面的倒下后，后面的整队向前顶一格。
-            float packSlide = moving || combat.MovementEnabled ? 0 : PackSpacing * (1 - Mathf.Clamp01((clock - packShiftAt) / .28f));
-            enemyX += packSlide;
-            for (int i = combat.reserve.Count - 1; i >= 0; i--)
+            foreach (Enemy e in front) DrawEnemyUnit(e, e == target, deep);
+            // 主角头顶：血条 + 技能条（明日方舟式），掉血有白色残影。
             {
-                float memberX = enemyX + (i + 1) * PackSpacing, memberFeetY = GroundY + 2 + (district == 2 ? Mathf.Sin(clock * 2 + i + 1) * 5 - 8 : 0);
-                if (memberX > StageX + StageW + enemyCanvas) continue;
-                Ui.Fill(memberX - enemyCanvas * .26f, GroundY - 3, enemyCanvas * .52f, 5, Ui.Alpha(Ui.Ink, .16f));
-                if (!DrawMovingEnemy(memberX, memberFeetY, enemyCanvas, district, false, deep ? new Color(.84f, .88f, 1) : Color.white,enemyWalking,enemyWalkPhase+i*.65f,0))
-                    DrawEnemy(memberX, GroundY - 138, 110, 88, false, 0, false);
-                Ui.Fill(memberX - 32, enemyTop - 16, 64, 5, Ui.Steel);
-                Ui.Fill(memberX - 32, enemyTop - 16, 64 * Mathf.Clamp01(combat.reserve[i] / Mathf.Max(1, combat.reserveMax)), 5, Ui.Orange);
+                float hp01 = Mathf.Clamp01(combat.health / Mathf.Max(1, stats.health));
+                SkillDef skill = combat.EquippedSkill;
+                int chargeMax = skill != null && skill.trigger == SkillTrigger.EveryNAttacks ? skill.attacks : 0;
+                HudBars.Hero(heroFeetX, GroundY + rise - 224, hp01, HudBars.Ghost(-1, hp01, clock), combat.SkillCharge, chargeMax,
+                    skill != null ? combat.SkillReadiness : 0, combat.health, stats.health, clock);
             }
-            if (enemyX < StageX + StageW + enemyCanvas)
-            {
-                bool floating = district == 2;
-                float enemyFeetY = GroundY + 2 + (floating ? Mathf.Sin(clock * 2) * 5 - 8 : 0), recoil = hit > 0 ? hit / .3f * 6 : 0;
-                Color enemyTint = hit > 0 ? new Color(1, .74f, .68f) : deep ? new Color(.84f, .88f, 1) : Color.white;
-                Ui.Fill(enemyX - enemyCanvas * .26f, GroundY - 3, enemyCanvas * .52f, 5, Ui.Alpha(Ui.Ink, .16f));
-                float enemyStrike=!moving && combat.hurtFlash>0?Mathf.Sin(Mathf.Clamp01(combat.hurtFlash/.25f)*Mathf.PI):0;
-                if (DrawMovingEnemy(enemyX + recoil, enemyFeetY, enemyCanvas, district, boss, enemyTint,enemyWalking,enemyWalkPhase,enemyStrike))
-                { if (!moving && combat.markTime > 0) MarkFrame(enemyX - enemyCanvas * .42f, enemyTop - 8, enemyX + enemyCanvas * .42f, GroundY + 14); }
-                else
-                {
-                    float boxW = boss ? 150 : 110, boxH = boss ? 120 : 88;
-                    DrawEnemy(enemyX, GroundY - 50 - boxH + Mathf.Sin(clock * 2) * 4, boxW, boxH, boss, hit, !moving && combat.markTime > 0);
-                }
-            }
-            if (!moving && pose.projectile > 0)
+
+            if (!layered && pose.projectile > 0 && target != null)
             {
                 float scale = HeroCanvas / 512;
                 float weaponMuzzleX, weaponMuzzleY;
@@ -138,41 +151,118 @@ namespace ThreadZero
                     float old = Mathf.Min(oldW / 330, oldH / 320);
                     start = new Vector2(heroFeetX - 128 * old + mx * old, heroFeetY + 6 - 320 * old + my * old);
                 }
-                Vector2 end = new Vector2(enemyX - enemyCanvas * .2f, enemyMid), point = Vector2.Lerp(start, end, pose.projectile), direction = (end - start).normalized;
+                Vector2 end = new Vector2(liveEnemyX - targetCanvas * .2f, enemyMid), point = Vector2.Lerp(start, end, pose.projectile), direction = (end - start).normalized;
                 Ui.Stroke(point.x, point.y, point.x + direction.x * 30, point.y + direction.y * 30, 4, Ui.Orange);
             }
+            WeaponFx.Draw(clock);
             ModuleEffects(heroFeetX, enemyMid, moving);
-            DropEffect(enemyCanvas);
-            DrawFloaters(heroFeetX, enemyX - enemyCanvas * .36f - 120, enemyMid - 50);
+            DropEffect(targetCanvas);
+            DrawFloaters(heroFeetX);
             Ui.EndClip();
 
-            // 敌我铭牌。
-            float plateH = 120;
-            Ui.Fill(StageX + 24, StageY + 24, 400, plateH, Ui.Ink);
-            Ui.Text(StageX + 42, StageY + 34, 200, 28, "回收员", 18, Ui.Panel, TextAnchor.MiddleLeft, true);
-            Numbers(StageX + 42, StageY + 30, 364, combat.health, stats.health, true);
-            Bar(StageX + 42, StageY + 72, 364, healthShown, Ui.Panel, false);
-            ModuleChips(StageX + 42, StageY + 98);
-
-            Color enemyColor = boss ? QualityVisual.Colors[4] : Ui.Orange;
-            Ui.Fill(StageX + StageW - 424, StageY + 24, 400, 84, Ui.Ink);
-            Ui.Text(StageX + StageW - 406, StageY + 34, 364, 28, combat.EnemyName + (combat.Alive > 1 ? "  ×" + combat.Alive : ""), 18, boss ? enemyColor : Ui.Panel, TextAnchor.MiddleRight, true);
-            Numbers(StageX + StageW - 406, StageY + 30, 364, Mathf.Max(0, combat.enemyHealth), combat.enemyMaxHealth, false);
-            Bar(StageX + StageW - 406, StageY + 72, 364, enemyShown, enemyColor, true);
-
-            bool transit = moving && travelKind >= 2;
-            if (down || paused || transit)
+            // 首领：屏幕上方长血条。其余信息在纯净模式只留四角细字，终端滑出时看完整界面。
+            Enemy bossUnit = combat.BossEnemy;
+            if (bossUnit != null)
             {
-                string line = down ? "维修中 · " + combat.recovery.ToString("F1") + " 秒" : paused ? "已暂停"
-                    : travelKind == 3 ? "前往 0" + (region + 1) + " · " + Catalog.RegionNames[region] : "首领已回收";
-                string note = down ? "装备与收藏不会丢失，修好后从第 1 波重试" : paused ? "按空格或右下角按钮继续"
-                    : travelKind == 3 ? "转移中，抵达后自动开始回收" : "返回街区入口继续循环，可在左上角切换街区";
+                float b01 = Mathf.Clamp01(bossUnit.health / Mathf.Max(1, bossUnit.maxHealth));
+                HudBars.Boss(800, 132, b01, HudBars.Ghost(bossUnit.id, b01, clock), combat.NameOf(bossUnit), bossUnit.health, bossUnit.maxHealth);
+            }
+            PureOverlay(1 - hudShow);
+
+            if (down || paused)
+            {
+                string line = down ? "维修中 · " + combat.recovery.ToString("F1") + " 秒" : "已暂停";
+                string note = down ? (region > 0 ? "修好后撤回上一关补给，变强后自动再挑战" : "装备与收藏不会丢失，修好后重新开始本关") : "按空格或右下角按钮继续";
                 Ui.Fill(StageX + StageW / 2 - 210, StageY + 170, 420, 76, Ui.Ink); Ui.Fill(StageX + StageW / 2 - 210, StageY + 170, 8, 76, Ui.Orange);
                 Ui.Text(StageX + StageW / 2 - 180, StageY + 178, 380, 36, line, 22, Ui.Panel, TextAnchor.MiddleLeft, true);
                 Ui.Text(StageX + StageW / 2 - 180, StageY + 212, 380, 24, note, 13, Ui.MuteOnInk, TextAnchor.MiddleLeft);
             }
-            Ui.Frame(StageX, StageY, StageW, StageH, 2, Ui.Ink);
-            ActionFooter();
+            StageTransitionOverlay();
+            // 终端界面：上下两条实心带滑入，盖在画面上（画面本身不动）。
+            if (hudShow > .001f)
+            {
+                Matrix4x4 m0 = GUI.matrix; float e = 1 - Mathf.Pow(1 - hudShow, 3);
+                GUI.matrix = Matrix4x4.Translate(new Vector3(0, -(1 - e) * 112 * Ui.K, 0)) * m0;
+                Ui.Fill(0, 0, 1600, 104, Ui.Ground); Ui.Fill(0, 104, 1600, 2, Ui.Ink);
+                ActionHeader();
+                GUI.matrix = Matrix4x4.Translate(new Vector3(0, (1 - e) * 186 * Ui.K, 0)) * m0;
+                Ui.Fill(0, 726, 1600, 174, Ui.Ground); Ui.Fill(0, 724, 1600, 2, Ui.Ink);
+                ActionFooter();
+                GUI.matrix = m0;
+            }
+        }
+
+        // 一只活怪：影子、本体（走路/出手姿态）、头顶小血条。
+        private void DrawEnemyUnit(Enemy e, bool isTarget, bool deep)
+        {
+            float x = e.x - worldX;
+            if (x < StageX - e.canvas || x > StageX + StageW + e.canvas) return;
+            float feetY = GroundY + 2 + (e.depth - .5f) * 18;
+            bool floating = e.Art == 2 && !e.boss;
+            if (floating) feetY += Mathf.Sin(clock * 2 + e.id) * 5 - 8;
+            Ui.Fill(x - e.canvas * .26f, GroundY - 3 + (e.depth - .5f) * 18, e.canvas * .52f, 5, Ui.Alpha(Ui.Ink, .16f));
+            float strike = e.strikeFlash > 0 ? Mathf.Sin(Mathf.Clamp01(e.strikeFlash / .25f) * Mathf.PI) : 0;
+            float recoil = e.hitFlash > 0 ? e.hitFlash / .3f * 6 : 0;
+            Color tint = e.hitFlash > 0 ? new Color(1, .74f, .68f) : e.elite ? new Color(1, .86f, .8f) : deep ? new Color(.84f, .88f, 1) : Color.white;
+            if (!DrawMovingEnemy(x + recoil, feetY, e.canvas, e.Art, e.boss, tint, e.moving, e.travel / 21f, strike))
+            {
+                float boxW = e.canvas * .5f, boxH = e.canvas * .4f;
+                DrawEnemy(x, GroundY - 50 - boxH, boxW, boxH, e.boss, e.hitFlash, false);
+            }
+            float top = feetY - e.canvas * .82f;
+            if (isTarget && combat.markTime > 0) MarkFrame(x - e.canvas * .42f, top - 8, x + e.canvas * .42f, GroundY + 14);
+            if (e.boss) return;   // 首领血量在右上铭牌
+            float hp01 = Mathf.Clamp01(e.health / Mathf.Max(1, e.maxHealth));
+            HudBars.Enemy(x, top - 18, hp01, HudBars.Ghost(e.id, hp01, clock), e.elite);
+        }
+
+        // 倒下的怪：压扁、变灰，几秒后淡出（随角色前进被甩到画面左侧）。
+        private void DrawEnemyWreck(Enemy e)
+        {
+            float x = e.x - worldX;
+            if (x < StageX - e.canvas || x > StageX + StageW + e.canvas) return;
+            float fade = Mathf.Clamp01(1 - (combat.Elapsed - e.deadAt - 4) / 2);
+            if (fade <= 0) return;
+            float feetY = GroundY + 8 + (e.depth - .5f) * 18;
+            Matrix4x4 old = GUI.matrix;
+            GUIUtility.RotateAroundPivot(-9, Ui.P(x, feetY));
+            GUIUtility.ScaleAroundPivot(new Vector2(1.05f, .28f), Ui.P(x, feetY));
+            bool drawn = ActorView.Enemy(x, feetY, e.canvas, e.Art, e.boss, new Color(.42f, .44f, .47f, .75f * fade));
+            GUI.matrix = old;
+            if (!drawn) Ui.Fill(x - e.canvas * .25f, feetY - 34, e.canvas * .5f, 34, Ui.Alpha(Ui.Grey, fade));
+        }
+
+        // 关卡转场（约 2 秒）：变暗 → 纵向管道上标记往上爬一格、亮出下一关编号 → 变亮。
+        private void StageTransitionOverlay()
+        {
+            if (transitionLeft <= 0) return;
+            float p = 1 - transitionLeft / Chapters.StageTransition;
+            float alpha = p < .25f ? p / .25f : p > .75f ? (1 - p) / .25f : 1;
+            Ui.Fill(StageX, StageY, StageW, StageH, Ui.Alpha(Ui.Ink, .94f * alpha));
+            if (alpha < .4f) return;
+            float a = Mathf.Clamp01((alpha - .4f) / .6f);
+            float cx = StageX + StageW / 2 - 260, top = StageY + 70, bottom = StageY + StageH - 70;
+            int stages = Chapters.StagesPerChapter;
+            Ui.Fill(cx - 3, top, 6, bottom - top, Ui.Alpha(Ui.Steel, a));
+            for (int r = 0; r < stages; r++)
+            {
+                float y = Mathf.Lerp(bottom, top, r / (float)(stages - 1));
+                bool passed = r < transitionTo, here = r == transitionTo;
+                StageKind kind = Chapters.Stage(r).kind;
+                float size = kind == StageKind.Boss ? 22 : kind == StageKind.Elite ? 18 : 14;
+                Color c = here ? Ui.Orange : passed ? QualityVisual.Colors[1] : Ui.Steel;
+                Ui.Fill(cx - size / 2, y - size / 2, size, size, Ui.Alpha(c, a));
+            }
+            float climb = Mathf.SmoothStep(0, 1, Mathf.Clamp01((p - .25f) / .4f));
+            float fromY = Mathf.Lerp(bottom, top, transitionFrom / (float)(stages - 1)), toY = Mathf.Lerp(bottom, top, transitionTo / (float)(stages - 1));
+            float my = Mathf.Lerp(fromY, toY, climb);
+            Ui.Fill(cx + 18, my - 6, 22, 12, Ui.Alpha(QualityVisual.Colors[1], a));
+            StageDef stage = Chapters.Stage(transitionTo);
+            string kindText = stage.kind == StageKind.Boss ? "首领" : stage.kind == StageKind.Elite ? "精英" : "";
+            Ui.Text(cx + 90, StageY + StageH / 2 - 90, 600, 110, Catalog.StageCode(transitionTo), 96, Ui.Alpha(Ui.Panel, a), TextAnchor.MiddleLeft, true, true);
+            Ui.Text(cx + 96, StageY + StageH / 2 + 20, 600, 40, Catalog.RegionNames[transitionTo] + (kindText.Length > 0 ? " · " + kindText : ""), 26, Ui.Alpha(Ui.MuteOnInk, a), TextAnchor.MiddleLeft, true);
+            string note = transitionTo > transitionFrom ? "向上一层" : transitionTo < transitionFrom ? "撤回补给" : "重新开始";
+            Ui.Text(cx + 96, StageY + StageH / 2 + 64, 600, 30, note, 16, Ui.Alpha(Ui.Orange, a), TextAnchor.MiddleLeft, true);
         }
 
         private bool DrawMovingEnemy(float x,float y,float canvas,int district,bool boss,Color tint,bool walking,float phase,float strike)
@@ -250,40 +340,69 @@ namespace ThreadZero
             if (!drawn) Ui.Fill(x - 55, GroundY - 34, 110, 34, Ui.Grey);
         }
 
+        // 纯净模式：四角细框 + 左上关卡号与路线点 + 上方波次；边缘一道淡线提示可以呼出终端。
+        private void PureOverlay(float a)
+        {
+            if (a <= .01f) return;
+            Color ink = Ui.Alpha(Ui.Ink, .85f * a), mute = Ui.Alpha(Ui.Mute, .9f * a);
+            const float m = 18, L = 26, t = 2;
+            Ui.Fill(m, m, L, t, ink); Ui.Fill(m, m, t, L, ink);
+            Ui.Fill(1600 - m - L, m, L, t, ink); Ui.Fill(1600 - m - t, m, t, L, ink);
+            Ui.Fill(m, 900 - m - t, L, t, ink); Ui.Fill(m, 900 - m - L, t, L, ink);
+            Ui.Fill(1600 - m - L, 900 - m - t, L, t, ink); Ui.Fill(1600 - m - t, 900 - m - L, t, L, ink);
+            int region = model.state.region;
+            Ui.Text(40, 30, 200, 56, Catalog.StageCode(region), 48, ink, TextAnchor.MiddleLeft, true, true);
+            StageKind kind = Chapters.Stage(region).kind;
+            string kindText = kind == StageKind.Boss ? " · 首领" : kind == StageKind.Elite ? " · 精英" : "";
+            Ui.Text(42, 84, 400, 22, Catalog.RegionNames[region] + kindText, 15, ink, TextAnchor.MiddleLeft, true);
+            for (int r = 0; r < Chapters.StagesPerChapter; r++)
+            {
+                bool now = r == region, done = r < model.state.unlockedRegion;
+                float size = now ? 10 : 8, x = 44 + r * 16 + (now ? -1 : 0);
+                Ui.Fill(x, 116 - size / 2, size, size, now ? Ui.Alpha(Ui.Orange, a) : done ? ink : Ui.Alpha(Ui.Rule, a));
+            }
+            if (combat.BossEnemy == null)
+                Ui.Text(500, 30, 600, 24, "—  第 " + combat.wave + " / " + combat.WaveCount + " 波 · 剩余 " + combat.Alive + "  —", 14, mute, TextAnchor.MiddleCenter, true);
+            Ui.Text(1200, 900 - 52, 360, 20, "鼠标移到边缘 · 呼出终端", 12, Ui.Alpha(Ui.Mute, .6f * a), TextAnchor.MiddleRight);
+            Ui.Fill(0, 0, 1600, 2, Ui.Alpha(Ui.Ink, .18f * a)); Ui.Fill(0, 898, 1600, 2, Ui.Alpha(Ui.Ink, .18f * a));
+        }
+
         private void ActionHeader()
         {
-            string region = Catalog.RegionNames[model.state.region];
-            float nameWidth = Ui.Width(region, 30, true);
-            bool hover = Ui.Hover(128, 16, 150 + nameWidth, 76);
-            Ui.Text(128, 12, 84, 80, "0" + (model.state.region + 1), 60, Ui.Ink, TextAnchor.MiddleLeft, true, true);
-            Ui.Text(214, 22, 240, 18, "SECTOR / 街区", 13, Ui.Mute, TextAnchor.MiddleLeft, true, true);
-            Ui.Text(214, 42, nameWidth + 10, 40, region, 30, Ui.Ink, TextAnchor.MiddleLeft, true);
-            float boxX = 214 + nameWidth + 16;
+            int region = model.state.region;
+            string name = Catalog.RegionNames[region];
+            float nameWidth = Ui.Width(name, 30, true);
+            bool hover = Ui.Hover(128, 16, 190 + nameWidth, 76);
+            Ui.Text(128, 12, 120, 80, Catalog.StageCode(region), 52, Ui.Ink, TextAnchor.MiddleLeft, true, true);
+            Ui.Text(250, 22, 240, 18, "CHAPTER 1 / 第一章", 13, Ui.Mute, TextAnchor.MiddleLeft, true, true);
+            Ui.Text(250, 42, nameWidth + 10, 40, name, 30, Ui.Ink, TextAnchor.MiddleLeft, true);
+            float boxX = 250 + nameWidth + 16;
             Ui.Fill(boxX, 44, 36, 36, hover ? Ui.Ink : Ui.Ground); Ui.Frame(boxX, 44, 36, 36, 2, Ui.Ink);
             Ui.IconChevron(boxX + 18, 62, hover ? Ui.Panel : Ui.Ink);
-            if (Ui.Click(128, 16, 150 + nameWidth, 76)) navigation.Open(GameModal.Map);
+            if (Ui.Click(128, 16, 190 + nameWidth, 76)) navigation.Open(GameModal.Map);
 
-            float x = 640, middle = 54; float[] centers = new float[6];
+            // 路线：一章 7 关。当前关下方的小格 = 本关波次进度。
+            float x = 640, middle = 50;
             Ui.Text(x - 66, middle - 12, 56, 24, "ROUTE", 14, Ui.Mute, TextAnchor.MiddleRight, true, true);
-            for (int wave = 1; wave <= 4; wave++)
+            for (int r = 0; r < Chapters.StagesPerChapter; r++)
             {
-                bool done = wave < combat.wave, now = wave == combat.wave;
-                float size = now ? 52 : 40;
-                bool digit = wave != Balance.EliteWave; string label = digit ? wave.ToString() : "精";
-                if (done) { Ui.Fill(x, middle - 20, 40, 40, Ui.Ink); Ui.IconCheck(x + 20, middle, Ui.Panel); }
-                else if (now) { Ui.Fill(x, middle - 26, 52, 52, Ui.Orange); Ui.Text(x, middle - 26, 52, 52, label, digit ? 30 : 24, Ui.Ink, TextAnchor.MiddleCenter, true, digit); }
-                else { Ui.Frame(x, middle - 20, 40, 40, 2, Ui.Grey); Ui.Text(x, middle - 20, 40, 40, label, digit ? 20 : 17, Ui.Mute, TextAnchor.MiddleCenter, true, digit); }
-                centers[wave] = x + size / 2; x += size;
-                Ui.Fill(x, middle - 2, 44, 4, done ? Ui.Ink : Ui.Rule); x += 44;
+                StageKind kind = Chapters.Stage(r).kind;
+                bool now = r == region, done = r < model.state.unlockedRegion || (kind == StageKind.Boss && model.state.bosses > 0), locked = r > model.state.unlockedRegion;
+                float size = now ? 48 : 38;
+                string label = kind == StageKind.Boss ? "首" : kind == StageKind.Elite ? "精" : (r + 1).ToString();
+                bool digit = kind == StageKind.Normal;
+                if (now) { Ui.Fill(x, middle - size / 2, size, size, Ui.Orange); Ui.Text(x, middle - size / 2, size, size, label, digit ? 26 : 20, Ui.Ink, TextAnchor.MiddleCenter, true, digit); }
+                else if (done) { Ui.Fill(x, middle - size / 2, size, size, Ui.Ink); Ui.Text(x, middle - size / 2, size, size, label, digit ? 18 : 15, Ui.Panel, TextAnchor.MiddleCenter, true, digit); }
+                else { Ui.Frame(x, middle - size / 2, size, size, 2, locked ? Ui.Rule : Ui.Grey); Ui.Text(x, middle - size / 2, size, size, label, digit ? 18 : 15, locked ? Ui.Rule : Ui.Mute, TextAnchor.MiddleCenter, true, digit); }
+                if (now)
+                {
+                    int waves = combat.WaveCount; float w = 10, gap = 4, total = waves * w + (waves - 1) * gap;
+                    for (int k = 0; k < waves; k++)
+                        Ui.Fill(x + size / 2 - total / 2 + k * (w + gap), middle + size / 2 + 6, w, 4, k < combat.wave - 1 ? Ui.Ink : k == combat.wave - 1 ? Ui.Orange : Ui.Rule);
+                }
+                x += size;
+                if (r < Chapters.StagesPerChapter - 1) { Ui.Fill(x, middle - 2, 30, 4, done ? Ui.Ink : Ui.Rule); x += 30; }
             }
-            if (combat.Boss) { Ui.Fill(x, middle - 26, 100, 52, Ui.Orange); Ui.Text(x, middle - 26, 100, 52, "BOSS", 26, Ui.Ink, TextAnchor.MiddleCenter, true, true); }
-            else { Ui.Frame(x, middle - 20, 84, 40, 2, Ui.Ink); Ui.Text(x, middle - 20, 84, 40, "BOSS", 19, Ui.Ink, TextAnchor.MiddleCenter, true, true); }
-
-            centers[5] = x + (combat.Boss ? 50 : 42);
-            // 路线上的位置标记：赶往下一波时在两个节点之间滑动。
-            int at = Mathf.Clamp(combat.wave, 1, 5); float marker = centers[at];
-            if (travelLeft > 0 && travelKind == 1 && at > 1) marker = Mathf.Lerp(centers[at - 1], centers[at], TravelProgress);
-            Ui.Fill(marker - 6, middle + 32, 12, 4, Ui.Ink); Ui.Fill(marker - 2, middle + 28, 4, 4, Ui.Ink);
 
             if (Ui.Button(1196, 30, 176, 48, autoAdvance ? "自动推进 · 开" : "自动推进 · 关", autoAdvance ? 2 : 0, true, 15)) autoAdvance = !autoAdvance;
             ScrapChip(1568);
@@ -394,17 +513,17 @@ namespace ThreadZero
             Ui.ItemTile(x, y, 52, 56, b, lastDrop.quality, true, false, 4, false);
         }
 
-        private void DrawFloaters(float feetX, float enemySideX, float enemySideY)
+        private void DrawFloaters(float feetX)
         {
             for (int i = 0; i < floaters.Count; i++)
             {
                 Floater f = floaters[i]; float age = (clock - f.born) / .9f, rise = 54 * age, alpha = age < .7f ? 1 : Mathf.Clamp01(1 - (age - .7f) / .3f);
                 if (f.onEnemy)
                 {
-                    float size = f.critical ? 54 : 40, x = enemySideX + f.drift, y = enemySideY - rise;
+                    float size = f.critical ? 42 : 28, x = f.x - worldX - 30 + f.drift, y = GroundY - 230 - rise - f.lift;
                     string value = f.value.ToString("F0");
-                    if (f.critical) { Ui.Fill(x - 56, y + 24, 48, 24, Ui.Alpha(Ui.Orange, alpha)); Ui.Text(x - 56, y + 24, 48, 24, "暴击", 14, Ui.Alpha(Ui.Ink, alpha), TextAnchor.MiddleCenter, true); }
-                    Ui.Text(x, y, 220, 72, value, size, Ui.Alpha(Ui.Ink, alpha), TextAnchor.MiddleLeft, true, true);
+                    if (f.critical) { Ui.Fill(x - 56, y + 20, 48, 24, Ui.Alpha(Ui.Orange, alpha)); Ui.Text(x - 56, y + 20, 48, 24, "暴击", 14, Ui.Alpha(Ui.Ink, alpha), TextAnchor.MiddleCenter, true); }
+                    Ui.Text(x, y, 220, 64, value, size, Ui.Alpha(Ui.Ink, alpha), TextAnchor.MiddleLeft, true, true);
                 }
                 else Ui.Text(feetX + 56 + f.drift, GroundY - 250 - rise, 160, 44, "-" + f.value.ToString("F0"), 32, Ui.Alpha(Ui.OrangeInk, alpha), TextAnchor.MiddleLeft, true, true);
             }

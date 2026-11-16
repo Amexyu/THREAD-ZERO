@@ -1,0 +1,142 @@
+[
+  {
+    "part": "head",
+    "pixels": [
+      336,
+      304
+    ],
+    "units": [
+      84.0,
+      76.0
+    ],
+    "pivot": [
+      42,
+      68
+    ],
+    "transparent_border_2px": true,
+    "rgba": true
+  },
+  {
+    "part": "torso",
+    "pixels": [
+      240,
+      200
+    ],
+    "units": [
+      60.0,
+      50.0
+    ],
+    "pivot": [
+      30,
+      46
+    ],
+    "transparent_border_2px": true,
+    "rgba": true
+  },
+  {
+    "part": "arm",
+    "pixels": [
+      112,
+      160
+    ],
+    "units": [
+      28.0,
+      40.0
+    ],
+    "pivot": [
+      14,
+      9
+    ],
+    "transparent_border_2px": true,
+    "rgba": true,
+    "overlap_3unit_opaque_ratio": 1.0
+  },
+  {
+    "part": "hand",
+    "pixels": [
+      72,
+      72
+    ],
+    "units": [
+      18.0,
+      18.0
+    ],
+    "pivot": [
+      9,
+      9
+    ],
+    "transparent_border_2px": true,
+    "rgba": true
+  },
+  {
+    "part": "pack",
+    "pixels": [
+      136,
+      200
+    ],
+    "units": [
+      34.0,
+      50.0
+    ],
+    "pivot": [
+      28,
+      33
+    ],
+    "transparent_border_2px": true,
+    "rgba": true
+  },
+  {
+    "part": "leg_near",
+    "pixels": [
+      136,
+      136
+    ],
+    "units": [
+      34.0,
+      34.0
+    ],
+    "pivot": [
+      12,
+      6
+    ],
+    "transparent_border_2px": true,
+    "rgba": true,
+    "overlap_3unit_opaque_ratio": 1.0
+  },
+  {
+    "part": "leg_far",
+    "pixels": [
+      136,
+      136
+    ],
+    "units": [
+      34.0,
+      34.0
+    ],
+    "pivot": [
+      12,
+      6
+    ],
+    "transparent_border_2px": true,
+    "rgba": true,
+    "overlap_3unit_opaque_ratio": 1.0
+  },
+  {
+    "part": "weapon",
+    "pixels": [
+      56,
+      160
+    ],
+    "units": [
+      14.0,
+      40.0
+    ],
+    "pivot": [
+      7,
+      6
+    ],
+    "transparent_border_2px": true,
+    "rgba": true,
+    "overlap_3unit_opaque_ratio": 1.0
+  }
+]

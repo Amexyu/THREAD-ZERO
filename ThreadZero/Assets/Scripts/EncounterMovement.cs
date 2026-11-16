@@ -2,67 +2,57 @@ using System;
 
 namespace ThreadZero
 {
-    // Distances are logical stage pixels. The renderer and combat share these positions.
+    // 一只怪。位置是世界坐标（逻辑像素），渲染与战斗共用。
+    public sealed class Enemy
+    {
+        public int id;
+        public EnemyRole role;
+        public bool elite, boss;
+        public float health, maxHealth, attack, interval, timer, speed, stop, canvas;
+        public float x, depth;                 // depth 0..1：站位前后错开（画面上 0~20 像素），越大越靠前
+        public float hitFlash, strikeFlash, travel, deadAt = -1;
+        public bool moving;
+        public bool Alive { get { return health > 0; } }
+        public bool Ranged { get { return role == EnemyRole.Ranged && !boss; } }
+        public int Art { get { return boss ? Chapters.BossArt : Chapters.Roles[(int)role].art; } }
+    }
+
+    // 角色的位置、速度与镜头。怪的移动在 CombatSession 里，每只各走各的。
     public sealed class EncounterMovement
     {
-        public const float InitialHero=428, InitialEnemy=1060, PackSpacing=136;
-        public float HeroX {get;private set;}=InitialHero;
-        public float EnemyX {get;private set;}=InitialEnemy;
-        public float CameraX {get;private set;}
-        public float HeroTravel {get;private set;}
-        public float EnemyTravel {get;private set;}
-        public float HeroVelocity {get;private set;}
-        public float EnemyVelocity {get;private set;}
-        public float ContactGap {get;private set;}=176;
-        public float HeroRange {get;private set;}=176;
-        public int TargetVersion {get;private set;}
-        public float HeroScreenX {get{return HeroX-CameraX;}}
-        public float EnemyScreenX {get{return EnemyX-CameraX;}}
-        public float Gap {get{return EnemyX-HeroX;}}
-        public bool HeroInRange {get{return Gap<=HeroRange+.1f;}}
-        public bool EnemyInRange {get{return Gap<=ContactGap+.1f;}}
-        public bool HeroMoving {get{return HeroVelocity>.01f;}}
-        public bool EnemyMoving {get{return EnemyVelocity>.01f;}}
+        public const float InitialHero = 428, HeroSpeed = 220, MeleeRange = 200, GunRange = 380;
+        public float HeroX { get; private set; } = InitialHero;
+        public float CameraX { get; private set; }
+        public float HeroTravel { get; private set; }
+        public float HeroVelocity { get; private set; }
+        public float HeroRange { get; private set; } = MeleeRange;
+        public float HeroScreenX { get { return HeroX - CameraX; } }
+        public bool HeroMoving { get { return HeroVelocity > .01f; } }
 
-        public void ResetAtCamera(float camera=0)
+        public void ResetAtCamera(float camera = 0)
+        { CameraX = Math.Max(0, camera); HeroX = CameraX + InitialHero; HeroVelocity = HeroTravel = 0; }
+        public void Stop() { HeroVelocity = 0; }
+        public void Tick(float dt, bool melee, bool walk)
         {
-            CameraX=Math.Max(0,camera);HeroX=CameraX+InitialHero;EnemyX=CameraX+InitialEnemy;
-            HeroVelocity=EnemyVelocity=HeroTravel=EnemyTravel=0;TargetVersion++;
-        }
-        public void BeginEncounter()
-        {
-            // Continue down the street: never warp the hero back after each kill.
-            EnemyX=Math.Max(EnemyX,HeroX+760);HeroVelocity=EnemyVelocity=0;TargetVersion++;
-        }
-        public void AdvanceTarget()
-        {EnemyX+=PackSpacing;HeroVelocity=EnemyVelocity=0;TargetVersion++;}
-        public void Stop(){HeroVelocity=EnemyVelocity=0;}
-        private static float Approach(float value,float target,float max)
-        {return value<target?Math.Min(target,value+max):Math.Max(target,value-max);}
-        public void Tick(float dt,bool melee,bool boss,bool elite,bool heroBusy)
-        {
-            if(dt<=0 || float.IsNaN(dt))return;
-            ContactGap=boss?200:elite?188:176;
-            HeroRange=melee?ContactGap:ContactGap+150;
-            float heroNeed=Math.Max(0,Gap-HeroRange), enemyNeed=Math.Max(0,Gap-ContactGap);
-            float hv=Approach(HeroVelocity,heroNeed>.1f && !heroBusy?220:0,900*dt);
-            float ev=Approach(EnemyVelocity,enemyNeed>.1f?160:0,700*dt);
-            float hd=heroBusy?0:Math.Min(heroNeed,hv*dt),ed=Math.Min(enemyNeed,ev*dt);
-            float allowed=Math.Max(0,Gap-ContactGap),sum=hd+ed;
-            if(sum>allowed && sum>0){float ratio=allowed/sum;hd*=ratio;ed*=ratio;}
-            HeroX+=hd;EnemyX-=ed;HeroTravel+=hd;EnemyTravel+=ed;
-            HeroVelocity=hd/dt;EnemyVelocity=ed/dt;
-            float cameraTarget=Math.Max(CameraX,HeroX-640);
-            CameraX+=(cameraTarget-CameraX)*(1-(float)Math.Exp(-6*dt));
+            if (dt <= 0 || float.IsNaN(dt)) return;
+            HeroRange = melee ? MeleeRange : GunRange;
+            float target = walk ? HeroSpeed : 0, max = 900 * dt;
+            HeroVelocity = HeroVelocity < target ? Math.Min(target, HeroVelocity + max) : Math.Max(target, HeroVelocity - max);
+            float d = HeroVelocity * dt; HeroX += d; HeroTravel += d;
+            float cameraTarget = Math.Max(CameraX, HeroX - 640);
+            CameraX += (cameraTarget - CameraX) * (1 - (float)Math.Exp(-6 * dt));
         }
     }
 
     public sealed partial class CombatSession
     {
-        public readonly EncounterMovement Movement=new EncounterMovement();
-        public bool MovementEnabled {get;private set;}
-        public void EnableMovement(){MovementEnabled=true;Movement.ResetAtCamera();}
-        public bool HeroInRange {get{return !MovementEnabled || Movement.HeroInRange;}}
-        public bool EnemyInRange {get{return !MovementEnabled || Movement.EnemyInRange;}}
+        public readonly EncounterMovement Movement = new EncounterMovement();
+        public bool MovementEnabled { get; private set; } = true;
+        public void EnableMovement() { MovementEnabled = true; Movement.ResetAtCamera(); }
+        /// 角色的攻击对象（最近的一只活怪）在射程内。
+        public bool HeroInRange { get { Enemy t = Target; return t != null && t.x - Movement.HeroX <= Movement.HeroRange + .1f; } }
+        /// 至少有一只怪已经走到位、正在打角色。
+        public bool EnemyInRange { get { foreach (Enemy e in enemies) if (e.Alive && Arrived(e)) return true; return false; } }
+        private bool Arrived(Enemy e) { return e.x - Movement.HeroX <= e.stop + 2; }
     }
 }

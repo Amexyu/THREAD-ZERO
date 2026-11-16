@@ -1,0 +1,15 @@
+{
+ "weapon_class": "cannon",
+ "weapon": {
+  "file": "weapon.png",
+  "pivot": [
+   11.08,
+   19.89
+  ],
+  "tip": [
+   17.96,
+   61.45
+  ]
+ },
+ "scale": 4
+}
