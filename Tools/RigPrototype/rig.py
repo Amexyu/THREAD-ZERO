@@ -49,73 +49,73 @@ class Part:
         self.d.line([(x * R, y * R) for x, y in pts], fill=fill, width=int(w * R))
 
 def legs(col, boot):
-    p = Part(28, 34, (10, 4))
-    p.rr(4, 0, 17, 25, 5, col)
-    p.rr(3, 22, 26, 32, 5, boot)
-    p.rr(4, 17, 17, 20, 1, ORANGE, ow=0)
+    p = Part(32, 26, (11, 4))
+    p.rr(4, 0, 19, 18, 6, col)
+    p.rr(3, 14, 29, 25, 6, boot)
+    p.rr(4, 10, 19, 13, 1, ORANGE, ow=0)
     return p
 
 def hand():
-    p = Part(16, 16, (8, 8)); p.ell(1, 1, 15, 15, SKIN); return p
+    p = Part(18, 18, (9, 9)); p.ell(1, 1, 17, 17, SKIN); return p
 
-# --- armor sets: torso, arms, legs
+# --- armor sets: torso, arms, legs   (Q proportions v0.13: big head, block torso, stubby limbs)
 def armor_light():
-    t = Part(54, 48, (27, 46))
-    t.rr(4, 2, 50, 46, 13, (70, 84, 96, 255))
-    t.rr(17, 14, 41, 31, 5, TILE); t.ell(26, 19, 32, 25, ORANGE, ow=0)
-    t.rr(4, 36, 50, 42, 2, ORANGE, ow=0)
-    a = Part(20, 46, (10, 7)); a.rr(3, 2, 17, 41, 6, (112, 128, 144, 255)); a.rr(3, 33, 17, 38, 1, ORANGE, ow=0)
-    return dict(torso=t, arm=a, armF=a, legs=legs((54, 60, 66, 255), TILE), shoulder=(11, -33), shoulderF=(-4, -33))
+    t = Part(52, 38, (26, 36))
+    t.rr(3, 2, 49, 36, 11, (70, 84, 96, 255))
+    t.rr(15, 9, 37, 23, 4, TILE); t.ell(23, 13, 29, 19, ORANGE, ow=0)
+    t.rr(3, 28, 49, 33, 2, ORANGE, ow=0)
+    a = Part(20, 32, (10, 6)); a.rr(3, 2, 17, 29, 6, (112, 128, 144, 255)); a.rr(3, 22, 17, 26, 1, ORANGE, ow=0)
+    return dict(torso=t, arm=a, armF=a, legs=legs((54, 60, 66, 255), TILE), shoulder=(11, -26), shoulderF=(-4, -26))
 
 def armor_heavy():
-    t = Part(64, 54, (32, 52))
-    t.rr(2, 2, 62, 52, 10, STEEL)
-    t.poly([(14, 10), (50, 10), (44, 38), (20, 38)], STEEL2)
-    t.rr(20, 16, 44, 28, 3, TILE); t.rr(24, 20, 40, 24, 1, ORANGE, ow=0)
-    t.rr(2, 42, 62, 50, 2, ORANGE, ow=0)
-    a = Part(30, 52, (15, 11))
-    a.rr(5, 8, 25, 48, 7, (96, 108, 120, 255))
-    a.rr(1, 1, 29, 18, 8, STEEL)       # shoulder pad
-    a.rr(1, 13, 29, 17, 1, ORANGE, ow=0)
-    return dict(torso=t, arm=a, armF=a, legs=legs(STEEL2, TILE), shoulder=(13, -36), shoulderF=(-6, -36))
+    t = Part(60, 42, (30, 40))
+    t.rr(2, 2, 58, 40, 10, STEEL)
+    t.poly([(12, 8), (48, 8), (43, 30), (17, 30)], STEEL2)
+    t.rr(18, 12, 42, 22, 3, TILE); t.rr(22, 15, 38, 19, 1, ORANGE, ow=0)
+    t.rr(2, 32, 58, 38, 2, ORANGE, ow=0)
+    a = Part(30, 36, (15, 10))
+    a.rr(5, 7, 25, 33, 7, (96, 108, 120, 255))
+    a.rr(1, 1, 29, 15, 8, STEEL)       # shoulder pad
+    a.rr(1, 11, 29, 14, 1, ORANGE, ow=0)
+    return dict(torso=t, arm=a, armF=a, legs=legs(STEEL2, TILE), shoulder=(13, -29), shoulderF=(-6, -29))
 
-# --- heads
+# --- heads (big: ~half of total height)
 def head_cap():
-    h = Part(88, 78, (44, 70))
-    h.rr(8, 14, 78, 68, 24, PAPER)
-    h.rr(36, 30, 78, 54, 9, TILE)
-    h.rr(50, 36, 57, 48, 2, ORANGE, ow=0); h.rr(63, 36, 70, 48, 2, ORANGE, ow=0)
-    h.rr(6, 2, 74, 30, 16, TILE)            # cap dome
-    h.rr(42, 24, 86, 31, 3, ORANGE)         # brim
+    h = Part(96, 84, (48, 76))
+    h.rr(6, 12, 90, 76, 30, PAPER)
+    h.rr(40, 32, 90, 58, 10, TILE)
+    h.rr(55, 38, 63, 52, 2, ORANGE, ow=0); h.rr(70, 38, 78, 52, 2, ORANGE, ow=0)
+    h.rr(4, 2, 84, 32, 18, TILE)            # cap dome
+    h.rr(48, 26, 94, 33, 3, ORANGE)         # brim
     return h
 
 def head_helm():
-    h = Part(92, 82, (46, 74))
-    h.rr(4, 10, 82, 72, 26, STEEL)
-    h.rr(34, 28, 84, 52, 7, TILE)
-    h.rr(44, 37, 80, 43, 2, ORANGE, ow=0)
-    h.rr(22, 2, 56, 14, 5, RED)             # crest
-    h.rr(4, 58, 82, 66, 2, STEEL2, ow=0)
+    h = Part(100, 88, (50, 80))
+    h.rr(4, 10, 94, 80, 32, STEEL)
+    h.rr(38, 32, 96, 58, 8, TILE)
+    h.rr(50, 42, 92, 48, 2, ORANGE, ow=0)
+    h.rr(26, 2, 64, 14, 5, RED)             # crest
+    h.rr(4, 64, 94, 72, 2, STEEL2, ow=0)
     return h
 
 def head_visor():
-    h = Part(88, 78, (44, 70))
-    h.rr(8, 14, 78, 68, 28, (255, 194, 77, 255))
-    h.rr(30, 28, 80, 56, 12, TILE)
-    h.ell(52, 36, 62, 48, GREEN, ow=0); h.ell(66, 36, 76, 48, GREEN, ow=0)
-    h.poly([(14, 22), (4, 6), (26, 14)], (255, 194, 77, 255))
+    h = Part(96, 84, (48, 76))
+    h.rr(6, 12, 90, 76, 32, (255, 194, 77, 255))
+    h.rr(32, 30, 90, 62, 14, TILE)
+    h.ell(56, 40, 68, 54, GREEN, ow=0); h.ell(72, 40, 84, 54, GREEN, ow=0)
+    h.poly([(14, 22), (4, 6), (28, 14)], (255, 194, 77, 255))
     return h
 
 # --- packs
 def pack_small():
-    p = Part(28, 52, (24, 40))
-    p.rr(0, 16, 26, 50, 7, TILE); p.rr(3, 22, 10, 44, 2, ORANGE, ow=0)
-    p.line([(13, 16), (13, 2)], INK, 2); p.ell(9, 0, 17, 8, ORANGE)
+    p = Part(26, 42, (23, 30))
+    p.rr(0, 12, 24, 40, 7, TILE); p.rr(3, 18, 9, 36, 2, ORANGE, ow=0)
+    p.line([(12, 12), (12, 2)], INK, 2); p.ell(8, 0, 16, 8, ORANGE)
     return p
 
 def pack_tank():
-    p = Part(40, 64, (34, 44))
-    p.rr(0, 8, 32, 60, 12, STEEL2); p.rr(0, 30, 32, 38, 1, ORANGE, ow=0)
+    p = Part(36, 54, (31, 34))
+    p.rr(0, 8, 32, 52, 12, STEEL2); p.rr(0, 28, 32, 35, 1, ORANGE, ow=0)
     p.rr(10, 0, 22, 12, 3, TILE)
     return p
 
@@ -128,11 +128,11 @@ def wpn_dagger():
     return w
 
 def wpn_spear():
-    w = Part(18, 128, (9, 38), tip=(9, 126))
-    w.rr(7, 0, 11, 112, 1, TILE, ow=1.5)
-    w.rr(5, 104, 13, 112, 1, ORANGE)
-    w.poly([(3, 110), (15, 110), (9, 126)], PAPER)
-    w.rr(5, 34, 13, 44, 2, STEEL2)
+    w = Part(18, 122, (9, 36), tip=(9, 120))
+    w.rr(7, 0, 11, 108, 1, TILE, ow=1.5)
+    w.rr(5, 100, 13, 108, 1, ORANGE)
+    w.poly([(3, 106), (15, 106), (9, 120)], PAPER)
+    w.rr(5, 32, 13, 42, 2, STEEL2)
     return w
 
 def wpn_hammer():
@@ -171,8 +171,8 @@ def set_from_manifest(path, defaults=None):
         return part_from_png(os.path.join(base, e["file"]), e["pivot"], sc, e.get("tip"))
     def armor():
         return dict(torso=L("torso"), arm=L("arm"), armF=L("armF") if "armF" in m["parts"] else L("arm"),
-                    legs=L("legs"), shoulder=tuple(m.get("shoulder", (11, -33))),
-                    shoulderF=tuple(m.get("shoulderF", (-4, -33))))
+                    legs=L("legs"), shoulder=tuple(m.get("shoulder", (11, -26))),
+                    shoulderF=tuple(m.get("shoulderF", (-4, -26))))
     return dict(armor=armor, head=lambda: L("head"), pack=lambda: L("pack"), wpn=lambda: L("weapon"),
                 kind=m.get("weapon_class", "dagger"))
 
@@ -198,8 +198,8 @@ def pose(kind, anim, t):
         p['sy'] = 1 - 0.06 * sq; p['sx'] = 1 + 0.05 * sq
         p['lean'] = 7 + 2 * math.sin(2 * ph); p['head'] = -4 * math.sin(2 * ph - 1.0)
         p['pack'] = -9 * math.sin(2 * ph - 1.6)
-        p['L'] = 34 * math.sin(ph); p['Lf'] = -34 * math.sin(ph)
-        p['A'] = -32 * math.sin(ph) + 6; p['Af'] = 32 * math.sin(ph) - 6
+        p['L'] = 7 * math.sin(ph) - 3 * abs(math.sin(ph)); p['Lf'] = -7 * math.sin(ph) - 3 * abs(math.sin(ph))
+        p['A'] = -10 * math.sin(2 * ph - .6) + 6; p['Af'] = 10 * math.sin(2 * ph - .6) - 6
     elif anim == "attack":
         t2 = t
         if kind == "dagger":
@@ -251,17 +251,17 @@ def pose(kind, anim, t):
 
 def matrices(parts, p):
     root = T((ROOT_X + p['dx']) * R, (GROUND + p['dy']) * R) @ S(p['sx'], p['sy'])
-    torso = root @ T(0, -24 * R) @ Rm(-p['lean'])
-    head = torso @ T(2 * R, -38 * R) @ Rm(-p['head'])
-    pack = torso @ T(-22 * R, -26 * R) @ Rm(-p['pack'])
+    torso = root @ T(0, -21 * R) @ Rm(-p['lean'])
+    head = torso @ T(2 * R, -29 * R) @ Rm(-p['head'])
+    pack = torso @ T(-21 * R, -20 * R) @ Rm(-p['pack'])
     sh, shf = parts['armor']['shoulder'], parts['armor']['shoulderF']
     armN = torso @ T(sh[0] * R, sh[1] * R) @ Rm(p['A'])
     armF = torso @ T(shf[0] * R, shf[1] * R) @ Rm(p['Af'])
     ap = parts['armor']['arm']
     handM = armN @ T(0, (ap.img.size[1] / R - 11) * R - ap.pivot[1])  # hand point = 11 units above image bottom
     wM = handM @ Rm(p['W'] - p['A']) @ T(0, p['wt'] * R)
-    legN = root @ T(5 * R, -24 * R) @ Rm(p['L'])
-    legF = root @ T(-5 * R, -24 * R) @ Rm(p['Lf'])
+    legN = root @ T(5 * R, -21 * R) @ Rm(p['L'])
+    legF = root @ T(-5 * R, -21 * R) @ Rm(p['Lf'])
     return dict(root=root, torso=torso, head=head, pack=pack, armN=armN, armF=armF, hand=handM, wpn=wM,
                 legN=legN, legF=legF)
 
@@ -286,7 +286,7 @@ def render(sp, anim, t):
     d = ImageDraw.Draw(cv, "RGBA")
     d.line([(0, GROUND * R), (300 * R, GROUND * R)], fill=(18, 20, 22, 60), width=2 * R)
     h = -p['dy']
-    sw = (54 - h * 0.8) * R; sh_ = (9 - h * 0.12) * R
+    sw = (60 - h * 0.8) * R; sh_ = (9 - h * 0.12) * R
     cx = (ROOT_X + p['dx']) * R
     d.ellipse([cx - sw / 2, GROUND * R - sh_ / 2, cx + sw / 2, GROUND * R + sh_ / 2], fill=(18, 20, 22, 70))
     a = parts['armor']

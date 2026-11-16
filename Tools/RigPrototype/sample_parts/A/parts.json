@@ -3,46 +3,46 @@
  "weapon_class": "dagger",
  "shoulder": [
   11,
-  -33
+  -26
  ],
  "shoulderF": [
   -4,
-  -33
+  -26
  ],
  "parts": {
   "torso": {
    "file": "torso.png",
    "pivot": [
-    29.0,
-    48.0
+    28.0,
+    38.0
    ]
   },
   "arm": {
    "file": "arm.png",
    "pivot": [
     12.0,
-    9.0
+    8.0
    ]
   },
   "legs": {
    "file": "legs.png",
    "pivot": [
-    12.0,
+    13.0,
     6.0
    ]
   },
   "head": {
    "file": "head.png",
    "pivot": [
-    46.0,
-    72.0
+    50.0,
+    78.0
    ]
   },
   "pack": {
    "file": "pack.png",
    "pivot": [
-    26.0,
-    42.0
+    25.0,
+    32.0
    ]
   },
   "weapon": {

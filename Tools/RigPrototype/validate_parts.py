@@ -7,11 +7,11 @@ from PIL import Image
 
 # slot -> (w_min, w_max, h_min, h_max, pivot rule, description)
 SPEC = {
-    "head":   (80, 96, 70, 86, "bottom-center: pivot.x ~ w/2 (+-8), pivot.y in [h-12, h-4]"),
-    "torso":  (50, 68, 44, 58, "hip: pivot.x ~ w/2 (+-6), pivot.y in [h-6, h-1]"),
-    "arm":    (18, 36, 42, 58, "shoulder: pivot.x ~ w/2 (+-4), pivot.y in [5, 13]"),
-    "legs":   (24, 32, 30, 38, "hip: pivot.x in [8, 12], pivot.y in [2, 6]"),
-    "pack":   (24, 44, 46, 68, "attach: pivot.x in [w-10, w-2], pivot.y in [0.5h-4, 0.85h]"),
+    "head":   (88, 110, 76, 96, "bottom-center: pivot.x ~ w/2 (+-8), pivot.y in [h-12, h-4]"),
+    "torso":  (46, 68, 34, 50, "hip: pivot.x ~ w/2 (+-6), pivot.y in [h-6, h-1]"),
+    "arm":    (18, 36, 32, 44, "shoulder: pivot.x ~ w/2 (+-4), pivot.y in [5, 13]"),
+    "legs":   (28, 38, 24, 34, "hip: pivot.x in [8, 16], pivot.y in [2, 7]"),
+    "pack":   (22, 44, 40, 62, "attach: pivot.x in [w-10, w-2], pivot.y in [0.5h-4, 0.85h]"),
     "weapon": (10, 40, 60, 140, "grip: pivot.x ~ w/2 (+-5), pivot.y in [2, 45]; needs 'tip'"),
 }
 
@@ -19,7 +19,7 @@ def pivot_ok(slot, w, h, px, py):
     if slot == "head":   return abs(px - w / 2) <= 8 and h - 12 <= py <= h - 4
     if slot == "torso":  return abs(px - w / 2) <= 6 and h - 6 <= py <= h - 1
     if slot == "arm":    return abs(px - w / 2) <= 4 and 5 <= py <= 13
-    if slot == "legs":   return 8 <= px <= 12 and 2 <= py <= 6
+    if slot == "legs":   return 8 <= px <= 16 and 2 <= py <= 7
     if slot == "pack":   return w - 10 <= px <= w - 2 and 0.5 * h - 4 <= py <= 0.85 * h
     if slot == "weapon": return abs(px - w / 2) <= 5 and 2 <= py <= 45
     return False

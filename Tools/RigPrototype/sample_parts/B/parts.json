@@ -3,57 +3,57 @@
  "weapon_class": "spear",
  "shoulder": [
   13,
-  -36
+  -29
  ],
  "shoulderF": [
   -6,
-  -36
+  -29
  ],
  "parts": {
   "torso": {
    "file": "torso.png",
    "pivot": [
-    34.0,
-    54.0
+    32.0,
+    42.0
    ]
   },
   "arm": {
    "file": "arm.png",
    "pivot": [
     17.0,
-    13.0
+    12.0
    ]
   },
   "legs": {
    "file": "legs.png",
    "pivot": [
-    12.0,
+    13.0,
     6.0
    ]
   },
   "head": {
    "file": "head.png",
    "pivot": [
-    48.0,
-    76.0
+    52.0,
+    82.0
    ]
   },
   "pack": {
    "file": "pack.png",
    "pivot": [
-    36.0,
-    46.0
+    33.0,
+    36.0
    ]
   },
   "weapon": {
    "file": "weapon.png",
    "pivot": [
     11.0,
-    40.0
+    38.0
    ],
    "tip": [
     11.0,
-    128.0
+    122.0
    ]
   }
  }
