@@ -50,7 +50,7 @@ namespace ThreadZero
             model = new GameModel(daggerReview?null:saves.Load());
             if(daggerReview) PrepareDaggerReviewModel();
             combat = new CombatSession(model);
-            if(daggerReview) {combat.enemyHealth=combat.enemyMaxHealth=100000; combat.enemyTimer=1000;}
+            combat.EnableMovement();
             combat.OnBasicAttack = () => animationState.TriggerAttack(model.IsMelee);
             combat.OnAdvance = dt => animationState.Tick(dt);
             combat.OnHit = () => animationState.TriggerHit();
@@ -61,7 +61,7 @@ namespace ThreadZero
                 if (TryAutoSalvage(item, fresh)) { Save(); return; }
                 string title = Catalog.QualityNames[(int)item.quality] + (fresh ? " · 新外观" : "");
                 Notify(title, (int)item.quality >= 2 ? 5 : 2.5f, item.uid);
-                lastDrop = item; dropWorldX = worldX; dropEffectFrom = clock; dropEffectUntil = clock + QualityVisual.DropDuration(item.quality);
+                lastDrop = item; dropWorldX = combat.MovementEnabled?combat.Movement.EnemyX:worldX; dropEffectFrom = clock; dropEffectUntil = clock + QualityVisual.DropDuration(item.quality);
                 recentDrops.Insert(0, item.uid); if (recentDrops.Count > 5) recentDrops.RemoveAt(5);
                 unseen.Add(item.uid);
                 Play((int)item.quality >= 2 ? rareSound : dropSound); Save();
@@ -93,20 +93,29 @@ namespace ThreadZero
                     float part = Mathf.Min(travelLeft, budget); budget -= part; travelLeft -= part;
                     animationState.Tick(part);
                     worldX = travelFrom + travelDistance * TravelProgress;
+                    if(travelLeft<=0 && combat.MovementEnabled)combat.Movement.ResetAtCamera(worldX);
                     continue;
                 }
                 float step = Mathf.Min(.05f, budget); budget -= step;
                 int wave = combat.wave, bosses = model.state.bosses, region = model.state.region; bool wasBoss = combat.Boss, wasDown = combat.recovery > 0;
+                int targetVersion=combat.Movement.TargetVersion;float oldEnemyWorld=combat.Movement.EnemyX;
                 combat.Tick(step);
+                if(combat.MovementEnabled)
+                {
+                    worldX=combat.Movement.CameraX;
+                    if(targetVersion!=combat.Movement.TargetVersion && !wasDown)
+                    {wreckShown=true;wreckWorldX=oldEnemyWorld;wreckDistrict=Catalog.District(region);wreckBoss=wasBoss;}
+                }
                 if (combat.packShifts != packShiftsSeen) { packShiftsSeen = combat.packShifts; packShiftAt = clock; }
-                if (wasDown && combat.recovery <= 0) BeginTravel(1, region, false, false);
+                if (wasDown && combat.recovery <= 0)
+                {if(combat.MovementEnabled)combat.Movement.ResetAtCamera(worldX);else BeginTravel(1,region,false,false);}
                 else if (model.state.bosses != bosses)
                 {
                     // 首领回收：开着自动推进且下一关已解锁就直接前往，否则回到本关入口继续刷。
                     if (autoAdvance && region < model.state.unlockedRegion) ChangeRegion(region + 1, false);
                     else BeginTravel(2, region, true, true);
                 }
-                else if (combat.wave != wave) BeginTravel(1, region, false, true);
+                else if (combat.wave != wave && !combat.MovementEnabled) BeginTravel(1, region, false, true);
             }
             if (combat.hitFlash > previousHit + .001f) AddFloater(combat.lastPlayerDamage, combat.lastCritical, true);
             if (combat.hurtFlash > previousHurt + .001f) AddFloater(combat.lastEnemyDamage, false, false);
@@ -126,7 +135,7 @@ namespace ThreadZero
         {
             travelKind = kind; travelTotal = kind == 1 ? 1.1f : kind == 2 ? 1.9f : 2.4f; travelLeft = travelTotal;
             travelFrom = worldX; travelDistance = kind == 1 ? 900 : kind == 2 ? 1700 : 2800;
-            wreckShown = leaveWreck; wreckWorldX = worldX; wreckDistrict = Catalog.District(region); wreckBoss = boss;
+            wreckShown = leaveWreck; if(!combat.MovementEnabled)wreckWorldX = worldX; wreckDistrict = Catalog.District(region); wreckBoss = boss;
         }
         private void Save() { if (!daggerReview && model != null && saves != null) lastSaveOk = saves.Save(model.state); saveTimer = 0; }
         private void OnApplicationQuit() { Save(); }

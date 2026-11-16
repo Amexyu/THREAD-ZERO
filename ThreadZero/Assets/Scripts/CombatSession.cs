@@ -54,6 +54,7 @@ namespace ThreadZero
             reserve.Clear(); reserveMax = enemyMaxHealth;
             for (int i = 1; i < packSize; i++) reserve.Add(enemyMaxHealth);
             enemyHealth = enemyMaxHealth; attackTimer = .3f; enemyTimer = 1.25f; markTime = 0; pendingStrike=false;
+            if(MovementEnabled)Movement.BeginEncounter();
         }
         private void ResetModules()
         {
@@ -91,18 +92,23 @@ namespace ThreadZero
             SyncLoadout();
             if (recovery > 0)
             {
+                if(MovementEnabled)Movement.Stop();
                 recovery -= dt;
                 if (recovery <= 0) { ResetRegion(); OnMessage?.Invoke("维修完成，装备与收藏保留，设备重新部署。"); }
                 return;
             }
             Stats s = model.Total(); health = Math.Min(health, s.health);
+            if(MovementEnabled)Movement.Tick(dt,model.IsMelee,Boss,Elite,pendingStrike || DaggerActive);
+            bool engaged=HeroInRange || EnemyInRange;
             markTime = Math.Max(0, markTime - dt);
-            if (model.Has(Effect.Mark))
+            if (engaged && model.Has(Effect.Mark))
             {
                 markTimer -= dt;
                 if (markTimer <= 0) { markTime = Balance.MarkDuration; markTimer += Balance.MarkInterval; Emit(Ability.Mark); }
             }
             attackTimer -= dt; enemyTimer -= dt;
+            if(!HeroInRange){attackTimer=Math.Max(0,attackTimer);pendingStrike=false;}
+            if(!EnemyInRange)enemyTimer=Math.Max(0,enemyTimer);
             if (AdvanceDagger(dt,s)) return;
             if(pendingStrike)strikeDelay-=dt;
             if (pendingStrike && strikeDelay <= .00001f)
@@ -125,7 +131,7 @@ namespace ThreadZero
                 }
                 if (DealDamage(damage, s)) return;
             }
-            if(attackTimer<=0 && !pendingStrike && !DaggerActive)
+            if(attackTimer<=0 && !pendingStrike && !DaggerActive && HeroInRange)
             {
                 if (!BeginDagger(s)) {
                 attackTimer+=1/(1+s.haste);pendingStrike=true;
@@ -133,7 +139,7 @@ namespace ThreadZero
                 OnBasicAttack?.Invoke();
                 }
             }
-            if (model.Has(Effect.Drone))
+            if (engaged && model.Has(Effect.Drone))
             {
                 droneTimer -= dt;
                 if (droneTimer <= 0)
@@ -144,7 +150,7 @@ namespace ThreadZero
                     if (DealDamage(lastDroneDamage, s)) return;
                 }
             }
-            if (model.Has(Effect.Thruster))
+            if (engaged && model.Has(Effect.Thruster))
             {
                 dashTimer -= dt;
                 if (dashTimer <= 0)
@@ -157,7 +163,7 @@ namespace ThreadZero
                     if (DealDamage(lastDashDamage, s)) return;
                 }
             }
-            if (enemyTimer <= 0)
+            if (enemyTimer <= 0 && EnemyInRange)
             {
                 // 怪群里每多一只活着的同伴，攻击就更密一些；单只伤害不变。
                 enemyTimer += (Boss ? 1.1f : 1.65f) / (1 + Balance.PackPressure * reserve.Count);
@@ -182,11 +188,13 @@ namespace ThreadZero
             enemyHealth -= damage; lastPlayerDamage = damage; hitFlash = .3f;
             if (enemyHealth > 0) return false;
             CancelDagger();
+            pendingStrike=false;
             bool wasBoss = Boss, wasElite = Elite; Reward(wasBoss, wasElite);
             if (reserve.Count > 0 && !wasBoss)
             {
                 // 怪群还没清完：下一只顶到最前面，路段不推进。
                 enemyMaxHealth = reserveMax; enemyHealth = reserve[0]; reserve.RemoveAt(0);
+                if(MovementEnabled)Movement.AdvanceTarget();
                 markTime = 0; packShifts++; return true;
             }
             if (wasBoss)

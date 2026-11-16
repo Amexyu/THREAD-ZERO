@@ -35,7 +35,8 @@ namespace ThreadZero
             combat.OnDaggerHit=(index,damage)=>Debug.Log("DAGGER_HIT "+index+" age="+combat.DaggerAge+" damage="+damage);
             Debug.Log("DAGGER_REVIEW: isolated unsaved model; w1 Common, c0, default head, b0");
             string[] args=Environment.GetCommandLineArgs();int pos=Array.IndexOf(args,"-dagger-capture");
-            if(pos>=0 && pos+1<args.Length) StartCoroutine(CaptureDaggerReview(args[pos+1]));
+            if(pos>=0 && pos+1<args.Length)
+            {combat.enemyHealth=combat.enemyMaxHealth=100000;combat.enemyTimer=1000;StartCoroutine(CaptureDaggerReview(args[pos+1]));}
         }
         private IEnumerator CaptureDaggerReview(string folder)
         {

@@ -1,8 +1,11 @@
 from pathlib import Path
 import struct
+import sys
 root=Path(__file__).resolve().parent.parent
+movement='--movement' in sys.argv
 out=bytearray()
-for n,p in enumerate(sorted((root/'Artifacts/AttackGifFrames').glob('*.gif'))):
+frames=sorted((root/('Artifacts/MovementFrames' if movement else 'Artifacts/AttackGifFrames')).glob('*.gif'))
+for n,p in enumerate(frames):
     b=p.read_bytes();packed=b[10];table=b[13:13+3*(2**((packed&7)+1))] if packed&128 else b''
     offset=13+len(table)
     if n==0:
@@ -23,5 +26,6 @@ for n,p in enumerate(sorted((root/'Artifacts/AttackGifFrames').glob('*.gif'))):
     data+=b'\0'
     out+=b'\x21\xf9\x04\x04'+struct.pack('<H',4)+b'\x00\x00'+desc+local+data
 out+=b'\x3b'
-target=root/'Artifacts/AttackAnimationV5.gif';target.write_bytes(out)
-print(f'Animation: {target.name} ({len(out)} bytes, 36 frames)')
+target=root/('Artifacts/Movement_CloseCombat.gif' if movement else 'Artifacts/AttackAnimationV5.gif')
+target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(out)
+print(f'Animation: {target.name} ({len(out)} bytes, {len(frames)} frames)')

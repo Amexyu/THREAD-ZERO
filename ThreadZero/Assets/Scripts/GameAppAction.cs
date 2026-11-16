@@ -8,6 +8,7 @@ namespace ThreadZero
         private const float StageX = 128, StageY = 104, StageW = 1440, StageH = 624, GroundY = 572;
         // v0.8：镜头拉远。角色与敌人缩小，舞台里能看到更长的一段路。
         private const float HeroRestX = 428, HeroCanvas = 260, EnemyX = 1060, EnemyCanvas = 220, EnemyEliteCanvas = 260, EnemyBossCanvas = 300, PackSpacing = 136;
+        private float liveEnemyX=EnemyX;
 
         private static float Wrap(float value, float period) { value %= period; return value < 0 ? value + period : value; }
         private static float Noise(int n) { n = (n << 13) ^ n; return ((n * (n * n * 15731 + 789221) + 1376312589) & 0x7fffffff) / 2147483647f; }
@@ -20,7 +21,8 @@ namespace ThreadZero
             bool deep = region >= Catalog.Districts, moving = travelLeft > 0;
             bool boss = combat.Boss, melee = model.IsMelee, down = combat.recovery > 0;
             // 行进途中战斗逻辑暂停，上一场战斗残留的闪光不参与显示。
-            float hit = moving ? 0 : combat.hitFlash, dash = moving ? 0 : combat.dashFlash;
+            bool nearCombat=combat.HeroInRange || combat.EnemyInRange;
+            float hit = moving || !nearCombat ? 0 : combat.hitFlash, dash = moving || !nearCombat ? 0 : combat.dashFlash;
 
             Ui.Fill(StageX, StageY, StageW, StageH, deep ? Ui.Hex(0xE9EAE5) : Ui.Stage);
             Ui.BeginClip(StageX, StageY, StageW, StageH, 0);
@@ -29,29 +31,35 @@ namespace ThreadZero
             float enemyCanvas = boss ? EnemyBossCanvas : combat.Elite ? EnemyEliteCanvas : EnemyCanvas;
             float enemyTop = GroundY - enemyCanvas * .82f, enemyMid = GroundY - enemyCanvas * .42f;
             // 敌人固定在世界里：行进时它随着地面从右侧进入画面。
-            float enemyX = EnemyX + (moving ? travelFrom + travelDistance - worldX : 0);
+            float enemyX = !moving && combat.MovementEnabled?combat.Movement.EnemyScreenX:EnemyX + (moving ? travelFrom + travelDistance - worldX : 0);
+            liveEnemyX=enemyX;
+            bool heroWalking=moving || (!down && combat.MovementEnabled && combat.Movement.HeroMoving);
+            bool enemyWalking=!moving && !down && combat.MovementEnabled && combat.Movement.EnemyMoving;
+            float heroWalkPhase=moving?worldX/24f:combat.Movement.HeroTravel/24f;
+            float enemyWalkPhase=combat.Movement.EnemyTravel/21f;
 
             if (wreckShown)
             {
-                float wreckX = EnemyX - (worldX - wreckWorldX);
+                float wreckX = combat.MovementEnabled?wreckWorldX-worldX:EnemyX - (worldX - wreckWorldX);
                 if (wreckX < StageX - 360) wreckShown = false; else DrawWreck(wreckX);
             }
 
-            float lunge = dash > 0 ? 90 * Mathf.Sin(dash / .4f * Mathf.PI) : 0;
+            float lunge = !combat.MovementEnabled && dash > 0 ? 90 * Mathf.Sin(dash / .4f * Mathf.PI) : 0;
             DollPose pose = animationState.Pose(down);
             bool daggerSample = DaggerActorView.CanDraw(model);
-            float approach = !moving && melee && pose.attackProgress > 0 ? Mathf.Sin(pose.attackProgress * Mathf.PI) * (EnemyX - enemyCanvas * .30f - HeroRestX - 125) : 0;
-            if(daggerSample)
+            float approach = !combat.MovementEnabled && !moving && melee && pose.attackProgress > 0 ? Mathf.Sin(pose.attackProgress * Mathf.PI) * (EnemyX - enemyCanvas * .30f - HeroRestX - 125) : 0;
+            if(daggerSample && !combat.MovementEnabled)
             {
                 float age=combat.DaggerAge, contact=combat.DaggerCombo?.23f:DaggerSkill.BasicHit;
                 float recover=combat.DaggerCombo?.56f:.18f, duration=combat.DaggerCombo?DaggerSkill.Duration:DaggerSkill.BasicDuration;
                 float reach=age<contact?Mathf.SmoothStep(0,1,age/contact):age<recover?1:Mathf.SmoothStep(1,0,(age-recover)/(duration-recover));
                 approach=!moving && !down && combat.DaggerActive?reach*(EnemyX-enemyCanvas*.30f-HeroRestX-HeroCanvas*.42f):0;
             }
-            float stride = moving ? Mathf.Abs(Mathf.Sin(worldX / 24f)) * 3 : 0;
-            float heroFeetX = HeroRestX + lunge + approach, heroFeetY = GroundY + 2 - stride;
+            float stride = heroWalking?Mathf.Abs(Mathf.Sin(heroWalkPhase))*7:0;
+            float heroFeetX = !moving && combat.MovementEnabled?combat.Movement.HeroScreenX:HeroRestX+lunge+approach;
+            float heroFeetY = GroundY + 2 - stride;
             Ui.Fill(heroFeetX - 56, GroundY - 3, 112, 5, Ui.Alpha(Ui.Ink, .16f));
-            if (moving)
+            if (heroWalking)
                 for (int k = 0; k < 3; k++)
                 {
                     float phase = Wrap(worldX / 70f + k * .33f, 1), size = 3 + 7 * (1 - phase);
@@ -59,8 +67,8 @@ namespace ThreadZero
                 }
             if (dash > 0) Ui.Stroke(HeroRestX - 150, GroundY - 44, heroFeetX - 36, GroundY - 44, 4, Ui.Orange);
             Color heroTint = down ? new Color(.6f, .65f, .68f) : pose.damageTint > 0 ? new Color(1, 1 - pose.damageTint, 1 - pose.damageTint) : Color.white;
-            int heroFrame = down || moving ? ActorView.IdleFrame(melee) : ActorView.CombatFrame(pose.attackProgress, melee);
-            float shake = down || moving || pose.attackProgress > 0 ? 0 : pose.rootX;
+            int heroFrame = down || heroWalking ? ActorView.IdleFrame(melee) : ActorView.CombatFrame(pose.attackProgress, melee);
+            float shake = down || heroWalking || pose.attackProgress > 0 ? 0 : pose.rootX;
             string headId = model.Equipped(Slot.Head) == null && model.state.appearance[(int)Slot.Head] == null
                 ? "_default" : model.Appearance(Slot.Head).id;
             // Hold F9 on the action page to inspect the walk rig without waiting for travel.
@@ -69,28 +77,36 @@ namespace ThreadZero
             string rigHead = walkReview ? "h0" : headId;
             string rigWeapon = walkReview ? "w0" : model.Appearance(Slot.Weapon).id;
             string rigBack = walkReview ? "b0" : model.Appearance(Slot.Back).id;
-            int daggerFrame=!moving && !down && combat.DaggerActive?DaggerSkill.Frame(combat.DaggerAge,combat.DaggerCombo):0;
-            float hop=daggerSample && moving?Mathf.Abs(Mathf.Sin(worldX/24f))*6:0;
-            bool newDagger = DaggerActorView.Draw(model,heroFeetX+shake,heroFeetY-hop,HeroCanvas,daggerFrame,heroTint);
+            int daggerFrame=!heroWalking && !down && combat.DaggerActive?DaggerSkill.Frame(combat.DaggerAge,combat.DaggerCombo):0;
+            Matrix4x4 heroMatrix=GUI.matrix;
+            if(heroWalking && !down)
+            {
+                Vector2 pivot=Ui.P(heroFeetX,heroFeetY);
+                float squash=Mathf.Cos(heroWalkPhase*2)*.018f;
+                GUIUtility.RotateAroundPivot(2.5f+Mathf.Sin(heroWalkPhase)*.6f,pivot);
+                GUIUtility.ScaleAroundPivot(new Vector2(1+squash,1-squash),pivot);
+            }
+            bool newDagger = DaggerActorView.Draw(model,heroFeetX+shake,heroFeetY,HeroCanvas,daggerFrame,heroTint);
             bool skeletal = !newDagger && SkeletalActorView.Draw(heroFeetX + shake, heroFeetY, HeroCanvas,
                 rigCoat, rigHead, rigWeapon, rigBack,
-                heroFrame, moving || walkReview, walkReview ? clock * 6f : worldX / 24f,
+                heroFrame, heroWalking || walkReview, walkReview ? clock * 6f : heroWalkPhase,
                 pose.attackProgress, heroTint);
             bool wholeFrame = newDagger || skeletal || ActorView.Player(heroFeetX + shake, heroFeetY, HeroCanvas,
                 model.Appearance(Slot.Coat).style, heroFrame, heroTint, headId, model.Appearance(Slot.Weapon).id);
             const float oldW = 300, oldH = 240;
             if (!wholeFrame) CharacterView.Draw(model, Ui.R(heroFeetX - oldW / 2, heroFeetY - oldH + 6, oldW, oldH), clock, Mathf.Abs(pose.weaponAngle) > .1f, moving ? 0 : combat.hurtFlash, down, dash, pose);
+            GUI.matrix=heroMatrix;
 
             // 敌人：信号禁区的两种是悬浮单位，会上下浮动。深层敌人带冷色调。
             // 怪群：最前面一只在 enemyX，同伴依次排在它身后。前面的倒下后，后面的整队向前顶一格。
-            float packSlide = moving ? 0 : PackSpacing * (1 - Mathf.Clamp01((clock - packShiftAt) / .28f));
+            float packSlide = moving || combat.MovementEnabled ? 0 : PackSpacing * (1 - Mathf.Clamp01((clock - packShiftAt) / .28f));
             enemyX += packSlide;
             for (int i = combat.reserve.Count - 1; i >= 0; i--)
             {
                 float memberX = enemyX + (i + 1) * PackSpacing, memberFeetY = GroundY + 2 + (district == 2 ? Mathf.Sin(clock * 2 + i + 1) * 5 - 8 : 0);
                 if (memberX > StageX + StageW + enemyCanvas) continue;
                 Ui.Fill(memberX - enemyCanvas * .26f, GroundY - 3, enemyCanvas * .52f, 5, Ui.Alpha(Ui.Ink, .16f));
-                if (!ActorView.Enemy(memberX, memberFeetY, enemyCanvas, district, false, deep ? new Color(.84f, .88f, 1) : Color.white))
+                if (!DrawMovingEnemy(memberX, memberFeetY, enemyCanvas, district, false, deep ? new Color(.84f, .88f, 1) : Color.white,enemyWalking,enemyWalkPhase+i*.65f,0))
                     DrawEnemy(memberX, GroundY - 138, 110, 88, false, 0, false);
                 Ui.Fill(memberX - 32, enemyTop - 16, 64, 5, Ui.Steel);
                 Ui.Fill(memberX - 32, enemyTop - 16, 64 * Mathf.Clamp01(combat.reserve[i] / Mathf.Max(1, combat.reserveMax)), 5, Ui.Orange);
@@ -101,7 +117,8 @@ namespace ThreadZero
                 float enemyFeetY = GroundY + 2 + (floating ? Mathf.Sin(clock * 2) * 5 - 8 : 0), recoil = hit > 0 ? hit / .3f * 6 : 0;
                 Color enemyTint = hit > 0 ? new Color(1, .74f, .68f) : deep ? new Color(.84f, .88f, 1) : Color.white;
                 Ui.Fill(enemyX - enemyCanvas * .26f, GroundY - 3, enemyCanvas * .52f, 5, Ui.Alpha(Ui.Ink, .16f));
-                if (ActorView.Enemy(enemyX + recoil, enemyFeetY, enemyCanvas, district, boss, enemyTint))
+                float enemyStrike=!moving && combat.hurtFlash>0?Mathf.Sin(Mathf.Clamp01(combat.hurtFlash/.25f)*Mathf.PI):0;
+                if (DrawMovingEnemy(enemyX + recoil, enemyFeetY, enemyCanvas, district, boss, enemyTint,enemyWalking,enemyWalkPhase,enemyStrike))
                 { if (!moving && combat.markTime > 0) MarkFrame(enemyX - enemyCanvas * .42f, enemyTop - 8, enemyX + enemyCanvas * .42f, GroundY + 14); }
                 else
                 {
@@ -121,12 +138,12 @@ namespace ThreadZero
                     float old = Mathf.Min(oldW / 330, oldH / 320);
                     start = new Vector2(heroFeetX - 128 * old + mx * old, heroFeetY + 6 - 320 * old + my * old);
                 }
-                Vector2 end = new Vector2(EnemyX - enemyCanvas * .2f, enemyMid), point = Vector2.Lerp(start, end, pose.projectile), direction = (end - start).normalized;
+                Vector2 end = new Vector2(enemyX - enemyCanvas * .2f, enemyMid), point = Vector2.Lerp(start, end, pose.projectile), direction = (end - start).normalized;
                 Ui.Stroke(point.x, point.y, point.x + direction.x * 30, point.y + direction.y * 30, 4, Ui.Orange);
             }
             ModuleEffects(heroFeetX, enemyMid, moving);
             DropEffect(enemyCanvas);
-            DrawFloaters(heroFeetX, EnemyX - enemyCanvas * .36f - 120, enemyMid - 50);
+            DrawFloaters(heroFeetX, enemyX - enemyCanvas * .36f - 120, enemyMid - 50);
             Ui.EndClip();
 
             // 敌我铭牌。
@@ -156,6 +173,17 @@ namespace ThreadZero
             }
             Ui.Frame(StageX, StageY, StageW, StageH, 2, Ui.Ink);
             ActionFooter();
+        }
+
+        private bool DrawMovingEnemy(float x,float y,float canvas,int district,bool boss,Color tint,bool walking,float phase,float strike)
+        {
+            Matrix4x4 previous=GUI.matrix;
+            float hop=walking?Mathf.Abs(Mathf.Sin(phase))*4:0;
+            Vector2 pivot=Ui.P(x,y-hop);
+            if(walking)GUIUtility.RotateAroundPivot(-2.5f+Mathf.Sin(phase)*.6f,pivot);
+            else if(strike>0)GUIUtility.RotateAroundPivot(-strike*3,pivot);
+            bool drawn=ActorView.Enemy(x-strike*5,y-hop,canvas,district,boss,tint);
+            GUI.matrix=previous;return drawn;
         }
 
         // 程序画的行进背景：远景楼块（慢）、中景立柱与街区特征（中）、地面标线（快），随 worldX 滚动。
@@ -216,6 +244,7 @@ namespace ThreadZero
             float canvas = wreckBoss ? EnemyBossCanvas : EnemyCanvas;
             Matrix4x4 old = GUI.matrix;
             GUIUtility.RotateAroundPivot(-9, Ui.P(x, GroundY));
+            GUIUtility.ScaleAroundPivot(new Vector2(1.05f,.28f),Ui.P(x,GroundY));
             bool drawn = ActorView.Enemy(x, GroundY + 8, canvas, wreckDistrict, wreckBoss, new Color(.42f, .44f, .47f, .75f));
             GUI.matrix = old;
             if (!drawn) Ui.Fill(x - 55, GroundY - 34, 110, 34, Ui.Grey);
@@ -337,12 +366,12 @@ namespace ThreadZero
             {
                 float dx = feetX + 96, dy = GroundY - 262 + Mathf.Sin(clock * 3) * 5;
                 if (!PaperDollView.DrawDrone(Ui.R(dx - 38, dy - 15, 76, 30))) { Ui.Fill(dx - 18, dy - 7, 36, 14, Ui.Ink); Ui.Disk(dx, dy, 4, Ui.Orange); }
-                if (!moving && combat.droneFlash > 0) Ui.Stroke(dx + 24, dy + 5, EnemyX, enemyMid, 3, Ui.Orange);
+                if (!moving && (combat.HeroInRange || combat.EnemyInRange) && combat.droneFlash > 0) Ui.Stroke(dx + 24, dy + 5, liveEnemyX, enemyMid, 3, Ui.Orange);
             }
-            if (moving) return;
+            if (moving || (!combat.HeroInRange && !combat.EnemyInRange)) return;
             if (combat.arcFlash > 0)
             {
-                Color arc = QualityVisual.Colors[3]; float x0 = feetX + 84, span = EnemyX - x0;
+                Color arc = QualityVisual.Colors[3]; float x0 = feetX + 84, span = liveEnemyX - x0;
                 float[] offsets = { 0, -26, 18, -20, 0 };
                 for (int i = 1; i < 5; i++)
                     Ui.Stroke(x0 + span * (i - 1) / 4, enemyMid + offsets[i - 1], x0 + span * i / 4, enemyMid + offsets[i], 4, arc);
@@ -358,7 +387,8 @@ namespace ThreadZero
         {
             if (lastDrop == null || clock >= dropEffectUntil) return;
             EquipmentBase b = Catalog.Find(lastDrop.baseId); if (b == null) return;
-            float rise = Mathf.Clamp01((clock - dropEffectFrom) / .22f) * 34, x = EnemyX + enemyCanvas * .42f + 24 - (worldX - dropWorldX), y = GroundY - 64 - rise;
+            float rise = Mathf.Clamp01((clock - dropEffectFrom) / .22f) * 34;
+            float x = (combat.MovementEnabled?dropWorldX-worldX:EnemyX-(worldX-dropWorldX))+enemyCanvas*.42f+24, y=GroundY-64-rise;
             if (model.state.glowMode > 0 && (int)lastDrop.quality >= 2)
                 QualityVisual.Halo(Ui.P(x + 26, y + 28), 56 * Ui.K, QualityVisual.Colors[(int)lastDrop.quality], model.state.glowMode == 1 ? .25f : .5f);
             Ui.ItemTile(x, y, 52, 56, b, lastDrop.quality, true, false, 4, false);
