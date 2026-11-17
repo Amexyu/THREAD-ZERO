@@ -38,22 +38,28 @@ namespace ThreadZero {
  public static bool DrawDrone(Rect area){
  if(!Ready()||legacy==null)return false;DollPart s=PaperDollLayout.Parts[5];GUI.DrawTextureWithTexCoords(area,legacy,new Rect((float)s.x/legacy.width,1f-(float)(s.y+s.height)/legacy.height,(float)s.width/legacy.width,(float)s.height/legacy.height),true);return true;
  }
+ [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] static void ResetCache(){iconCache.Clear();attempted=false;}
+ // 装备图标：只用 V13 现行部件（Parts/<id>/ 或初始件 Starter/），旧 V08/EquipmentAtlas 图标不再使用。
+ static Texture2D PartIcon(EquipmentBase item){
+ Texture2D t;if(iconCache.TryGetValue(item.id,out t))return t;
+ string file=item.slot==Slot.Head?"head":item.slot==Slot.Coat?"torso":item.slot==Slot.Back?"pack":"weapon";
+ t=Resources.Load<Texture2D>("Art/V13/Parts/"+item.id+"/icon");   // 单品图（例如头部装备不带人头），有就优先用
+ if(t==null)t=Resources.Load<Texture2D>("Art/V13/Parts/"+item.id+"/"+file);
+ if(t==null)t=Resources.Load<Texture2D>("Art/V13/Starter/"+file);
+ iconCache[item.id]=t;return t;
+ }
+ static bool IsPartIcon(Texture2D t){return t!=null&&t.name=="icon";}
  public static bool DrawEquipmentIcon(EquipmentBase item,Rect area,bool dim=false){
- Texture2D replacement;
- if(!iconCache.TryGetValue(item.id,out replacement)){
- replacement=Resources.Load<Texture2D>("Art/V08/EquipmentIcon/"+item.id);
- iconCache[item.id]=replacement;
- }
- if(replacement!=null){
- Color previous=GUI.color;
- if(dim)GUI.color=new Color(.65f,.67f,.7f,.55f);
- GUI.DrawTexture(area,replacement,ScaleMode.ScaleToFit,true);
- GUI.color=previous;
- return true;
- }
- if(!Ready())return false;int index=(int)item.slot*5+item.style;int[,] l=SpriteAtlasLayout.Equipment;
- float scale=Mathf.Min(area.width/l[index,2],area.height/l[index,3]);Color old=GUI.color;if(dim)GUI.color=new Color(.65f,.67f,.7f,.55f);
- Sprite(equipment,l,index,new Rect(area.center.x-l[index,2]*scale/2,area.center.y-l[index,3]*scale/2,l[index,2]*scale,l[index,3]*scale));GUI.color=old;return true;
+ if(item==null)return false;Texture2D tex=PartIcon(item);if(tex==null)return false;
+ Color previous=GUI.color;if(dim)GUI.color=new Color(.65f,.67f,.7f,.55f);
+ if(item.slot==Slot.Weapon&&!IsPartIcon(tex)){
+ // 武器部件是竖着画的（握把在上、枪口/刃尖朝下），图标里斜放成刃尖朝右上。
+ float k=Mathf.Min(area.width,area.height)*.98f/((tex.width+tex.height)*.70711f),w=tex.width*k,h=tex.height*k;
+ Matrix4x4 before=GUI.matrix;GUIUtility.RotateAroundPivot(-135,area.center);
+ GUI.DrawTexture(new Rect(area.center.x-w/2,area.center.y-h/2,w,h),tex,ScaleMode.StretchToFill,true);
+ GUI.matrix=before;
+ }else GUI.DrawTexture(area,tex,ScaleMode.ScaleToFit,true);
+ GUI.color=previous;return true;
  }
  }
 }

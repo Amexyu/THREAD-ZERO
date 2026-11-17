@@ -64,7 +64,7 @@ namespace ThreadZero
                 if (TryAutoSalvage(item, fresh)) { Save(); return; }
                 string title = Catalog.QualityNames[(int)item.quality] + (fresh ? " · 新外观" : "");
                 Notify(title, (int)item.quality >= 2 ? 5 : 2.5f, item.uid);
-                lastDrop = item; dropWorldX = combat.lastKillX; dropEffectFrom = clock; dropEffectUntil = clock + QualityVisual.DropDuration(item.quality);
+                lastDrop = item; SpawnDrop(item);
                 recentDrops.Insert(0, item.uid); if (recentDrops.Count > 5) recentDrops.RemoveAt(5);
                 unseen.Add(item.uid);
                 Play((int)item.quality >= 2 ? rareSound : dropSound); Save();

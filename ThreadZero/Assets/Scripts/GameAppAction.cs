@@ -156,7 +156,7 @@ namespace ThreadZero
             }
             WeaponFx.Draw(clock);
             ModuleEffects(heroFeetX, enemyMid, moving);
-            DropEffect(targetCanvas);
+            DropEffect(heroFeetX);
             DrawFloaters(heroFeetX);
             Ui.EndClip();
 
@@ -502,16 +502,60 @@ namespace ThreadZero
             }
         }
 
-        private void DropEffect(float enemyCanvas)
+        // ---------- 掉落：从残骸弹出 → 落地闪一下 → 被吸向角色（不再钉在原地） ----------
+        private sealed class DropFx { public Item item; public EquipmentBase b; public float from, wx, side; }
+        private readonly List<DropFx> dropFx = new List<DropFx>();
+        private const float DropPop = .5f, DropFly = .36f, DropFlash = .28f;
+        private static float DropRest(Quality q) { return .22f + (int)q * .12f; }
+        private void SpawnDrop(Item item)
         {
-            if (lastDrop == null || clock >= dropEffectUntil) return;
-            EquipmentBase b = Catalog.Find(lastDrop.baseId); if (b == null) return;
-            float rise = Mathf.Clamp01((clock - dropEffectFrom) / .22f) * 34;
-            float x = (combat.MovementEnabled?dropWorldX-worldX:EnemyX-(worldX-dropWorldX))+enemyCanvas*.42f+24, y=GroundY-64-rise;
-            if (model.state.glowMode > 0 && (int)lastDrop.quality >= 2)
-                QualityVisual.Halo(Ui.P(x + 26, y + 28), 56 * Ui.K, QualityVisual.Colors[(int)lastDrop.quality], model.state.glowMode == 1 ? .25f : .5f);
-            Ui.ItemTile(x, y, 52, 56, b, lastDrop.quality, true, false, 4, false);
+            EquipmentBase b = Catalog.Find(item.baseId); if (b == null) return;
+            if (dropFx.Count >= 8) dropFx.RemoveAt(0);
+            dropFx.Add(new DropFx { item = item, b = b, from = clock, wx = combat.lastKillX, side = (dropFx.Count % 2 == 0 ? 1 : -1) * (20 + dropFx.Count * 6) });
         }
+        private float DropScreenX(float wx) { return combat.MovementEnabled ? wx - worldX : EnemyX - (worldX - wx); }
+        private void DropEffect(float heroX)
+        {
+            const float W = 44, H = 48;
+            Vector2 hero = new Vector2(heroX, GroundY - 118);
+            for (int i = dropFx.Count - 1; i >= 0; i--)
+            {
+                DropFx d = dropFx[i]; float t = clock - d.from, rest = DropRest(d.item.quality);
+                Color qc = QualityVisual.Colors[(int)d.item.quality];
+                float gx = DropScreenX(d.wx) + d.side, groundTop = GroundY - H - 4;
+                if (t < DropPop)
+                {   // 抛物线弹出，落地时轻微回弹
+                    float u = t / DropPop, x = Mathf.Lerp(DropScreenX(d.wx), gx, u);
+                    float y = groundTop - 4 * u * (1 - u) * 110 - 70 * (1 - u) * (1 - u);
+                    Ui.Fill(gx - 16, GroundY - 3, 32, 3, Ui.Alpha(Ui.Ink, .18f * u));
+                    Ui.ItemTile(x - W / 2, y, W, H, d.b, d.item.quality, true, false, 3, false);
+                }
+                else if (t < DropPop + rest)
+                {   // 落地停一下：轻微上下浮动 + 品质色底光
+                    float u = (t - DropPop) / rest, bob = Mathf.Sin(u * Mathf.PI) * 5;
+                    Ui.Fill(gx - 18, GroundY - 3, 36, 3, Ui.Alpha(qc, .55f));
+                    if (model.state.glowMode > 0 && (int)d.item.quality >= 2)
+                        QualityVisual.Halo(Ui.P(gx, groundTop + H / 2 - bob), 46 * Ui.K, qc, model.state.glowMode == 1 ? .25f : .5f);
+                    Ui.ItemTile(gx - W / 2, groundTop - bob, W, H, d.b, d.item.quality, true, false, 3, false);
+                }
+                else if (t < DropPop + rest + DropFly)
+                {   // 吸向角色：先慢后快、边飞边缩小，拖一道品质色尾迹
+                    float u = (t - DropPop - rest) / DropFly, e = u * u * u, s = Mathf.Lerp(1, .32f, e);
+                    Vector2 a = new Vector2(gx, groundTop + H / 2), c = a + new Vector2(0, -90);
+                    Vector2 p = Bez(a, c, hero, e), q = Bez(a, c, hero, Mathf.Max(0, e - .18f));
+                    Ui.Stroke(q.x, q.y, p.x, p.y, 5 * s + 1, Ui.Alpha(qc, .5f));
+                    Ui.ItemTile(p.x - W * s / 2, p.y - H * s / 2, W * s, H * s, d.b, d.item.quality, true, false, 3 * s, false);
+                }
+                else if (t < DropPop + rest + DropFly + DropFlash)
+                {   // 收进身上：一圈小闪光
+                    float u = (t - DropPop - rest - DropFly) / DropFlash;
+                    Ui.Disk(hero.x, hero.y, 10 + u * 30, Ui.Alpha(qc, .35f * (1 - u)));
+                    Ui.Disk(hero.x, hero.y, 5 + u * 8, Ui.Alpha(Color.white, .7f * (1 - u)));
+                }
+                else dropFx.RemoveAt(i);
+            }
+        }
+        private static Vector2 Bez(Vector2 a, Vector2 c, Vector2 b, float t) { float m = 1 - t; return m * m * a + 2 * m * t * c + t * t * b; }
 
         private void DrawFloaters(float feetX)
         {

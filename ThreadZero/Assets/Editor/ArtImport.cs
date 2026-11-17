@@ -19,7 +19,7 @@ namespace ThreadZero.Editor
             texture.filterMode=FilterMode.Bilinear;
             texture.wrapMode=TextureWrapMode.Clamp;
             // V13 layered parts are drawn ~2.5x smaller than authored; mipmaps keep the line art from shimmering.
-            if(assetPath.StartsWith("Assets/Resources/Art/V13/Starter/") || assetPath.StartsWith("Assets/Resources/Art/V15/Hud/"))
+            if(assetPath.StartsWith("Assets/Resources/Art/V13/Starter/") || assetPath.StartsWith("Assets/Resources/Art/V13/Parts/") || assetPath.StartsWith("Assets/Resources/Art/V15/Hud/"))
             { texture.mipmapEnabled=true; texture.filterMode=FilterMode.Trilinear; }
         }
     }
