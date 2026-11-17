@@ -26,7 +26,7 @@ namespace ThreadZero
         }
         public static void Line(Vector2 a,Vector2 b,float width,Color color)
         {
-            Matrix4x4 old=GUI.matrix; GUIUtility.RotateAroundPivot(Mathf.Atan2(b.y-a.y,b.x-a.x)*Mathf.Rad2Deg,a);
+            Matrix4x4 old=GUI.matrix; GUI.matrix=old*Ui.RotateLocal(Mathf.Atan2(b.y-a.y,b.x-a.x)*Mathf.Rad2Deg,a);
             Box(a.x,a.y-width/2,Vector2.Distance(a,b),width,color); GUI.matrix=old;
         }
         public static void Draw(GameModel model,Rect area,float animation,bool attacking=false,float hurt=0,bool defeated=false,float dash=0,DollPose? pose=null)

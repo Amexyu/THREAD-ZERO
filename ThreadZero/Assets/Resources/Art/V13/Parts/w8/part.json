@@ -1,0 +1,15 @@
+{
+ "weapon_class": "dagger",
+ "weapon": {
+  "file": "weapon.png",
+  "pivot": [
+   12.75,
+   7.35
+  ],
+  "tip": [
+   13.0,
+   55.25
+  ]
+ },
+ "scale": 4
+}

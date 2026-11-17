@@ -45,7 +45,7 @@
   "pack": {
    "file": "pack.png",
    "pivot": [
-    28,
+    18.98,
     33
    ]
   },
@@ -72,6 +72,24 @@
    "tip": [
     7,
     38
+   ]
+  },
+  "arm_far": {
+   "file": "arm_far.png",
+   "pivot": [
+    7.25,
+    8.75
+   ],
+   "hand": [
+    9.58,
+    26.85
+   ]
+  },
+  "hand_far": {
+   "file": "hand_far.png",
+   "pivot": [
+    5.75,
+    5.25
    ]
   }
  },

@@ -8,22 +8,22 @@ namespace ThreadZero
     public sealed partial class GameApp
     {
         private bool daggerReview;
-        public const string DaggerAutoReviewKey="ThreadZero.StarterDagger.AutoReview.v12";
+        public const string DaggerAutoReviewKey="ThreadZero.StarterDagger.AutoReview.v16";
         private static bool DaggerReviewRequested()
         {
 #if UNITY_EDITOR
             if(UnityEditor.SessionState.GetBool("ThreadZero.DaggerReview",false))
             {UnityEditor.SessionState.SetBool("ThreadZero.DaggerReview",false);return true;}
-            // The current art milestone is one complete outfit. Plain Play must show it,
-            // rather than silently loading an unrelated gun/helmet from a prior save.
-            if(UnityEditor.EditorPrefs.GetBool(DaggerAutoReviewKey,true))return true;
+            // v0.16：默认关闭。以前每次在编辑器里点 Play 都进「匕首素材测试」（不读不写存档）；
+            // 现在正常 Play 读写正式存档，要单独看初始匕首时用菜单 Thread Zero/Preview Starter Dagger on Play 打开。
+            if(UnityEditor.EditorPrefs.GetBool(DaggerAutoReviewKey,false))return true;
 #endif
             return Array.IndexOf(Environment.GetCommandLineArgs(),"-dagger-review")>=0;
         }
         private void PrepareDaggerReviewModel()
         {
             Item dagger=model.Create("w1",Quality.Common,1);model.state.items.Add(dagger);model.Unlock("w1");model.Equip(dagger.uid);
-            model.state.equipped[(int)Slot.Head]=null;model.state.appearance=new string[4];
+            model.state.equipped[(int)Slot.Head]=null;model.state.appearance=new string[Catalog.SlotCount];
         }
         private void BeginDaggerReviewCapture()
         {

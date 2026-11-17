@@ -1,0 +1,15 @@
+{
+ "weapon_class": "pole",
+ "weapon": {
+  "file": "weapon.png",
+  "pivot": [
+   9.38,
+   8.36
+  ],
+  "tip": [
+   9.38,
+   107.75
+  ]
+ },
+ "scale": 4
+}

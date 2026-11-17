@@ -12,6 +12,8 @@ namespace ThreadZero
         public static readonly Color Rule = Hex(0xC4C7C1), Hair = Hex(0xD5D7D1), Ghost = Hex(0xE3E5DF), Grey = Hex(0x8B9093);
         public static readonly Color Mute = Hex(0x565C60), MuteOnInk = Hex(0xB9BEC0), Body = Hex(0x3A3F43);
         public static readonly Color Orange = Hex(0xFF4A12), OrangeInk = Hex(0xB5300A), Good = Hex(0x1E7A46);
+        // 橙色按钮上的字、橙色按钮悬停色：单独定义，换配色时不和 Ink 混在一起
+        public static readonly Color OnAccent = Hex(0x121417), OrangeHover = Hex(0xFF6A3A);
 
         public static float K = 1;
         public static bool Blocked;
@@ -30,7 +32,7 @@ namespace ThreadZero
         {
             K = Mathf.Max(.25f, Mathf.Min(Screen.width / 1600f, Screen.height / 900f));
             origin = new Vector2(Mathf.Round((Screen.width - 1600 * K) / 2), Mathf.Round((Screen.height - 900 * K) / 2));
-            origins.Clear();
+            origins.Clear(); clipOffsets.Clear(); clipOffset = Vector2.zero;
             Blocked = false;
             if (Mathf.Abs(styleScale - K) > .0001f) { styles.Clear(); styleScale = K; }
             if (textFont == null || numberFont == null)
@@ -57,6 +59,16 @@ namespace ThreadZero
             if (h > 0 && y1 - y0 < 1) y1 = y0 + 1;
             return new Rect(x0, y0, x1 - x0, y1 - y0);
         }
+        /// 绕本地坐标点旋转，用法：GUI.matrix = old * Ui.RotateLocal(angle, pivot)。
+        /// GUIUtility.RotateAroundPivot 把支点当屏幕坐标：GUI.matrix 带平移（界面滑入）时图会飞走。
+        /// GUI.matrix 作用在“去掉裁剪组偏移之后”的坐标上，所以支点要加上当前裁剪组的累计偏移（滚动列表里尤其明显）。
+        public static Matrix4x4 RotateLocal(float angle, Vector2 pivot)
+        {
+            Vector2 u = pivot + clipOffset;
+            return Matrix4x4.Translate(u) * Matrix4x4.Rotate(Quaternion.Euler(0, 0, angle)) * Matrix4x4.Translate(-u);
+        }
+        private static Vector2 clipOffset;
+        private static readonly Stack<Vector2> clipOffsets = new Stack<Vector2>();
         public static Vector2 P(float x, float y) { return new Vector2(origin.x + x * K, origin.y + y * K); }
 
         // 裁剪区域：内部仍然使用页面逻辑坐标，scrollY 为向上滚动的逻辑距离。
@@ -64,16 +76,23 @@ namespace ThreadZero
         {
             Rect area = R(x, y, w, h);
             GUI.BeginGroup(area);
+            clipOffsets.Push(clipOffset); clipOffset += area.position;
             origins.Push(origin);
             origin = new Vector2(origin.x - area.x, origin.y - area.y - Mathf.Round(scrollY * K));
         }
         public static void EndClip()
         {
             if (origins.Count > 0) origin = origins.Pop();
+            if (clipOffsets.Count > 0) clipOffset = clipOffsets.Pop();
             GUI.EndGroup();
         }
 
         public static void Fill(float x, float y, float w, float h, Color color)
+        {   // 细于 3 像素的填充当作分隔线
+            color = UiTheme.Map(color, w <= 3 || h <= 3 ? UiTheme.Role.Line : UiTheme.Role.Fill);
+            FillRaw(x, y, w, h, color);
+        }
+        private static void FillRaw(float x, float y, float w, float h, Color color)
         {
             Color old = GUI.color; GUI.color = color;
             GUI.DrawTexture(R(x, y, w, h), Texture2D.whiteTexture);
@@ -81,19 +100,22 @@ namespace ThreadZero
         }
         public static void FillScreen(Color color)
         {
+            color = UiTheme.Map(color, UiTheme.Role.Fill);
             Color old = GUI.color; GUI.color = color;
             GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
             GUI.color = old;
         }
         public static void Frame(float x, float y, float w, float h, float thickness, Color color)
         {
-            Fill(x, y, w, thickness, color); Fill(x, y + h - thickness, w, thickness, color);
-            Fill(x, y + thickness, thickness, h - thickness * 2, color); Fill(x + w - thickness, y + thickness, thickness, h - thickness * 2, color);
+            color = UiTheme.Map(color, UiTheme.Role.Line);
+            FillRaw(x, y, w, thickness, color); FillRaw(x, y + h - thickness, w, thickness, color);
+            FillRaw(x, y + thickness, thickness, h - thickness * 2, color); FillRaw(x + w - thickness, y + thickness, thickness, h - thickness * 2, color);
         }
         public static void Stroke(float x1, float y1, float x2, float y2, float width, Color color)
-        { CharacterView.Line(P(x1, y1), P(x2, y2), Mathf.Max(1, width * K), color); }
+        { CharacterView.Line(P(x1, y1), P(x2, y2), Mathf.Max(1, width * K), UiTheme.Map(color, UiTheme.Role.Text)); }
         public static void Disk(float x, float y, float radius, Color color)
-        { Vector2 p = P(x, y); CharacterView.Circle(p.x, p.y, radius * K, color); }
+        { Vector2 p = P(x, y); CharacterView.Circle(p.x, p.y, radius * K, UiTheme.Map(SameRgb(color, Ink) ? new Color(Tile.r, Tile.g, Tile.b, color.a) : color, UiTheme.Role.Fill)); }
+        private static bool SameRgb(Color a, Color b) { return Mathf.Abs(a.r - b.r) + Mathf.Abs(a.g - b.g) + Mathf.Abs(a.b - b.b) < .004f; }
         // shift：逻辑像素的水平偏移，用于让条纹随地面滚动。
         public static void Hazard(float x, float y, float w, float h, float shift = 0)
         {
@@ -129,7 +151,7 @@ namespace ThreadZero
         {
             if (string.IsNullOrEmpty(value)) return;
             GUIStyle style = Style(numeric, Pixels(size), bold, anchor, wrap);
-            style.normal.textColor = color;
+            style.normal.textColor = UiTheme.Map(color, UiTheme.Role.Text);
             GUI.Label(R(x, y, w, h), value, style);
         }
         public static float Width(string value, float size, bool bold = false, bool numeric = false)
@@ -150,7 +172,7 @@ namespace ThreadZero
             bool hover = enabled && Hover(x, y, w, h);
             Color fill, text, edge;
             if (!enabled) { fill = kind == 3 ? Tile2 : Rule; text = kind == 3 ? Grey : Mute; edge = kind == 3 ? Steel : Grey; }
-            else if (kind == 1) { fill = hover ? Hex(0xFF6A3A) : Orange; text = Ink; edge = Ink; }
+            else if (kind == 1) { fill = hover ? OrangeHover : Orange; text = OnAccent; edge = OnAccent; }
             else if (kind == 2) { fill = hover ? Tile2 : Ink; text = Panel; edge = Ink; }
             else if (kind == 3) { fill = hover ? Panel : Ink; text = hover ? Ink : Panel; edge = Panel; }
             else { fill = hover ? Ink : Panel; text = hover ? Panel : Ink; edge = Ink; }

@@ -8,7 +8,7 @@ namespace ThreadZero
         {
             Ui.FillScreen(Ui.Alpha(Ui.Ink, .62f));
             bool map = navigation.Modal == GameModal.Map;
-            float x = map ? 390 : 450, y = map ? 96 : 130, w = map ? 820 : 700, h = map ? 708 : 640;
+            float x = map ? 390 : 450, y = map ? 40 : 130, w = map ? 820 : 700, h = map ? 800 : 640;
             string title = map ? "选择街区" : navigation.Modal == GameModal.Help ? "行动指南" : navigation.Modal == GameModal.Salvage ? "一键分解" : "设置";
             Ui.Fill(x, y, w, h, Ui.Panel); Ui.Fill(x, y, w, 72, Ui.Ink); Ui.Fill(x, y, 8, 72, Ui.Orange);
             Ui.Text(x + 32, y, w - 160, 72, title, 22, Ui.Panel, TextAnchor.MiddleLeft, true);
@@ -27,9 +27,17 @@ namespace ThreadZero
         private void MapModal(float x, float y, float w)
         {
             EquipmentBase target = Catalog.Find(model.state.recoveryTarget);
-            for (int r = 0; r < Catalog.RegionNames.Length; r++)
+            // v0.16 章节分页（标题栏右侧）。打开时默认显示当前所在章。
+            if (mapChapter < 1) mapChapter = model.Chapter;
+            for (int c = 1; c <= Chapters.ChapterCount; c++)
             {
-                float top = y + 84 + r * 84; bool unlocked = r <= model.state.unlockedRegion, here = r == model.state.region;
+                bool open = Chapters.FirstRegion(c) <= model.state.unlockedRegion;
+                if (Ui.Button(x + w - 108 - (Chapters.ChapterCount - c + 1) * 152, y + 14, 144, 44, "第" + "一二三四五"[c - 1] + "章 · " + Catalog.ChapterNames[c - 1], mapChapter == c ? 1 : 3, open, 14)) mapChapter = c;
+            }
+            for (int i = 0; i < Chapters.StagesPerChapter; i++)
+            {
+                int r = Chapters.FirstRegion(mapChapter) + i;
+                float top = y + 84 + i * 84; bool unlocked = r <= model.state.unlockedRegion, here = r == model.state.region && !model.InEcho;
                 StageDef stage = Chapters.Stage(r);
                 Ui.Fill(x + 28, top, w - 56, 76, here ? Ui.Ink : Ui.Stage); Ui.Frame(x + 28, top, w - 56, 76, here ? 2 : 1, here ? Ui.Ink : Ui.Rule);
                 Color main = here ? Ui.Panel : unlocked ? Ui.Ink : Ui.Grey, sub = here ? Ui.MuteOnInk : Ui.Mute;
@@ -37,11 +45,25 @@ namespace ThreadZero
                 string kind = stage.kind == StageKind.Boss ? "  · 首领" : stage.kind == StageKind.Elite ? "  · 精英" : "";
                 Ui.Text(x + 160, top + 6, 420, 30, Catalog.RegionNames[r] + kind, 20, main, TextAnchor.MiddleLeft, true);
                 int count = 0; foreach (WaveDef wd in stage.waves) count += wd.Count;
-                string hint = !unlocked ? "通过上一关后开放" : stage.kind == StageKind.Boss ? "首领：" + Catalog.BossNames[r] + " · 会呼叫支援" : stage.waves.Length + " 波 · 约 " + count + " 只";
-                if (target != null && Catalog.SourceRegion(target.id) == Catalog.District(r)) hint += " · 回收目标产地";
+                string hint = !unlocked ? "通过上一关后开放" : stage.kind == StageKind.Boss ? "首领：" + Catalog.BossName(mapChapter) + " · 会呼叫支援" : stage.waves.Length + " 波 · 约 " + count + " 只";
+                if (target != null && Catalog.DropsIn(target.id, false, mapChapter)) hint += " · 回收目标产地";
                 Ui.Text(x + 160, top + 38, 420, 24, hint, 14, sub, TextAnchor.MiddleLeft);
                 string label = here ? "正在行动" : unlocked ? "前往" : "未解锁";
                 if (Ui.Button(x + w - 208, top + 14, 160, 48, label, here ? 3 : 1, unlocked && !here, 16)) { ChangeRegion(r); return; }
+            }
+            // 回声层入口（打通 1-7 后开放）
+            {
+                float top = y + 84 + Chapters.StagesPerChapter * 84; bool open = model.EchoUnlocked, here = model.InEcho;
+                Ui.Fill(x + 28, top, w - 56, 76, here ? Ui.Ink : Ui.Stage); Ui.Frame(x + 28, top, w - 56, 76, 2, here ? Ui.Ink : open ? Ui.Orange : Ui.Rule);
+                Color main = here ? Ui.Panel : open ? Ui.Ink : Ui.Grey, sub = here ? Ui.MuteOnInk : Ui.Mute;
+                Ui.Text(x + 48, top, 110, 76, "∞", 40, here || open ? Ui.Orange : main, TextAnchor.MiddleLeft, true);
+                Ui.Text(x + 160, top + 6, 420, 30, "回声层" + (here ? " · 第 " + model.state.echoFloor + " 层" : ""), 20, main, TextAnchor.MiddleLeft, true);
+                int resume = Mathf.Max(1, model.state.echoBest - 2);
+                string hint = !open ? "击败 1-7 闸门看守后开放" : "无尽楼层 · 最高 " + model.state.echoBest + " 层 · 从第 " + resume + " 层开始" + (model.state.anomalies.Count > 0 ? " · 异常 " + model.state.anomalies.Count : "");
+                Ui.Text(x + 160, top + 38, 440, 24, hint, 14, sub, TextAnchor.MiddleLeft);
+                if (open && model.state.anomalies.Count > 0 && Ui.Button(x + w - 336, top + 14, 120, 48, "清除异常", 0, true, 14)) { model.state.anomalies.Clear(); Save(); Notify("协议异常已清除", 2); }
+                if (Ui.Button(x + w - 208, top + 14, 160, 48, here ? "正在行动" : open ? "进入" : "未开放", here ? 3 : 1, open && !here, 16))
+                { navigation.Close(); Go(GameScreen.Action); BeginEchoTransition(resume); return; }
             }
         }
 

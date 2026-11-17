@@ -11,9 +11,9 @@ namespace ThreadZero
         private readonly Action<string> report;
         public bool Writable { get; private set; } = true;
         public string Message { get; private set; } = "本地自动保存";
-        public SaveService(string directory, Func<string, GameState> reader, Func<GameState, string> writer, Action<string> logger = null)
+        public SaveService(string directory, Func<string, GameState> reader, Func<GameState, string> writer, Action<string> logger = null, string fileName = "thread-zero-save.json")
         {
-            path = Path.Combine(directory, "thread-zero-save.json");
+            path = Path.Combine(directory, fileName);
             deserialize = reader ?? throw new ArgumentNullException(nameof(reader));
             serialize = writer ?? throw new ArgumentNullException(nameof(writer));
             report = logger;
@@ -46,6 +46,12 @@ namespace ThreadZero
             }
             if (any) { Writable = false; Message = "存档损坏，原文件已保留；本次为临时进度"; }
             return null;
+        }
+        /// 删掉这个存档及其备份（只给测试存档用）。
+        public void Delete()
+        {
+            foreach (string file in new[] { path, path + ".bak", path + ".tmp" }) if (File.Exists(file)) File.Delete(file);
+            Writable = true;
         }
         public bool Save(GameState data)
         {

@@ -7,8 +7,11 @@ namespace ThreadZero
 {
     public sealed partial class GameApp
     {
+        private string implantNew;   // 刚装上、还没在整备页看过的义体（看过一次就清掉）
+        private float implantNewSeenAt = -1;
         private void LoadoutPage()
         {
+            if (implantNew != null) { if (implantNewSeenAt < 0) implantNewSeenAt = clock; else if (clock - implantNewSeenAt > 6) { implantNew = null; implantNewSeenAt = -1; } }
             LoadoutCharacter();
             LoadoutInventory();
             Item chosen = FindItem(selectedItem);
@@ -27,24 +30,27 @@ namespace ThreadZero
             string summary = model.LoadoutSummary; float chip = Ui.Width(summary, 13, true) + 20;
             Ui.Fill(516 - chip, 32, chip, 28, Ui.Ink); Ui.Text(516 - chip, 32, chip, 28, summary, 13, Ui.Panel, TextAnchor.MiddleCenter, true);
             PreviewHero(328, 384, 350, 158, 86, 340, 306);
+            ImplantColumn(146, 104);
             Ui.Frame(128, 20, 400, 404, 2, Ui.Ink);
 
-            for (int i = 0; i < 4; i++)
+            // v0.16 五个部位：两列三行（第三行是下装），格子比原来矮一点
+            for (int i = 0; i < Catalog.SlotCount; i++)
             {
-                Item item = model.Equipped((Slot)i); float x = 128 + (i % 2) * 204, y = 436 + (i / 2) * 84;
-                bool hover = Ui.Hover(x, y, 196, 76);
-                Ui.Fill(x, y, 196, 76, Ui.Panel); Ui.Frame(x, y, 196, 76, hover ? 2 : 1, hover ? Ui.Ink : Ui.Rule);
+                const float tw = 196, th = 52;
+                Item item = model.Equipped((Slot)i); float x = 128 + (i % 2) * 204, y = 436 + (i / 2) * 56;
+                bool hover = Ui.Hover(x, y, tw, th);
+                Ui.Fill(x, y, tw, th, Ui.Panel); Ui.Frame(x, y, tw, th, hover ? 2 : 1, hover ? Ui.Ink : Ui.Rule);
                 if (item == null)
                 {
-                    Ui.Fill(x + 7, y + 7, 62, 62, Ui.Rule);
-                    Ui.Text(x + 80, y, 110, 76, Catalog.SlotNames[i] + " · 空", 14, Ui.Mute, TextAnchor.MiddleLeft);
+                    Ui.Fill(x + 5, y + 5, 42, 42, Ui.Rule);
+                    Ui.Text(x + 56, y, 136, th, Catalog.SlotNames[i] + " · 空", 14, Ui.Mute, TextAnchor.MiddleLeft);
                     continue;
                 }
                 EquipmentBase b = Catalog.Find(item.baseId);
-                Ui.ItemTile(x + 7, y + 7, 62, 62, b, item.quality, true, false, 4, false);
-                Ui.Text(x + 80, y + 14, 112, 18, Catalog.SlotNames[i] + " · " + Catalog.QualityNames[(int)item.quality] + " Lv." + item.level, 12, Ui.Mute, TextAnchor.MiddleLeft);
-                Ui.Text(x + 80, y + 34, 112, 26, b.name, 15, Ui.Ink, TextAnchor.MiddleLeft, true);
-                if (Ui.Click(x, y, 196, 76)) { ResetInventoryFilters(); SelectItem(item); slotFilter = i; inventoryScroll = 0; }
+                Ui.ItemTile(x + 5, y + 5, 42, 42, b, item.quality, true, false, 3, false);
+                Ui.Text(x + 56, y + 5, 136, 16, Catalog.SlotNames[i] + " · " + Catalog.QualityNames[(int)item.quality] + " Lv." + item.level, 11, Ui.Mute, TextAnchor.MiddleLeft);
+                Ui.Text(x + 56, y + 22, 136, 24, b.name, 14, Ui.Ink, TextAnchor.MiddleLeft, true);
+                if (Ui.Click(x, y, tw, th)) { ResetInventoryFilters(); SelectItem(item); slotFilter = i; inventoryScroll = 0; }
             }
 
             float[] totals = Values(model.Total());
@@ -65,22 +71,53 @@ namespace ThreadZero
             Ui.Text(128, 840, 400, 30, capped ? "基础训练已经到达上限。" : affordable ? "每级训练：攻击 +1.5，生命 +8" : "零件不足。击败敌人和分解装备可以获得零件。", 13, Ui.Mute, TextAnchor.MiddleLeft);
         }
 
+        // v0.16 机械飞升：5 个义体槽竖排在角色左边。已装 = 橙色块；悬停显示名字和效果。
+        private static readonly string[] ImplantParts = { "手臂", "义眼", "脊柱", "心脏", "接口" };
+        private void ImplantColumn(float x, float y)
+        {
+            int have = model.state.implants.Count;
+            Ui.Text(x, y, 120, 18, "机械飞升 " + have + "/" + Catalog.AscensionTotal, 13, have > 0 ? Ui.Orange : Ui.Mute, TextAnchor.MiddleLeft, true);
+            string tipTitle = null, tipBody = null; float tipY = 0;
+            for (int i = 0; i < Catalog.AscensionTotal; i++)
+            {
+                // 按部位对格子：第 i 格 = 第 i 章首领给的义体（手臂、义眼……），装没装看有没有这件，和获得顺序无关
+                ImplantDef slotDef = i < Catalog.Implants.Length ? Catalog.Implants[i] : null;
+                float by = y + 26 + i * 50; bool on = slotDef != null && model.state.implants.Contains(slotDef.id); bool hover = Ui.Hover(x, by, 44, 44);
+                Ui.Fill(x, by, 44, 44, on ? Ui.Orange : Ui.Panel); Ui.Frame(x, by, 44, 44, 2, on ? Ui.Ink : Ui.Rule);
+                Ui.Text(x, by, 44, 44, ImplantParts[i].Substring(0, 1), 18, on ? Ui.OnAccent : Ui.Rule, TextAnchor.MiddleCenter, true);
+                if (on && slotDef.id == implantNew) { Ui.Fill(x + 30, by - 6, 30, 16, Ui.Ink); Ui.Text(x + 30, by - 6, 30, 16, "NEW", 10, Ui.Orange, TextAnchor.MiddleCenter, true, true); }
+                if (hover)
+                {
+                    ImplantDef d = on ? slotDef : null;
+                    tipTitle = d != null ? d.name : "未解锁 · " + ImplantParts[i];
+                    tipBody = d != null ? d.desc : "击败第 " + (i + 1) + " 章的首领后装上。";
+                    tipY = by;
+                }
+            }
+            if (tipTitle != null)
+            {
+                Ui.Fill(x + 52, tipY - 4, 260, 64, Ui.Ink);
+                Ui.Text(x + 64, tipY, 240, 24, tipTitle, 15, Ui.Panel, TextAnchor.MiddleLeft, true);
+                Ui.Text(x + 64, tipY + 24, 240, 34, tipBody, 12, Ui.MuteOnInk, TextAnchor.UpperLeft, false, false, true);
+            }
+        }
+
         private void LoadoutInventory()
         {
             float x = 548;
-            for (int f = -1; f < 4; f++)
+            for (int f = -1; f < Catalog.SlotCount; f++)
             {
                 int slot = f;
                 string label = f < 0 ? "全部" : Catalog.SlotNames[f];
                 string count = model.state.items.Count(item => slot < 0 || (int)Catalog.Find(item.baseId).slot == slot).ToString();
-                float labelWidth = Ui.Width(label, 15, true), width = labelWidth + Ui.Width(count, 17, true, true) + 38;
+                float labelWidth = Ui.Width(label, 15, true), width = labelWidth + Ui.Width(count, 17, true, true) + 30;   // 五个部位 + 全部，收紧一点给零件数留位置
                 bool on = slotFilter == f, hover = Ui.Hover(x, 20, width, 44);
                 Color fill = on ? Ui.Ink : hover ? Ui.Rule : Ui.Panel, text = on ? Ui.Panel : Ui.Ink;
                 Ui.Fill(x, 20, width, 44, fill); Ui.Frame(x, 20, width, 44, 2, Ui.Ink);
-                Ui.Text(x + 14, 20, labelWidth + 4, 44, label, 15, text, TextAnchor.MiddleLeft, true);
-                Ui.Text(x + 14 + labelWidth + 8, 20, 60, 44, count, 17, on ? Ui.MuteOnInk : Ui.Mute, TextAnchor.MiddleLeft, true, true);
+                Ui.Text(x + 10, 20, labelWidth + 4, 44, label, 15, text, TextAnchor.MiddleLeft, true);
+                Ui.Text(x + 10 + labelWidth + 8, 20, 60, 44, count, 17, on ? Ui.MuteOnInk : Ui.Mute, TextAnchor.MiddleLeft, true, true);
                 if (Ui.Click(x, 20, width, 44)) { slotFilter = f; inventoryScroll = 0; }
-                x += width + 6;
+                x += width + 4;
             }
             string scrap = model.state.scrap.ToString();
             Ui.Text(960, 20, 180, 44, scrap, 26, Ui.Ink, TextAnchor.MiddleRight, true, true);
@@ -113,7 +150,7 @@ namespace ThreadZero
                 PaperDollView.DrawEquipmentIcon(b, Ui.R(tx + (tileW - 74) / 2, ty + 18, 74, 74));
                 Ui.Text(tx + 7, ty + 3, 60, 18, "Lv." + item.level, 13, Ui.MuteOnInk, TextAnchor.MiddleLeft, true, true);
                 if (equipped) { Ui.Fill(tx + tileW - 50, ty, 50, 20, Ui.Panel); Ui.Text(tx + tileW - 50, ty, 50, 20, "穿戴中", 11, Ui.Ink, TextAnchor.MiddleCenter, true); }
-                else if (unseen.Contains(item.uid)) { Ui.Fill(tx + tileW - 26, ty, 26, 20, Ui.Orange); Ui.Text(tx + tileW - 26, ty, 26, 20, "新", 11, Ui.Ink, TextAnchor.MiddleCenter, true); }
+                else if (unseen.Contains(item.uid)) { Ui.Fill(tx + tileW - 26, ty, 26, 20, Ui.Orange); Ui.Text(tx + tileW - 26, ty, 26, 20, "新", 11, Ui.OnAccent, TextAnchor.MiddleCenter, true); }
                 if (item.locked) Ui.IconLock(tx + 8, ty + 26, Ui.MuteOnInk);
                 Ui.Text(tx, ty + 96, tileW, 22, b.name, 12, quality, TextAnchor.MiddleCenter, true);
                 Ui.Fill(tx, ty + tileH - 5, tileW, 5, quality);

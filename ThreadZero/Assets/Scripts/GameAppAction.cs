@@ -24,16 +24,22 @@ namespace ThreadZero
                 || paused || combat.recovery > 0 || navigation.HasModal;
             if (wantHud) hudWantAt = clock;
             if (Event.current.type == EventType.Repaint)
-                hudShow = Mathf.MoveTowards(hudShow, clock - hudWantAt < 1.5f ? 1 : 0, Time.unscaledDeltaTime * 6);
+            {   // 滑出约 0.3 秒、收回约 0.45 秒；进度再过一道 ease-in-out，起停都不生硬
+                bool show = clock - hudWantAt < 1.5f;
+                hudShow = Mathf.MoveTowards(hudShow, show ? 1 : 0, Mathf.Min(Time.unscaledDeltaTime, 1 / 30f) * (show ? 3.4f : 2.2f));
+            }
             int region = model.state.region, district = Catalog.District(region);
             bool deep = region >= Catalog.Districts, moving = travelLeft > 0;
             bool boss = combat.Boss, melee = model.IsMelee, down = combat.recovery > 0;
             bool nearCombat = combat.HeroInRange || combat.EnemyInRange;
             float hit = moving || !nearCombat ? 0 : combat.hitFlash, dash = moving || !nearCombat ? 0 : combat.dashFlash;
 
+            bool pixel = pixelScale > 0 && Event.current.type == EventType.Repaint;
+            if (pixel) BeginPixel();
             Ui.Fill(StageX, StageY, StageW, StageH, deep ? Ui.Hex(0xE9EAE5) : Ui.Stage);
             Ui.BeginClip(StageX, StageY, StageW, StageH, 0);
             Backdrop(region, district, deep);
+            TransitionUnder();
 
             // v0.14 群怪：每只怪各自的世界坐标 → 屏幕坐标。depth 让怪群前后错开、互相重叠。
             Enemy target = combat.Target;
@@ -63,10 +69,10 @@ namespace ThreadZero
             if (heroWalking)
                 for (int k = 0; k < 3; k++)
                 {
-                    float phase = Wrap(worldX / 70f + k * .33f, 1), size = 3 + 7 * (1 - phase);
-                    Ui.Fill(heroFeetX - 34 - phase * 46, GroundY - 4 - phase * 12 - size, size, size, Ui.Alpha(Ui.Grey, .55f * (1 - phase)));
+                    float phase = Wrap(worldX / 70f + k * .33f, 1), size = 4 + 8 * phase;   // 脚下扬起的尘土：软圆、越飘越淡
+                    Ui.Disk(heroFeetX - 30 - phase * 50, GroundY - 6 - phase * 16, size, new Color(.62f, .6f, .56f, .35f * (1 - phase)));
                 }
-            if (dash > 0) Ui.Stroke(heroFeetX - 190, GroundY - 44, heroFeetX - 36, GroundY - 44, 4, Ui.Orange);
+
             Color heroTint = down ? new Color(.6f, .65f, .68f) : pose.damageTint > 0 ? new Color(1, 1 - pose.damageTint, 1 - pose.damageTint) : Color.white;
             int heroFrame = down || heroWalking ? ActorView.IdleFrame(melee) : ActorView.CombatFrame(pose.attackProgress, melee);
             float shake = down || heroWalking || pose.attackProgress > 0 ? 0 : pose.rootX;
@@ -86,9 +92,16 @@ namespace ThreadZero
                 // 动作：走路 / 初始匕首（普攻+迅切连击）/ 其他武器按类别（射击、重砸）/ 待机。
                 LayeredRigView.Anim rigAnim = LayeredRigView.Anim.Idle; float rigT = clock / 1.2f;
                 if (heroWalking && !down) { rigAnim = LayeredRigView.Anim.Walk; rigT = heroWalkPhase / (2 * Mathf.PI); }
+                else if (!down && combat.DaggerActive && combat.ActiveSkill != null && combat.ActiveSkill != SkillBook.QuickCut)
+                {   // 其他武器的技能：按技能的每一段，把射击 / 重砸动作对到命中时刻
+                    rigAnim = LayeredRigView.ClassAttack(model); rigT = SkillRigT(combat.ActiveSkill, combat.DaggerAge, rigAnim);
+                    if (combat.ActiveSkill.animation == "sweep") rigAnim = LayeredRigView.Anim.Sweep;
+                }
                 else if (!down && combat.DaggerActive) { rigAnim = LayeredRigView.DaggerAnim(combat.DaggerCombo); rigT = LayeredRigView.DaggerT(combat.DaggerAge, combat.DaggerCombo); }
                 else if (!down && pose.attackProgress > 0) { rigAnim = LayeredRigView.ClassAttack(model); rigT = pose.attackProgress; }
+                if (target != null) LayeredRigView.ChainReachPx = Mathf.Clamp(liveEnemyX - targetCanvas * .15f - (heroFeetX + 30), 40, 320);
                 LayeredRigView.Draw(model, heroFeetX, GroundY + 2 + rise, 1, rigAnim, rigT, heroTint);
+                ImplantInstallFx();
                 if (Event.current.type == EventType.Repaint)
                 {
                     // 动作走到开火 / 落锤那一帧时放特效（弹道、光束、炮弹、冲击波），起点是枪口 / 锤头的实际位置。
@@ -96,6 +109,8 @@ namespace ThreadZero
                     if (rigAnim == LayeredRigView.Anim.Shoot && prevT < LayeredRigView.FireT && rigT >= LayeredRigView.FireT && target != null)
                         WeaponFx.Fire(LayeredRigView.Kind, clock, LayeredRigView.Muzzle, LayeredRigView.MuzzleDir,
                             new Vector2(liveEnemyX - targetCanvas * .2f, enemyMid + UnityEngine.Random.Range(-14f, 14f)));
+                    if ((rigAnim == LayeredRigView.Anim.Throw || rigAnim == LayeredRigView.Anim.Sweep) && prevT < .42f && rigT >= .42f)
+                        EnemyFx.Burst(clock, LayeredRigView.Muzzle.x + worldX, LayeredRigView.Muzzle.y, new Color(1, .62f, .25f), .9f);   // 吊钩打中：火星
                     if (rigAnim == LayeredRigView.Anim.Smash && prevT < .42f && rigT >= .42f)
                         WeaponFx.Slam(clock, new Vector2(LayeredRigView.Muzzle.x, GroundY));
                     lastRigAnim = rigAnim; lastRigT = rigT;
@@ -137,6 +152,7 @@ namespace ThreadZero
                 int chargeMax = skill != null && skill.trigger == SkillTrigger.EveryNAttacks ? skill.attacks : 0;
                 HudBars.Hero(heroFeetX, GroundY + rise - 224, hp01, HudBars.Ghost(-1, hp01, clock), combat.SkillCharge, chargeMax,
                     skill != null ? combat.SkillReadiness : 0, combat.health, stats.health, clock);
+                SkillCallout(heroFeetX, GroundY + rise - 262);
             }
 
             if (!layered && pose.projectile > 0 && target != null)
@@ -155,8 +171,11 @@ namespace ThreadZero
                 Ui.Stroke(point.x, point.y, point.x + direction.x * 30, point.y + direction.y * 30, 4, Ui.Orange);
             }
             WeaponFx.Draw(clock);
+            DrawEnemyShots();
+            EnemyFx.Draw(clock, worldX);
             ModuleEffects(heroFeetX, enemyMid, moving);
             DropEffect(heroFeetX);
+            if (pixel) { Ui.EndClip(); EndPixel(); Ui.BeginClip(StageX, StageY, StageW, StageH, 0); }   // 伤害数字不进像素画布，保持清楚
             DrawFloaters(heroFeetX);
             Ui.EndClip();
 
@@ -181,7 +200,7 @@ namespace ThreadZero
             // 终端界面：上下两条实心带滑入，盖在画面上（画面本身不动）。
             if (hudShow > .001f)
             {
-                Matrix4x4 m0 = GUI.matrix; float e = 1 - Mathf.Pow(1 - hudShow, 3);
+                Matrix4x4 m0 = GUI.matrix; float e = HudEase;
                 GUI.matrix = Matrix4x4.Translate(new Vector3(0, -(1 - e) * 112 * Ui.K, 0)) * m0;
                 Ui.Fill(0, 0, 1600, 104, Ui.Ground); Ui.Fill(0, 104, 1600, 2, Ui.Ink);
                 ActionHeader();
@@ -191,6 +210,39 @@ namespace ThreadZero
                 GUI.matrix = m0;
             }
         }
+        // ---------- 像素试验（F7）：战斗画面先画到 1/3 或 1/4 分辨率的小画布，再按最近邻放大回全屏 ----------
+        // 背景、角色、敌人、特效都落在同一套像素格上；界面和伤害数字照常高清。
+        private int pixelScale; private bool pixelFlip;
+        private RenderTexture pixelRT, pixelPrev;
+        private Vector2 pixelScreen; private Matrix4x4 pixelMatrix;
+        private void BeginPixel()
+        {
+            int w = Mathf.Max(64, Screen.width / pixelScale), h = Mathf.Max(36, Screen.height / pixelScale);
+            if (pixelRT == null || pixelRT.width != w || pixelRT.height != h)
+            {
+                if (pixelRT != null) pixelRT.Release();
+                pixelRT = new RenderTexture(w, h, 0, RenderTextureFormat.ARGB32) { filterMode = FilterMode.Point, useMipMap = false };
+                pixelRT.Create();
+            }
+            pixelPrev = RenderTexture.active;
+            pixelScreen = new Vector2(Screen.width, Screen.height);
+            RenderTexture.active = pixelRT;
+            GL.Clear(true, true, Color.black);
+            // 画布激活后 Screen.width/height 变成小画布的尺寸、坐标 1:1 对到画布像素 → 只画到了左上角一块（上一版的 bug）。
+            // 这里把整个画面按比例缩进小画布：IMGUI 走 GUI.matrix，角色骨骼（GL）走 LayeredRigView.PixelTarget。
+            pixelMatrix = GUI.matrix;
+            GUI.matrix = Matrix4x4.Scale(new Vector3(w / pixelScreen.x, h / pixelScreen.y, 1)) * GUI.matrix;
+            LayeredRigView.PixelTarget = pixelScreen;
+        }
+        private void EndPixel()
+        {
+            GUI.matrix = pixelMatrix; LayeredRigView.PixelTarget = Vector2.zero;
+            RenderTexture.active = pixelPrev;
+            Matrix4x4 m = GUI.matrix; GUI.matrix = Matrix4x4.identity;
+            GUI.DrawTextureWithTexCoords(new Rect(0, 0, Screen.width, Screen.height), pixelRT, pixelFlip ? new Rect(0, 1, 1, -1) : new Rect(0, 0, 1, 1), false);
+            GUI.matrix = m;
+        }
+        private float HudEase { get { float h = hudShow; return h < .5f ? 4 * h * h * h : 1 - Mathf.Pow(-2 * h + 2, 3) / 2; } }
 
         // 一只活怪：影子、本体（走路/出手姿态）、头顶小血条。
         private void DrawEnemyUnit(Enemy e, bool isTarget, bool deep)
@@ -198,13 +250,17 @@ namespace ThreadZero
             float x = e.x - worldX;
             if (x < StageX - e.canvas || x > StageX + StageW + e.canvas) return;
             float feetY = GroundY + 2 + (e.depth - .5f) * 18;
-            bool floating = e.Art == 2 && !e.boss;
+            bool floating = StageArt.GaitOf(e) == StageArt.Gait.Flying;
             if (floating) feetY += Mathf.Sin(clock * 2 + e.id) * 5 - 8;
             Ui.Fill(x - e.canvas * .26f, GroundY - 3 + (e.depth - .5f) * 18, e.canvas * .52f, 5, Ui.Alpha(Ui.Ink, .16f));
-            float strike = e.strikeFlash > 0 ? Mathf.Sin(Mathf.Clamp01(e.strikeFlash / .25f) * Mathf.PI) : 0;
             float recoil = e.hitFlash > 0 ? e.hitFlash / .3f * 6 : 0;
             Color tint = e.hitFlash > 0 ? new Color(1, .74f, .68f) : e.elite ? new Color(1, .86f, .8f) : deep ? new Color(.84f, .88f, 1) : Color.white;
-            if (!DrawMovingEnemy(x + recoil, feetY, e.canvas, e.Art, e.boss, tint, e.moving, e.travel / 21f, strike))
+            if (e.boss && e.phase >= 2) tint = Color.Lerp(tint, new Color(1, .55f, .5f), .45f + .15f * Mathf.Sin(clock * 8));
+            if (e.hasteLeft > 0) tint = Color.Lerp(tint, new Color(.85f, .7f, 1), .35f);
+            EnemyPoseT pose = EnemyPose(e);
+            if (pose.flash > 0) tint = Color.Lerp(tint, EnemyFx.Warn, pose.flash);
+            EnemyTelegraph(e, x, feetY);
+            if (!DrawMovingEnemy(e, x + recoil, feetY, e.canvas, tint, e.moving && e.windLeft <= 0, 0, pose))
             {
                 float boxW = e.canvas * .5f, boxH = e.canvas * .4f;
                 DrawEnemy(x, GroundY - 50 - boxH, boxW, boxH, e.boss, e.hitFlash, false);
@@ -227,59 +283,162 @@ namespace ThreadZero
             Matrix4x4 old = GUI.matrix;
             GUIUtility.RotateAroundPivot(-9, Ui.P(x, feetY));
             GUIUtility.ScaleAroundPivot(new Vector2(1.05f, .28f), Ui.P(x, feetY));
-            bool drawn = ActorView.Enemy(x, feetY, e.canvas, e.Art, e.boss, new Color(.42f, .44f, .47f, .75f * fade));
+            Color wreck = new Color(.42f, .44f, .47f, .75f * fade);
+            bool drawn = StageArt.DrawEnemy(e, StageArt.Pose.Idle, x, feetY, e.canvas, wreck) || ActorView.Enemy(x, feetY, e.canvas, e.Art, e.boss, wreck);
             GUI.matrix = old;
             if (!drawn) Ui.Fill(x - e.canvas * .25f, feetY - 34, e.canvas * .5f, 34, Ui.Alpha(Ui.Grey, fade));
         }
 
-        // 关卡转场（约 2 秒）：变暗 → 纵向管道上标记往上爬一格、亮出下一关编号 → 变亮。
+        // ---------- v0.16 快速转场（挂机不打断）----------
+        // 0 无缝推进（日常过关 / 撤回）：旧场景带视差滑出淡掉，约 0.45 秒，转场一开始就换关。
+        // 1 快闸（进精英关 / 首领关）：闸门合上→亮关卡号→打开，约 1 秒，闸门合拢时换关。
+        // 2 织线一扫（进入一章）：织线带从左扫到右，扫过处是新场景，约 0.6 秒。
+        // 三种结束后左上角弹出关卡条，停约 1.5 秒自动收回。
+        public const int TransPush = 0, TransGate = 1, TransWeave = 2;
+        public static float TransitionLength(int kind) { return kind == TransGate ? 1f : kind == TransWeave ? .6f : .45f; }
+        public static float TransitionSwapAt(int kind) { return kind == TransGate ? .3f : 0; }
+        private float TransitionP { get { return transitionLeft > 0 ? 1 - transitionLeft / transitionDur : 1; } }
+
+        // 画在背景之上、角色之下：旧场景的残影。
+        private void TransitionUnder()
+        {
+            if (transitionLeft <= 0 || !transitionSwapped) return;
+            int oldScene = SceneOf(transitionFrom);
+            float p = TransitionP;
+            if (transitionKind == TransPush)
+            {
+                float e = Mathf.SmoothStep(0, 1, Mathf.Clamp01(p / .85f));
+                Color old = GUI.color; GUI.color = new Color(1, 1, 1, 1 - e);
+                StageArt.Background(oldScene, worldX + 260 * e, StageW, StageH, GroundY);
+                GUI.color = old;
+            }
+            else if (transitionKind == TransWeave)
+            {
+                float bx = WeaveX(p);
+                if (bx + 260 < StageW)
+                {
+                    Ui.BeginClip(bx + 260, 0, StageW - bx - 260, StageH, 0);
+                    StageArt.Background(oldScene, worldX, StageW, StageH, GroundY);
+                    Ui.EndClip();
+                }
+            }
+        }
+        private static float WeaveX(float p) { float e = p < .5f ? 2 * p * p : 1 - Mathf.Pow(-2 * p + 2, 2) / 2; return Mathf.Lerp(-260, 1600, e); }
+
+        // 画在最上层：闸门、织线带、闪光、关卡条。
         private void StageTransitionOverlay()
         {
+            StageTag();
+            AscensionBanner();
+            AnomalyOffer();
             if (transitionLeft <= 0) return;
-            float p = 1 - transitionLeft / Chapters.StageTransition;
-            float alpha = p < .25f ? p / .25f : p > .75f ? (1 - p) / .25f : 1;
-            Ui.Fill(StageX, StageY, StageW, StageH, Ui.Alpha(Ui.Ink, .94f * alpha));
-            if (alpha < .4f) return;
-            float a = Mathf.Clamp01((alpha - .4f) / .6f);
-            float cx = StageX + StageW / 2 - 260, top = StageY + 70, bottom = StageY + StageH - 70;
-            int stages = Chapters.StagesPerChapter;
-            Ui.Fill(cx - 3, top, 6, bottom - top, Ui.Alpha(Ui.Steel, a));
-            for (int r = 0; r < stages; r++)
+            float p = TransitionP;
+            if (transitionKind == TransPush)
             {
-                float y = Mathf.Lerp(bottom, top, r / (float)(stages - 1));
-                bool passed = r < transitionTo, here = r == transitionTo;
-                StageKind kind = Chapters.Stage(r).kind;
-                float size = kind == StageKind.Boss ? 22 : kind == StageKind.Elite ? 18 : 14;
-                Color c = here ? Ui.Orange : passed ? QualityVisual.Colors[1] : Ui.Steel;
-                Ui.Fill(cx - size / 2, y - size / 2, size, size, Ui.Alpha(c, a));
+                float f = p < .3f ? p / .3f : Mathf.Clamp01(1 - (p - .3f) / .5f);
+                Ui.Fill(StageX, StageY, StageW, StageH, new Color(.9f, .88f, .82f, .3f * f));
             }
-            float climb = Mathf.SmoothStep(0, 1, Mathf.Clamp01((p - .25f) / .4f));
-            float fromY = Mathf.Lerp(bottom, top, transitionFrom / (float)(stages - 1)), toY = Mathf.Lerp(bottom, top, transitionTo / (float)(stages - 1));
-            float my = Mathf.Lerp(fromY, toY, climb);
-            Ui.Fill(cx + 18, my - 6, 22, 12, Ui.Alpha(QualityVisual.Colors[1], a));
-            StageDef stage = Chapters.Stage(transitionTo);
-            string kindText = stage.kind == StageKind.Boss ? "首领" : stage.kind == StageKind.Elite ? "精英" : "";
-            Ui.Text(cx + 90, StageY + StageH / 2 - 90, 600, 110, Catalog.StageCode(transitionTo), 96, Ui.Alpha(Ui.Panel, a), TextAnchor.MiddleLeft, true, true);
-            Ui.Text(cx + 96, StageY + StageH / 2 + 20, 600, 40, Catalog.RegionNames[transitionTo] + (kindText.Length > 0 ? " · " + kindText : ""), 26, Ui.Alpha(Ui.MuteOnInk, a), TextAnchor.MiddleLeft, true);
-            string note = transitionTo > transitionFrom ? "向上一层" : transitionTo < transitionFrom ? "撤回补给" : "重新开始";
-            Ui.Text(cx + 96, StageY + StageH / 2 + 64, 600, 30, note, 16, Ui.Alpha(Ui.Orange, a), TextAnchor.MiddleLeft, true);
+            else if (transitionKind == TransWeave)
+            {
+                float bx = WeaveX(p);
+                Ui.Fill(bx, 0, 260, StageH, Ui.Hex(0x121817));
+                for (int y = 22; y < StageH; y += 24) Ui.Fill(bx, y, 260, 2, new Color(.25f, .85f, .75f, .55f));
+                for (float x = bx + 30; x < bx + 260; x += 34) Ui.Fill(x, 0, 4, StageH, new Color(.16f, .23f, .22f, .9f));
+                Ui.Fill(bx + 260, 0, 6, StageH, new Color(.25f, .85f, .75f, 1));
+            }
+            else GateOverlay(p);
+        }
+        private void GateOverlay(float p)
+        {
+            float close = p < .3f ? EaseIn(p / .3f) : p < .72f ? 1 : 1 - EaseIn((p - .72f) / .28f);
+            float bounce = p > .3f && p < .38f ? Mathf.Sin((p - .3f) / .08f * Mathf.PI) * 8 : 0;
+            float h = 452 * close, top = h - 452 - bounce, bottom = StageH - h + bounce;
+            Color steel = Ui.Hex(0x262C2D), seam = Ui.Hex(0x0A0C0D), rib = Ui.Hex(0x3A4244), rivet = Ui.Hex(0x4B5457);
+            // 上门
+            Ui.Fill(0, top, StageW, 452, steel);
+            Ui.Fill(0, top + 40, StageW, 2, rib); Ui.Fill(0, top + 150, StageW, 2, rib); Ui.Fill(0, top + 260, StageW, 2, rib);
+            for (int i = 0; i < 16; i++) Ui.Disk(40 + i * 101, top + 400, 5, rivet);
+            Ui.Hazard(0, top + 418, StageW, 34, 0); Ui.Fill(0, top + 448, StageW, 4, seam);
+            // 下门
+            Ui.Fill(0, bottom, StageW, 452, steel);
+            Ui.Hazard(0, bottom, StageW, 34, 0); Ui.Fill(0, bottom, StageW, 4, seam);
+            Ui.Fill(0, bottom + 290, StageW, 2, rib); Ui.Fill(0, bottom + 390, StageW, 2, rib);
+            if (close < .98f) return;
+            // 合拢时：阀门轮转半圈 + 关卡号
+            float spin = Mathf.Clamp01((p - .3f) / .35f) * 180, cx = StageW / 2, cy = StageH / 2;
+            Ui.Disk(cx, cy, 86, seam); Ui.Disk(cx, cy, 78, Ui.Hex(0xC9541C)); Ui.Disk(cx, cy, 66, steel);
+            for (int k = 0; k < 2; k++)
+            {
+                float ang = (spin + k * 90) * Mathf.Deg2Rad; Vector2 d = new Vector2(Mathf.Cos(ang), Mathf.Sin(ang)) * 72;
+                Ui.Stroke(cx - d.x, cy - d.y, cx + d.x, cy + d.y, 12, Ui.Hex(0xC9541C));
+            }
+            Ui.Disk(cx, cy, 20, Ui.Hex(0xC9541C));
+            StageKind sk = KindOf(transitionTo);
+            string kind = sk == StageKind.Boss ? "首领" : sk == StageKind.Elite ? "精英" : "";
+            Ui.Text(cx - 520, cy - 60, 360, 120, CodeLabel(transitionTo), 110, Ui.Hex(0xE6E1D2), TextAnchor.MiddleRight, true, true);
+            Ui.Text(cx + 160, cy - 46, 460, 50, NameLabel(transitionTo), 40, Ui.Hex(0xE6E1D2), TextAnchor.MiddleLeft, true);
+            if (kind.Length > 0) Ui.Text(cx + 162, cy + 6, 420, 36, kind + "关", 24, Ui.Hex(0xF29A2E), TextAnchor.MiddleLeft, true);
+        }
+        private static float EaseIn(float x) { x = Mathf.Clamp01(x); return x * x * x; }
+
+        // 左上角关卡条：滑入 0.15 秒，停 1.5 秒，滑出 0.25 秒。
+        private void StageTag()
+        {
+            float t = clock - stageTagAt;
+            if (t < 0 || t > 1.9f) return;
+            float slide = t < .15f ? 1 - Mathf.SmoothStep(0, 1, t / .15f) : t > 1.65f ? Mathf.SmoothStep(0, 1, (t - 1.65f) / .25f) : 0;
+            int r = CurrentCode; StageKind sk = KindOf(r);
+            string sub = stageTagNote.Length > 0 ? stageTagNote : sk == StageKind.Boss ? "首领关" : sk == StageKind.Elite ? "精英关" : "";
+            float w = 500, x = -w * slide, y = 120;
+            Ui.Fill(x, y, w, 92, Ui.Alpha(Ui.Ink, .92f)); Ui.Fill(x, y, 6, 92, Ui.Orange);
+            Ui.Text(x + 24, y + 6, 110, 56, CodeLabel(r), 34, Ui.Panel, TextAnchor.MiddleLeft, true, true);
+            Ui.Text(x + 124, y + 6, 240, 56, NameLabel(r), 22, Ui.Panel, TextAnchor.MiddleLeft, true);
+            if (sub.Length > 0) Ui.Text(x + 300, y + 6, 180, 56, sub, 15, Ui.Orange, TextAnchor.MiddleRight, true);
+            Ui.Text(x + 26, y + 58, w - 40, 26, LineOf(r), 14, Ui.MuteOnInk, TextAnchor.MiddleLeft);
         }
 
-        private bool DrawMovingEnemy(float x,float y,float canvas,int district,bool boss,Color tint,bool walking,float phase,float strike)
+        // v0.16 地面怪和角色用同一套步伐：
+        //   · 速度有加速 / 减速（CombatSession 里和角色同为 900/s²）；
+        //   · 步伐相位按走过的距离算，步长按体型等比放大（角色：每 24 像素 1 弧度）；
+        //   · 用脚走的：落脚时身体往下沉、抬脚时上浮（同角色 |sin| × 7），身体随速度前倾，落脚瞬间轻微压扁；有走路帧就按步伐交替；
+        //   · 轮子 / 履带：不颠，只有发动机细震，起步刹车时前后点一下；
+        //   · 飞行：悬停起伏，往前飞时机头下压。
+        private bool DrawMovingEnemy(Enemy e, float x, float y, float canvas, Color tint, bool walking, float unused, EnemyPoseT p)
         {
-            Matrix4x4 previous=GUI.matrix;
-            float hop=walking?Mathf.Abs(Mathf.Sin(phase))*4:0;
-            Vector2 pivot=Ui.P(x,y-hop);
-            if(walking)GUIUtility.RotateAroundPivot(-2.5f+Mathf.Sin(phase)*.6f,pivot);
-            else if(strike>0)GUIUtility.RotateAroundPivot(-strike*3,pivot);
-            bool drawn=ActorView.Enemy(x-strike*5,y-hop,canvas,district,boss,tint);
-            GUI.matrix=previous;return drawn;
+            Matrix4x4 previous = GUI.matrix;
+            StageArt.Gait gait = StageArt.GaitOf(e);
+            float size = canvas / 180f, speed01 = Mathf.Clamp01(e.vel / Mathf.Max(1, e.speed));
+            float phase = e.travel / (24f * size), lift = 0, rot = 0, sx = 1, sy = 1; int frame = 0;
+            if (gait == StageArt.Gait.Legged)
+            {
+                // 和角色走路动作同一组数（LayeredRigView Walk）：每步弹起 9 单位（×1.5 像素，按体型缩放）、左右摇 ±3.2°、落地压扁
+                float sv = Mathf.Abs(Mathf.Sin(phase)), body = canvas / 210f;
+                lift = sv * 9 * 1.5f * body * speed01;
+                rot = (-3.2f * Mathf.Sin(phase) - 2) * speed01;              // 摇晃 + 朝前（左）微倾
+                float k2 = Mathf.Clamp01((sv - .15f) / .45f); k2 = k2 * k2 * (3 - 2 * k2);
+                sy = 1 + (-.035f + .06f * k2) * speed01; sx = 2 - sy;
+                if (walking && StageArt.HasWalk(e)) frame = Mathf.Sin(phase) >= 0 ? 1 : 2;
+            }
+            else if (gait == StageArt.Gait.Wheeled)
+            {   // 轮子 / 履带：也跟着节奏小幅颠，幅度只有用脚走的 1/3，外加发动机细震
+                float sv = Mathf.Abs(Mathf.Sin(phase));
+                lift = (sv * 3 * canvas / 210f + Mathf.Sin(clock * 38 + e.id) * .8f) * speed01;
+                rot = (-1.1f * Mathf.Sin(phase) - 1.2f) * speed01;
+            }
+            else rot = -5 * speed01;                                        // 飞行：悬停起伏在外面算过了，这里只压机头
+            float yy = y - lift + p.dy;
+            Vector2 pivot = Ui.P(x + p.dx, yy);
+            GUI.matrix = previous * Ui.RotateLocal(rot + p.rot, pivot) * Matrix4x4.Translate(pivot) * Matrix4x4.Scale(new Vector3(p.sx * sx, p.sy * sy, 1)) * Matrix4x4.Translate(-pivot);
+            bool drawn = StageArt.DrawEnemy(e, StageArt.PoseOf(e), x + p.dx, yy, canvas, tint, frame)
+                || ActorView.Enemy(x + p.dx, yy, canvas, e.Art, e.boss, tint);
+            GUI.matrix = previous; return drawn;
         }
 
         // 程序画的行进背景：远景楼块（慢）、中景立柱与街区特征（中）、地面标线（快），随 worldX 滚动。
         // 正式背景图到位后替换这里，滚动系数保持不变。
         private void Backdrop(int region, int district, bool deep)
         {
+            if (StageArt.Background(SceneOf(CurrentCode), worldX, StageW, StageH, GroundY)) return;   // v0.16 正式分层背景
             float far = worldX * .25f, mid = worldX * .6f;
             int firstBlock = Mathf.FloorToInt(far / 190);
             for (int i = 0; i < 10; i++)
@@ -350,15 +509,16 @@ namespace ThreadZero
             Ui.Fill(1600 - m - L, m, L, t, ink); Ui.Fill(1600 - m - t, m, t, L, ink);
             Ui.Fill(m, 900 - m - t, L, t, ink); Ui.Fill(m, 900 - m - L, t, L, ink);
             Ui.Fill(1600 - m - L, 900 - m - t, L, t, ink); Ui.Fill(1600 - m - t, 900 - m - L, t, L, ink);
-            int region = model.state.region;
-            Ui.Text(40, 30, 200, 56, Catalog.StageCode(region), 48, ink, TextAnchor.MiddleLeft, true, true);
-            StageKind kind = Chapters.Stage(region).kind;
+            int region = model.state.region, code = CurrentCode;
+            Ui.Text(40, 30, 200, 56, CodeLabel(code), 48, ink, TextAnchor.MiddleLeft, true, true);
+            StageKind kind = KindOf(code);
             string kindText = kind == StageKind.Boss ? " · 首领" : kind == StageKind.Elite ? " · 精英" : "";
-            Ui.Text(42, 84, 400, 22, Catalog.RegionNames[region] + kindText, 15, ink, TextAnchor.MiddleLeft, true);
-            for (int r = 0; r < Chapters.StagesPerChapter; r++)
+            Ui.Text(42, 84, 460, 22, NameLabel(code) + kindText + (model.InEcho ? " · 最高 " + model.state.echoBest : ""), 15, ink, TextAnchor.MiddleLeft, true);
+            if (!model.InEcho) for (int i = 0; i < Chapters.StagesPerChapter; i++)
             {
+                int r = Chapters.FirstRegion(model.Chapter) + i;
                 bool now = r == region, done = r < model.state.unlockedRegion;
-                float size = now ? 10 : 8, x = 44 + r * 16 + (now ? -1 : 0);
+                float size = now ? 10 : 8, x = 44 + i * 16 + (now ? -1 : 0);
                 Ui.Fill(x, 116 - size / 2, size, size, now ? Ui.Alpha(Ui.Orange, a) : done ? ink : Ui.Alpha(Ui.Rule, a));
             }
             if (combat.BossEnemy == null)
@@ -369,29 +529,35 @@ namespace ThreadZero
 
         private void ActionHeader()
         {
-            int region = model.state.region;
-            string name = Catalog.RegionNames[region];
+            int region = model.state.region, code = CurrentCode;
+            string name = NameLabel(code);
             float nameWidth = Ui.Width(name, 30, true);
             bool hover = Ui.Hover(128, 16, 190 + nameWidth, 76);
-            Ui.Text(128, 12, 120, 80, Catalog.StageCode(region), 52, Ui.Ink, TextAnchor.MiddleLeft, true, true);
-            Ui.Text(250, 22, 240, 18, "CHAPTER 1 / 第一章", 13, Ui.Mute, TextAnchor.MiddleLeft, true, true);
+            Ui.Text(128, 12, 120, 80, CodeLabel(code), model.InEcho ? 40 : 52, Ui.Ink, TextAnchor.MiddleLeft, true, true);
+            Ui.Text(250, 22, 240, 18, model.InEcho ? "ECHO / 回声层" : "CHAPTER " + model.Chapter + " / 第" + "一二三四五"[model.Chapter - 1] + "章", 13, Ui.Mute, TextAnchor.MiddleLeft, true, true);
+            // 机械飞升进度：5 格，一件义体一格
+            Ui.Text(420, 20, 44, 22, "飞升", 13, model.state.implants.Count > 0 ? Ui.Orange : Ui.Mute, TextAnchor.MiddleLeft, true);
+            for (int i = 0; i < Catalog.AscensionTotal; i++) Ui.Fill(456 + i * 20, 24, 16, 14, i < model.state.implants.Count ? Ui.Orange : Ui.Rule);
             Ui.Text(250, 42, nameWidth + 10, 40, name, 30, Ui.Ink, TextAnchor.MiddleLeft, true);
             float boxX = 250 + nameWidth + 16;
             Ui.Fill(boxX, 44, 36, 36, hover ? Ui.Ink : Ui.Ground); Ui.Frame(boxX, 44, 36, 36, 2, Ui.Ink);
             Ui.IconChevron(boxX + 18, 62, hover ? Ui.Panel : Ui.Ink);
-            if (Ui.Click(128, 16, 190 + nameWidth, 76)) navigation.Open(GameModal.Map);
+            if (Ui.Click(128, 16, 190 + nameWidth, 76)) { mapChapter = 0; navigation.Open(GameModal.Map); }
 
+            // 回声层：路线换成「最高层 + 波次 + 协议异常」。
+            if (model.InEcho) { EchoHeader(); if (Ui.Button(1196, 30, 176, 48, autoAdvance ? "自动推进 · 开" : "自动推进 · 关", autoAdvance ? 2 : 0, true, 15)) autoAdvance = !autoAdvance; ScrapChip(1568); return; }
             // 路线：一章 7 关。当前关下方的小格 = 本关波次进度。
             float x = 640, middle = 50;
             Ui.Text(x - 66, middle - 12, 56, 24, "ROUTE", 14, Ui.Mute, TextAnchor.MiddleRight, true, true);
-            for (int r = 0; r < Chapters.StagesPerChapter; r++)
+            for (int i = 0; i < Chapters.StagesPerChapter; i++)
             {
+                int r = Chapters.FirstRegion(model.Chapter) + i;
                 StageKind kind = Chapters.Stage(r).kind;
-                bool now = r == region, done = r < model.state.unlockedRegion || (kind == StageKind.Boss && model.state.bosses > 0), locked = r > model.state.unlockedRegion;
+                bool now = r == region, done = r < model.state.unlockedRegion || (kind == StageKind.Boss && model.BossCleared(model.Chapter)), locked = r > model.state.unlockedRegion;
                 float size = now ? 48 : 38;
-                string label = kind == StageKind.Boss ? "首" : kind == StageKind.Elite ? "精" : (r + 1).ToString();
+                string label = kind == StageKind.Boss ? "首" : kind == StageKind.Elite ? "精" : (i + 1).ToString();
                 bool digit = kind == StageKind.Normal;
-                if (now) { Ui.Fill(x, middle - size / 2, size, size, Ui.Orange); Ui.Text(x, middle - size / 2, size, size, label, digit ? 26 : 20, Ui.Ink, TextAnchor.MiddleCenter, true, digit); }
+                if (now) { Ui.Fill(x, middle - size / 2, size, size, Ui.Orange); Ui.Text(x, middle - size / 2, size, size, label, digit ? 26 : 20, Ui.OnAccent, TextAnchor.MiddleCenter, true, digit); }
                 else if (done) { Ui.Fill(x, middle - size / 2, size, size, Ui.Ink); Ui.Text(x, middle - size / 2, size, size, label, digit ? 18 : 15, Ui.Panel, TextAnchor.MiddleCenter, true, digit); }
                 else { Ui.Frame(x, middle - size / 2, size, size, 2, locked ? Ui.Rule : Ui.Grey); Ui.Text(x, middle - size / 2, size, size, label, digit ? 18 : 15, locked ? Ui.Rule : Ui.Mute, TextAnchor.MiddleCenter, true, digit); }
                 if (now)
@@ -401,11 +567,29 @@ namespace ThreadZero
                         Ui.Fill(x + size / 2 - total / 2 + k * (w + gap), middle + size / 2 + 6, w, 4, k < combat.wave - 1 ? Ui.Ink : k == combat.wave - 1 ? Ui.Orange : Ui.Rule);
                 }
                 x += size;
-                if (r < Chapters.StagesPerChapter - 1) { Ui.Fill(x, middle - 2, 30, 4, done ? Ui.Ink : Ui.Rule); x += 30; }
+                if (i < Chapters.StagesPerChapter - 1) { Ui.Fill(x, middle - 2, 30, 4, done ? Ui.Ink : Ui.Rule); x += 30; }
             }
 
             if (Ui.Button(1196, 30, 176, 48, autoAdvance ? "自动推进 · 开" : "自动推进 · 关", autoAdvance ? 2 : 0, true, 15)) autoAdvance = !autoAdvance;
             ScrapChip(1568);
+        }
+
+        private void EchoHeader()
+        {
+            float x = 640;
+            Ui.Text(x, 18, 200, 20, "最高 " + model.state.echoBest + " 层 · 下个里程碑 " + ((model.state.echoBest / Chapters.MilestoneEvery + 1) * Chapters.MilestoneEvery), 13, Ui.Mute, TextAnchor.MiddleLeft, true);
+            int waves = combat.WaveCount;
+            for (int k = 0; k < waves; k++) Ui.Fill(x + k * 34, 44, 28, 8, k < combat.wave - 1 ? Ui.Ink : k == combat.wave - 1 ? Ui.Orange : Ui.Rule);
+            float ax = x + 90;
+            if (model.state.anomalies.Count == 0) Ui.Text(ax, 36, 400, 24, "无协议异常", 13, Ui.Rule, TextAnchor.MiddleLeft);
+            foreach (string id in model.state.anomalies)
+            {
+                Chapters.Anomaly a = Chapters.FindAnomaly(id); if (a == null) continue;
+                float w = Ui.Width(a.name, 14, true) + 22;
+                Ui.Fill(ax, 34, w, 28, Ui.Ink); Ui.Text(ax, 34, w, 28, a.name, 14, Ui.Orange, TextAnchor.MiddleCenter, true);
+                if (Ui.Hover(ax, 34, w, 28)) { Ui.Fill(ax, 66, 300, 28, Ui.Ink); Ui.Text(ax + 10, 66, 290, 28, a.desc, 12, Ui.Panel, TextAnchor.MiddleLeft); }
+                ax += w + 8;
+            }
         }
 
         private void ScrapChip(float right)
@@ -449,7 +633,7 @@ namespace ThreadZero
             {
                 float width = Ui.Width(names[i], 13, true) + 20;
                 if (live[i]) Ui.Fill(x, y, width, 26, Ui.Orange); else Ui.Frame(x, y, width, 26, 1, Ui.Hex(0x6B7175));
-                Ui.Text(x, y, width, 26, names[i], 13, live[i] ? Ui.Ink : Ui.Panel, TextAnchor.MiddleCenter, true);
+                Ui.Text(x, y, width, 26, names[i], 13, live[i] ? Ui.OnAccent : Ui.Panel, TextAnchor.MiddleCenter, true);
                 x += width + 8;
             }
         }
@@ -485,39 +669,59 @@ namespace ThreadZero
             {
                 float dx = feetX + 96, dy = GroundY - 262 + Mathf.Sin(clock * 3) * 5;
                 if (!PaperDollView.DrawDrone(Ui.R(dx - 38, dy - 15, 76, 30))) { Ui.Fill(dx - 18, dy - 7, 36, 14, Ui.Ink); Ui.Disk(dx, dy, 4, Ui.Orange); }
-                if (!moving && (combat.HeroInRange || combat.EnemyInRange) && combat.droneFlash > 0) Ui.Stroke(dx + 24, dy + 5, liveEnemyX, enemyMid, 3, Ui.Orange);
             }
-            if (moving || (!combat.HeroInRange && !combat.EnemyInRange)) return;
-            if (combat.arcFlash > 0)
+            // v0.16 旧的直线特效（无人机激光线、折线电弧、护盾折线）已删除，改由 OnAbility 事件放正式特效（见 OnAbilityFx）。
+        }
+        private void OnAbilityFx(AbilityEvent a)
+        {
+            Enemy t = combat.Target; float hx = combat.Movement.HeroScreenX;
+            Vector2 aim = t != null ? new Vector2(t.x - worldX - t.canvas * .15f, GroundY + 2 - t.canvas * .45f) : new Vector2(hx + 300, GroundY - 120);
+            switch (a.ability)
             {
-                Color arc = QualityVisual.Colors[3]; float x0 = feetX + 84, span = liveEnemyX - x0;
-                float[] offsets = { 0, -26, 18, -20, 0 };
-                for (int i = 1; i < 5; i++)
-                    Ui.Stroke(x0 + span * (i - 1) / 4, enemyMid + offsets[i - 1], x0 + span * i / 4, enemyMid + offsets[i], 4, arc);
-            }
-            if (combat.guardFlash > 0)
-            {
-                float gx = feetX + 92;
-                Ui.Stroke(gx, GroundY - 150, gx + 20, GroundY - 95, 4, Ui.Ink); Ui.Stroke(gx + 20, GroundY - 95, gx, GroundY - 40, 4, Ui.Ink);
+                case Ability.Drone:   // 无人机：从机身打一发曳光弹
+                {
+                    Vector2 m = new Vector2(hx + 120, GroundY - 257);
+                    WeaponFx.Fire("gun", clock, m, (aim - m).normalized, aim);
+                    break;
+                }
+                case Ability.Arc:     // 电弧模块：从角色胸口拉一道电弧光束
+                {
+                    Vector2 c = new Vector2(hx + 40, GroundY - 120);
+                    WeaponFx.Fire("coil", clock, c, (aim - c).normalized, aim);
+                    break;
+                }
+                case Ability.Dash:
+                case Ability.Assault: // 推进器冲刺：目标处一团冲击
+                    if (t != null) EnemyFx.Burst(clock, t.x, GroundY + 2 - t.canvas * .45f, new Color(1, .6f, .25f), 1.3f);
+                    break;
+                case Ability.GuardCharge:   // 护盾挡下伤害：角色前方一面弧形护盾闪一下
+                    EnemyFx.Shield(clock, combat.Movement.HeroX + 70, GroundY - 110);
+                    break;
+                case Ability.GuardRelease:  // 护盾反击：目标处炸开
+                    if (t != null) EnemyFx.Burst(clock, t.x, GroundY + 2 - t.canvas * .45f, new Color(.45f, .85f, 1f), 1.6f);
+                    break;
             }
         }
 
-        // ---------- 掉落：从残骸弹出 → 落地闪一下 → 被吸向角色（不再钉在原地） ----------
+        // ---------- 掉落 + 回收无人机（v0.16b）----------
+        // 装备从残骸弹出、落地停一下，然后被吸进回收无人机（开局就有，独立于编队），存进仓库。
+        // 只是表现：物品在掉落那一刻已经进了仓库。
         private sealed class DropFx { public Item item; public EquipmentBase b; public float from, wx, side; }
         private readonly List<DropFx> dropFx = new List<DropFx>();
-        private const float DropPop = .5f, DropFly = .36f, DropFlash = .28f;
-        private static float DropRest(Quality q) { return .22f + (int)q * .12f; }
+        private const float DropPop = .5f, DropFly = .38f, DropFlash = .3f;
+        private static float DropRest(Quality q) { return .2f + (int)q * .1f; }
+        private float droneGulp = -10;   // 最近一次吸进东西的时刻：无人机鼓一下、灯闪一下
         private void SpawnDrop(Item item)
         {
             EquipmentBase b = Catalog.Find(item.baseId); if (b == null) return;
-            if (dropFx.Count >= 8) dropFx.RemoveAt(0);
-            dropFx.Add(new DropFx { item = item, b = b, from = clock, wx = combat.lastKillX, side = (dropFx.Count % 2 == 0 ? 1 : -1) * (20 + dropFx.Count * 6) });
+            if (dropFx.Count >= 12) dropFx.RemoveAt(0);
+            dropFx.Add(new DropFx { item = item, b = b, from = clock, wx = combat.lastKillX, side = (dropFx.Count % 2 == 0 ? 1 : -1) * (20 + (dropFx.Count % 4) * 14) });
         }
         private float DropScreenX(float wx) { return combat.MovementEnabled ? wx - worldX : EnemyX - (worldX - wx); }
         private void DropEffect(float heroX)
         {
             const float W = 44, H = 48;
-            Vector2 hero = new Vector2(heroX, GroundY - 118);
+            Vector2 drone = new Vector2(heroX - 92, GroundY - 222 + Mathf.Sin(clock * 2.4f) * 6);
             for (int i = dropFx.Count - 1; i >= 0; i--)
             {
                 DropFx d = dropFx[i]; float t = clock - d.from, rest = DropRest(d.item.quality);
@@ -539,23 +743,296 @@ namespace ThreadZero
                     Ui.ItemTile(gx - W / 2, groundTop - bob, W, H, d.b, d.item.quality, true, false, 3, false);
                 }
                 else if (t < DropPop + rest + DropFly)
-                {   // 吸向角色：先慢后快、边飞边缩小，拖一道品质色尾迹
-                    float u = (t - DropPop - rest) / DropFly, e = u * u * u, s = Mathf.Lerp(1, .32f, e);
-                    Vector2 a = new Vector2(gx, groundTop + H / 2), c = a + new Vector2(0, -90);
-                    Vector2 p = Bez(a, c, hero, e), q = Bez(a, c, hero, Mathf.Max(0, e - .18f));
-                    Ui.Stroke(q.x, q.y, p.x, p.y, 5 * s + 1, Ui.Alpha(qc, .5f));
-                    Ui.ItemTile(p.x - W * s / 2, p.y - H * s / 2, W * s, H * s, d.b, d.item.quality, true, false, 3 * s, false);
+                {   // 吸进无人机：先慢后快、边飞边缩小，拖一道品质色尾迹
+                    float u = (t - DropPop - rest) / DropFly, e = u * u * u, sc = Mathf.Lerp(1, .25f, e);
+                    Vector2 a = new Vector2(gx, groundTop + H / 2), c = a + new Vector2(0, -120), target = drone + new Vector2(0, 30);
+                    Vector2 p = Bez(a, c, target, e), q = Bez(a, c, target, Mathf.Max(0, e - .18f));
+                    Ui.Stroke(q.x, q.y, p.x, p.y, 5 * sc + 1, Ui.Alpha(qc, .5f));
+                    Ui.ItemTile(p.x - W * sc / 2, p.y - H * sc / 2, W * sc, H * sc, d.b, d.item.quality, true, false, 3 * sc, false);
                 }
                 else if (t < DropPop + rest + DropFly + DropFlash)
-                {   // 收进身上：一圈小闪光
+                {   // 存进仓库：爪子处一圈品质色闪光
+                    if (clock - droneGulp > DropFlash) droneGulp = clock;
                     float u = (t - DropPop - rest - DropFly) / DropFlash;
-                    Ui.Disk(hero.x, hero.y, 10 + u * 30, Ui.Alpha(qc, .35f * (1 - u)));
-                    Ui.Disk(hero.x, hero.y, 5 + u * 8, Ui.Alpha(Color.white, .7f * (1 - u)));
+                    Ui.Disk(drone.x, drone.y + 30, 10 + u * 28, Ui.Alpha(qc, .4f * (1 - u)));
+                    Ui.Disk(drone.x, drone.y + 30, 4 + u * 6, Ui.Alpha(Color.white, .8f * (1 - u)));
                 }
                 else dropFx.RemoveAt(i);
             }
+            RecyclerDrone(drone, clock - droneGulp < .25f);
+        }
+
+        // 回收无人机：有正式素材（Resources/Art/V16/Drone/recycler.png，朝右）就用素材，否则先用程序画的占位。
+        private Texture2D recyclerTex; private bool recyclerTried;
+        private void RecyclerDrone(Vector2 p, bool carrying)
+        {
+            if (!recyclerTried) { recyclerTried = true; recyclerTex = Resources.Load<Texture2D>("Art/V16/Drone/recycler"); }
+            float tilt = Mathf.Sin(clock * 3) * 2;
+            if (recyclerTex != null)
+            {
+                float w = carrying ? 118 : 110, h = w * recyclerTex.height / recyclerTex.width;   // 吸进东西时鼓一下
+                Matrix4x4 m = GUI.matrix; GUI.matrix = m * Ui.RotateLocal(tilt, Ui.P(p.x, p.y));
+                GUI.DrawTexture(Ui.R(p.x - w / 2, p.y - h / 2, w, h), recyclerTex, ScaleMode.StretchToFill, true);
+                GUI.matrix = m; return;
+            }
+            Color body = new Color(.22f, .25f, .27f), edge = new Color(.08f, .09f, .1f), light = new Color(.3f, 1, .88f);
+            float spin = Mathf.Abs(Mathf.Sin(clock * 40));
+            // 两侧旋翼
+            for (int s = -1; s <= 1; s += 2)
+            {
+                float ax = p.x + s * 34;
+                Ui.Stroke(p.x + s * 12, p.y - 6, ax, p.y - 12, 4, edge);
+                Ui.Stroke(ax - 22 * spin, p.y - 16, ax + 22 * spin, p.y - 16, 3, new Color(.75f, .8f, .82f, .8f));
+            }
+            Ui.Disk(p.x, p.y, 17, edge); Ui.Disk(p.x, p.y, 14, body);
+            Ui.Fill(p.x - 14, p.y - 2, 28, 4, new Color(1, .45f, .1f));                 // 橙色警示条
+            Ui.Disk(p.x + 7, p.y - 4, 4, light); Ui.Disk(p.x + 7, p.y - 4, 7, new Color(light.r, light.g, light.b, .25f));
+            // 爪子：抓着东西时收拢
+            float open = carrying ? 4 : 10;
+            Ui.Stroke(p.x - 4, p.y + 12, p.x - open, p.y + 26, 3, edge); Ui.Stroke(p.x + 4, p.y + 12, p.x + open, p.y + 26, 3, edge);
         }
         private static Vector2 Bez(Vector2 a, Vector2 c, Vector2 b, float t) { float m = 1 - t; return m * m * a + 2 * m * t * c + t * t * b; }
+
+        // ---------- 协议异常三选一：右侧面板，15 秒不选就跳过，不打断挂机 ----------
+        private readonly List<string> anomalyOffer = new List<string>(); private float offerAt = -10;
+        private void OfferAnomalies()
+        {
+            anomalyOffer.Clear();
+            var pool = new List<string>(); foreach (Chapters.Anomaly a in Chapters.Anomalies) if (!model.state.anomalies.Contains(a.id)) pool.Add(a.id);
+            while (pool.Count > 0 && anomalyOffer.Count < 3) { int k = UnityEngine.Random.Range(0, pool.Count); anomalyOffer.Add(pool[k]); pool.RemoveAt(k); }
+            offerAt = clock;
+        }
+        private void AnomalyOffer()
+        {
+            if (anomalyOffer.Count == 0) return;
+            float t = clock - offerAt, left = 15 - t;
+            if (left <= 0) { anomalyOffer.Clear(); return; }
+            float x = 1600 - 420 - 24, y = 230, w = 420, h = 96 + anomalyOffer.Count * 96;
+            Ui.Fill(x, y, w, h, Ui.Alpha(Ui.Ink, .95f)); Ui.Fill(x, y, w, 4, Ui.Orange);
+            Ui.Text(x + 20, y + 12, w - 40, 28, "协议异常 · 三选一", 20, Ui.Panel, TextAnchor.MiddleLeft, true);
+            Ui.Text(x + 20, y + 40, w - 40, 22, "叠上去更难，掉得更好（最多 3 个）", 13, Ui.MuteOnInk, TextAnchor.MiddleLeft);
+            for (int i = 0; i < anomalyOffer.Count; i++)
+            {
+                Chapters.Anomaly a = Chapters.FindAnomaly(anomalyOffer[i]); float cy = y + 72 + i * 96;
+                Ui.Fill(x + 16, cy, w - 32, 84, Ui.Tile2);
+                Ui.Text(x + 32, cy + 8, 200, 30, a.name, 20, Ui.Orange, TextAnchor.MiddleLeft, true);
+                Ui.Text(x + 32, cy + 40, w - 170, 36, a.desc, 12, Ui.MuteOnInk, TextAnchor.UpperLeft, false, false, true);
+                if (Ui.Button(x + w - 126, cy + 20, 94, 44, "接入", 1, true, 15))
+                { model.state.anomalies.Add(a.id); anomalyOffer.Clear(); Save(); Notify("协议异常接入：" + a.name, 2.5f); return; }
+            }
+            Ui.Text(x + 20, y + h - 26, w - 40, 22, "不选 · " + Mathf.CeilToInt(left) + " 秒后跳过", 12, Ui.MuteOnInk, TextAnchor.MiddleRight);
+        }
+
+        // ---------- 义体接入：首次击败章节首领后，在角色身上对应部位做 2.6 秒的接入动画（不暂停战斗） ----------
+        // 扫描框从外往里锁定部位 → 几根橙色「线」接进去 → 闪一下 → 部位名标签。看不到也没关系：义体会一直显示在身上，整备页的格子带 NEW。
+        private void ImplantInstallFx()
+        {
+            if (implantShown == null || Event.current.type != EventType.Repaint) return;
+            float t = clock - implantAt; if (t < 0 || t > 2.6f) return;
+            bool eye = implantShown.id == "eye_r";
+            Vector2 c = eye ? LayeredRigView.EyeAnchor : LayeredRigView.ArmAnchor;
+            float lockK = Mathf.SmoothStep(0, 1, Mathf.Clamp01(t / .7f)), a = t > 2.2f ? 1 - (t - 2.2f) / .4f : 1;
+            float r = Mathf.Lerp(150, eye ? 26 : 40, lockK), L = 16;
+            Color o = Ui.Alpha(Ui.Orange, a);
+            // 四角扫描框
+            Ui.Fill(c.x - r, c.y - r, L, 3, o); Ui.Fill(c.x - r, c.y - r, 3, L, o);
+            Ui.Fill(c.x + r - L, c.y - r, L, 3, o); Ui.Fill(c.x + r - 3, c.y - r, 3, L, o);
+            Ui.Fill(c.x - r, c.y + r - 3, L, 3, o); Ui.Fill(c.x - r, c.y + r - L, 3, L, o);
+            Ui.Fill(c.x + r - L, c.y + r - 3, L, 3, o); Ui.Fill(c.x + r - 3, c.y + r - L, 3, L, o);
+            // 0.7–1.4 秒：四根线从四周接进部位
+            if (t > .6f)
+            {
+                float k = Mathf.Clamp01((t - .6f) / .8f);
+                for (int i = 0; i < 4; i++)
+                {
+                    float ang = (35 + i * 90) * Mathf.Deg2Rad; Vector2 from = c + new Vector2(Mathf.Cos(ang), Mathf.Sin(ang)) * 230;
+                    Vector2 to = Vector2.Lerp(from, c, k);
+                    Ui.Stroke(from.x, from.y, to.x, to.y, 3, Ui.Alpha(Ui.Orange, .85f * a));
+                    Ui.Stroke(from.x, from.y, to.x, to.y, 1, Ui.Alpha(Color.white, .7f * a));
+                }
+            }
+            // 1.4 秒：接通闪光
+            if (t > 1.35f && t < 1.9f) { float f = 1 - (t - 1.35f) / .55f; EnemyFx.Glow(c, 90, Ui.Orange, .9f * f); Ui.Disk(c.x, c.y, 18 * f + 4, Ui.Alpha(Color.white, f)); }
+            // 部位标签
+            if (t > 1.4f)
+            {
+                float lx = c.x + r + 14, ly = c.y - 34;
+                Ui.Fill(lx, ly, 200, 40, Ui.Alpha(Ui.Ink, .92f * a)); Ui.Fill(lx, ly, 4, 40, o);
+                Ui.Text(lx + 14, ly, 186, 20, "义体接入 · " + implantShown.part, 12, Ui.Alpha(Ui.Orange, a), TextAnchor.MiddleLeft, true);
+                Ui.Text(lx + 14, ly + 18, 186, 22, implantShown.name, 15, Ui.Alpha(Ui.Panel, a), TextAnchor.MiddleLeft, true);
+            }
+        }
+
+        // ---------- 机械飞升：击败首领后装上义体的提示（约 4 秒，不挡操作） ----------
+        private ImplantDef implantShown; private float implantAt = -10;
+        private void AscensionBanner()
+        {
+            if (implantShown == null) return;
+            float t = clock - implantAt - 2.4f; if (t < 0 || t > 4.2f) return;   // 等身上的接入动画放完再出横幅
+            float a = t < .25f ? t / .25f : t > 3.7f ? 1 - (t - 3.7f) / .5f : 1, open = Mathf.SmoothStep(0, 1, Mathf.Clamp01(t / .3f));
+            float w = 760, h = 190 * open, x = StageW / 2 - w / 2, y = 250 - h / 2 + 95;
+            Ui.Fill(x, y, w, h, Ui.Alpha(Ui.Ink, .94f * a)); Ui.Fill(x, y, w, 4, Ui.Alpha(Ui.Orange, a)); Ui.Fill(x, y + h - 4, w, 4, Ui.Alpha(Ui.Orange, a));
+            if (open < .95f) return;
+            int have = model.state.implants.Count;
+            Ui.Text(x + 40, y + 20, 400, 26, "机械飞升  " + have + " / " + Catalog.AscensionTotal, 18, Ui.Alpha(Ui.Orange, a), TextAnchor.MiddleLeft, true);
+            for (int i = 0; i < Catalog.AscensionTotal; i++) Ui.Fill(x + w - 40 - (Catalog.AscensionTotal - i) * 34, y + 26, 26, 14, Ui.Alpha(i < have ? Ui.Orange : Ui.Steel, a));
+            Ui.Text(x + 40, y + 56, w - 80, 56, "装上义体：" + implantShown.name, 40, Ui.Alpha(Ui.Panel, a), TextAnchor.MiddleLeft, true);
+            Ui.Text(x + 40, y + 120, w - 80, 48, implantShown.desc + "  身上又多了一根「线」。", 17, Ui.Alpha(Ui.MuteOnInk, a), TextAnchor.MiddleLeft, false, false, true);
+        }
+
+        // ---------- 武器技能：动作对时、技能名提示、技能特效 ----------
+        private string calloutName = ""; private float calloutAt = -10;
+        /// 技能的第 i 段命中时刻对到动作的「开火 / 落锤」帧；一段动作约 0.56 秒（射击）/ 0.7 秒（重砸）。
+        private static float SkillRigT(SkillDef s, float age, LayeredRigView.Anim anim)
+        {
+            float impact = anim == LayeredRigView.Anim.Shoot ? LayeredRigView.FireT : .42f, seg = anim == LayeredRigView.Anim.Shoot ? .56f : .7f;
+            if (s.hitTimes == null || s.hitTimes.Length == 0) return Mathf.Clamp01(age / s.duration);
+            float start = s.hitTimes[0] - impact * seg;
+            for (int i = 1; i < s.hitTimes.Length; i++) { float st = s.hitTimes[i] - impact * seg; if (age >= st) start = st; }
+            return Mathf.Clamp01((age - start) / seg);
+        }
+        private void OnSkillCast(SkillDef s) { if (s != SkillBook.QuickCut) { calloutName = s.displayName; calloutAt = clock; } }
+        private void SkillCallout(float x, float y)
+        {
+            float t = clock - calloutAt; if (t < 0 || t > 1.1f || calloutName.Length == 0) return;
+            float pop = t < .12f ? EaseOutBack(t / .12f) : 1, fade = t > .8f ? 1 - (t - .8f) / .3f : 1;
+            float w = Ui.Width(calloutName, 22, true) + 34, h = 34 * pop;
+            Ui.Fill(x - w / 2, y - h / 2, w, h, Ui.Alpha(Ui.Ink, .9f * fade));
+            Ui.Fill(x - w / 2, y - h / 2, 5, h, Ui.Alpha(Ui.Orange, fade));
+            if (pop > .7f) Ui.Text(x - w / 2 + 6, y - 17, w - 6, 34, calloutName, 22, Ui.Alpha(Ui.Orange, fade), TextAnchor.MiddleCenter, true);
+        }
+        private void OnSkillHit(SkillDef s, int hit, Enemy target, List<Enemy> extra)
+        {
+            float Mid(Enemy e) { return GroundY + 2 - e.canvas * .45f; }
+            switch (s.fx)
+            {
+                case "chain":   // 电弧在怪之间一跳一跳
+                {
+                    Enemy from = target;
+                    foreach (Enemy e in extra)
+                    {
+                        Vector2 a = new Vector2(from.x - worldX, Mid(from)), b = new Vector2(e.x - worldX, Mid(e));
+                        WeaponFx.Fire("coil", clock, a, (b - a).normalized, b); from = e;
+                    }
+                    break;
+                }
+                case "blast":   // 过压弹：目标处一团大爆炸
+                    EnemyFx.Burst(clock, target.x, Mid(target), new Color(1, .55f, .2f), 2.6f);
+                    WeaponFx.Slam(clock, new Vector2(target.x - worldX, GroundY));
+                    break;
+                case "sweep":   // 吊钩横扫：链子甩过的一道弧光（不是锤子的砸地冲击波），扫到的怪各闪一下
+                    EnemyFx.Sweep(clock - .15f, combat.Movement.HeroX + 30, GroundY - 70, 300);
+                    EnemyFx.Burst(clock, target.x, Mid(target), new Color(1, .62f, .25f), 1.4f);
+                    foreach (Enemy e in extra) EnemyFx.Burst(clock + .03f, e.x, Mid(e), new Color(1, .62f, .25f), .9f);
+                    break;
+                case "quake":   // 震地：冲击波一路传过去
+                    EnemyFx.Shock(clock, combat.Movement.HeroX + 120, GroundY, true);
+                    foreach (Enemy e in extra) EnemyFx.Shock(clock + .04f, e.x, GroundY, false);
+                    break;
+                case "burst":   // 贴脸轰击：目标和周围各炸一下
+                    EnemyFx.Burst(clock, target.x, Mid(target), new Color(1, .8f, .45f), 1.5f);
+                    foreach (Enemy e in extra) EnemyFx.Burst(clock, e.x, Mid(e), new Color(1, .8f, .45f), .9f);
+                    break;
+            }
+        }
+
+        // ---------- 怪物攻击模组的画面：起手姿态、预警、蓄能球、弹道、命中特效 ----------
+        private struct EnemyPoseT { public float dx, dy, rot, sx, sy, flash; }
+        private EnemyPoseT EnemyPose(Enemy e)
+        {
+            var p = new EnemyPoseT { sx = 1, sy = 1 };
+            float w = e.Wind01, a = e.sinceStrike, amp = e.boss ? 1.4f : 1;
+            switch (e.move)
+            {
+                case EnemyMove.Lunge:   // 扑咬：往后一缩 → 猛扑出去
+                    if (w > 0) { p.dx = 10 * w; p.rot = 7 * w; p.sy = 1 - .08f * w; p.sx = 1 + .05f * w; }
+                    else if (a < .3f) { float u = 1 - a / .3f; p.dx = -46 * u * u; p.rot = -10 * u; p.sx = 1 + .06f * u; }
+                    break;
+                case EnemyMove.Bolt:
+                case EnemyMove.Beacon:  // 蓄能：微微后仰、抖动 → 开火后坐
+                    if (w > 0) { p.rot = 4 * w; p.dx = 4 * w + Mathf.Sin(clock * 70) * 1.5f * w; }
+                    else if (a < .22f) { float u = 1 - a / .22f; p.dx = 14 * u; p.rot = 5 * u; }
+                    break;
+                default:                // 砸地类：抬起、后仰、发红 → 重重砸下
+                    if (w > 0)
+                    {
+                        p.dy = -16 * w * amp; p.rot = 9 * w; p.sy = 1 + .08f * w; p.sx = 1 - .04f * w;
+                        if (w > .6f) { p.dx = Mathf.Sin(clock * 60) * (e.special ? 5 : 2); p.flash = (.5f + .5f * Mathf.Sin(clock * 30)) * (w - .6f) / .4f * .7f; }
+                    }
+                    else if (a < .35f) { float u = 1 - a / .35f; p.dx = -22 * u * amp; p.rot = -12 * u; p.sy = 1 - .15f * u; p.sx = 1 + .1f * u; }
+                    break;
+            }
+            return p;
+        }
+
+        private void EnemyTelegraph(Enemy e, float x, float feetY)
+        {
+            float w = e.Wind01; if (w <= 0) return;
+            float top = feetY - e.canvas * .82f;
+            if (e.Heavy)
+            {   // 重击预警：角色脚下的红色警示区 + 怪头顶的感叹号
+                float hx = combat.Movement.HeroScreenX, half = e.special ? 220 : e.boss ? 120 : 80;
+                Color c = e.special ? new Color(.3f, .7f, .9f) : EnemyFx.Warn;
+                Ui.Fill(hx - half, GroundY - 5, half * 2 * w, 6, EnemyFx.A(c, .35f + .45f * w));
+                for (int i = 0; i < 4; i++) { float cx = hx - half + (i + .5f) * half / 2; Ui.Stroke(cx - 10, GroundY - 18, cx, GroundY - 8, 3, EnemyFx.A(c, w)); Ui.Stroke(cx, GroundY - 8, cx + 10, GroundY - 18, 3, EnemyFx.A(c, w)); }
+                if (e.elite || e.boss || e.special)
+                    Ui.Text(x - 40, top - 76 - 6 * Mathf.Sin(clock * 12), 80, 50, e.special ? "!!" : "!", e.special ? 44 : 36, c, TextAnchor.MiddleCenter, true);
+            }
+            else if (e.move == EnemyMove.Bolt || e.move == EnemyMove.Beacon)
+            {   // 蓄能球在枪口处变大
+                Color c = e.move == EnemyMove.Beacon ? EnemyFx.Beacon : EnemyFx.Bolt;
+                Vector2 m = new Vector2(x - e.canvas * .32f, feetY - e.canvas * .45f);
+                EnemyFx.Glow(m, 30 + 30 * w, c, .6f * w);
+                Ui.Disk(m.x, m.y, 4 + 9 * w, EnemyFx.A(c, .9f));
+                Ui.Disk(m.x, m.y, 2 + 4 * w, Color.white);
+            }
+            if (e.hasteLeft > 0 && !e.boss)   // 被信号塔加速：头顶两道紫色箭头
+                for (int i = 0; i < 2; i++) { float yy = top - 30 - i * 9 - (clock * 20 % 9); Ui.Stroke(x - 8, yy + 6, x, yy, 3, EnemyFx.Beacon); Ui.Stroke(x, yy, x + 8, yy + 6, 3, EnemyFx.Beacon); }
+        }
+
+        private void DrawEnemyShots()
+        {
+            Vector2 hero = new Vector2(combat.Movement.HeroScreenX, GroundY - 110);
+            foreach (EnemyShot shot in combat.shots)
+            {
+                float u = Mathf.Clamp01((combat.Elapsed - shot.born) / shot.dur);
+                Vector2 a = new Vector2(shot.x0 - worldX, GroundY + 2 - shot.from.canvas * .45f);
+                Color c = shot.from.move == EnemyMove.Beacon ? EnemyFx.Beacon : EnemyFx.Bolt;
+                Vector2 p = Vector2.Lerp(a, hero, u) + new Vector2(0, -26 * Mathf.Sin(Mathf.PI * u));
+                for (int j = 1; j <= 5; j++)
+                {
+                    float uu = Mathf.Max(0, u - j * .045f);
+                    Vector2 q = Vector2.Lerp(a, hero, uu) + new Vector2(0, -26 * Mathf.Sin(Mathf.PI * uu));
+                    Ui.Disk(q.x, q.y, 8 - j, EnemyFx.A(c, .55f - j * .09f));
+                }
+                EnemyFx.Glow(p, 30, c, .6f);
+                Ui.Disk(p.x, p.y, 9, Ui.Ink); Ui.Disk(p.x, p.y, 7, c); Ui.Disk(p.x + 2, p.y - 2, 2.5f, Color.white);
+            }
+        }
+
+        private void OnEnemyAct(EnemyAct act)
+        {
+            Enemy e = act.e; float heroY = GroundY - 110, mid = GroundY + 2 - e.canvas * .45f;
+            switch (act.kind)
+            {
+                case EnemyActKind.Strike:
+                    if (e.move == EnemyMove.Lunge) EnemyFx.Claw(clock, act.x, heroY);
+                    else if (e.move == EnemyMove.Bolt || e.move == EnemyMove.Beacon) EnemyFx.Muzzle(clock, act.x, mid, e.move == EnemyMove.Beacon ? EnemyFx.Beacon : EnemyFx.Bolt);
+                    else EnemyFx.Shock(clock, act.x, GroundY, e.boss || e.elite);
+                    break;
+                case EnemyActKind.ShotHit: EnemyFx.Burst(clock, act.x, heroY, e.move == EnemyMove.Beacon ? EnemyFx.Beacon : EnemyFx.Bolt); break;
+                case EnemyActKind.Flood:
+                    if (e.skin == 1) EnemyFx.Crate(clock, act.x, GroundY);
+                    else { EnemyFx.Flood(clock, e.x, act.x, GroundY); EnemyFx.Shock(clock, act.x, GroundY, true); }
+                    break;
+                case EnemyActKind.Windup:
+                    if (e.boss && e.special && e.skin == 1) EnemyFx.Target(clock, combat.Movement.HeroX, GroundY, e.windDur);
+                    break;
+                case EnemyActKind.Deploy: EnemyFx.Burst(clock, e.x - 40, mid + 40, EnemyFx.Bolt, .9f); break;
+                case EnemyActKind.Pulse: EnemyFx.Pulse(clock, e.x, mid); break;
+                case EnemyActKind.Enrage: EnemyFx.Roar(clock, e.x, mid); break;
+            }
+        }
 
         private void DrawFloaters(float feetX)
         {
@@ -566,7 +1043,7 @@ namespace ThreadZero
                 {
                     float size = f.critical ? 42 : 28, x = f.x - worldX - 30 + f.drift, y = GroundY - 230 - rise - f.lift;
                     string value = f.value.ToString("F0");
-                    if (f.critical) { Ui.Fill(x - 56, y + 20, 48, 24, Ui.Alpha(Ui.Orange, alpha)); Ui.Text(x - 56, y + 20, 48, 24, "暴击", 14, Ui.Alpha(Ui.Ink, alpha), TextAnchor.MiddleCenter, true); }
+                    if (f.critical) { Ui.Fill(x - 56, y + 20, 48, 24, Ui.Alpha(Ui.Orange, alpha)); Ui.Text(x - 56, y + 20, 48, 24, "暴击", 14, Ui.Alpha(Ui.OnAccent, alpha), TextAnchor.MiddleCenter, true); }
                     Ui.Text(x, y, 220, 64, value, size, Ui.Alpha(Ui.Ink, alpha), TextAnchor.MiddleLeft, true, true);
                 }
                 else Ui.Text(feetX + 56 + f.drift, GroundY - 250 - rise, 160, 44, "-" + f.value.ToString("F0"), 32, Ui.Alpha(Ui.OrangeInk, alpha), TextAnchor.MiddleLeft, true, true);
@@ -581,11 +1058,11 @@ namespace ThreadZero
             Ui.Fill(128, y, 404, h, Ui.Panel); Ui.Frame(128, y, 404, h, over ? 2 : 1, over ? Ui.Ink : Ui.Rule);
             Ui.Text(144, y + 12, 120, 22, "当前配装", 15, Ui.Ink, TextAnchor.MiddleLeft, true);
             Ui.Text(250, y + 12, 266, 22, model.LoadoutSummary, 13, Ui.Mute, TextAnchor.MiddleRight);
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < Catalog.SlotCount; i++)
             {
-                Item item = model.Equipped((Slot)i); float x = 144 + i * 82;
-                if (item != null) Ui.ItemTile(x, y + 46, 72, 72, Catalog.Find(item.baseId), item.quality, true, false, 5, false);
-                else { Ui.Fill(x, y + 46, 72, 72, Ui.Rule); Ui.Text(x, y + 46, 72, 72, Catalog.SlotNames[i], 13, Ui.Mute, TextAnchor.MiddleCenter); }
+                Item item = model.Equipped((Slot)i); float x = 144 + i * 76;
+                if (item != null) Ui.ItemTile(x, y + 50, 68, 68, Catalog.Find(item.baseId), item.quality, true, false, 5, false);
+                else { Ui.Fill(x, y + 50, 68, 68, Ui.Rule); Ui.Text(x, y + 50, 68, 68, Catalog.SlotNames[i], 13, Ui.Mute, TextAnchor.MiddleCenter); }
             }
             if (Ui.Click(128, y, 404, h)) Go(GameScreen.Loadout);
 
@@ -617,7 +1094,7 @@ namespace ThreadZero
                 Ui.Text(1078, y + 36, 232, 28, target.name, 18, Ui.Panel, TextAnchor.MiddleLeft, true);
                 int misses = model.TargetActive ? model.state.targetBossMisses : 0;
                 for (int i = 0; i < 8; i++) Ui.Fill(1078 + i * 29, y + 74, 25, 8, i < misses ? Ui.Orange : Ui.Steel);
-                string note = model.TargetActive ? "本区首领保底 " + misses + " / " + Balance.TargetBossGuarantee : "产地 · " + Catalog.RegionNames[Catalog.SourceRegion(target.id)];
+                string note = model.TargetActive ? "精英 / 首领保底 " + misses + " / " + Balance.TargetBossGuarantee : "产地 · " + Catalog.SourceStages(target.id);
                 Ui.Text(1078, y + 90, 232, 22, note, 13, Ui.MuteOnInk, TextAnchor.MiddleLeft);
             }
             else
@@ -633,18 +1110,23 @@ namespace ThreadZero
 
             // 暂停与倍速
             bool hotPause = Ui.Hover(1340, y, 228, 60);
-            Color pauseFill = paused ? Ui.Orange : hotPause ? Ui.Ink : Ui.Panel, pauseText = paused ? Ui.Ink : hotPause ? Ui.Panel : Ui.Ink;
+            Color pauseFill = paused ? Ui.Orange : hotPause ? Ui.Ink : Ui.Panel, pauseText = paused ? Ui.OnAccent : hotPause ? Ui.Panel : Ui.Ink;
             Ui.Fill(1340, y, 228, 60, pauseFill); Ui.Frame(1340, y, 228, 60, 2, Ui.Ink);
             if (!paused) Ui.IconPause(1340 + 78, y + 30, pauseText);
             Ui.Text(paused ? 1340 : 1340 + 18, y, 228, 60, paused ? "继续行动" : "暂停", 18, pauseText, TextAnchor.MiddleCenter, true);
             if (Ui.Click(1340, y, 228, 60)) paused = !paused;
-            int[] speeds = { 1, 2, 4 };
+            // v0.16 倍速：开局只有 1× / 2×；打通第一章（击败闸门看守）后开放 3×。4× 取消。
+            int[] speeds = { 1, 2, 3 };
+            bool fastOpen = model.state.bosses > 0;
+            if (!fastOpen && speed > 2) speed = 2;
             for (int i = 0; i < 3; i++)
             {
-                float x = 1340 + i * 76; bool on = speed == speeds[i], hot = Ui.Hover(x, y + 72, 76, 60);
+                bool locked = speeds[i] == 3 && !fastOpen;
+                float x = 1340 + i * 76; bool on = speed == speeds[i], hot = !locked && Ui.Hover(x, y + 72, 76, 60);
                 Ui.Fill(x, y + 72, 76, 60, on ? Ui.Ink : hot ? Ui.Rule : Ui.Panel);
-                Ui.Text(x, y + 72, 76, 60, speeds[i] + "×", 24, on ? Ui.Panel : Ui.Ink, TextAnchor.MiddleCenter, true, true);
-                if (Ui.Click(x, y + 72, 76, 60)) speed = speeds[i];
+                Ui.Text(x, y + 72, 76, locked ? 40 : 60, speeds[i] + "×", locked ? 20 : 24, locked ? Ui.Rule : on ? Ui.Panel : Ui.Ink, TextAnchor.MiddleCenter, true, true);
+                if (locked) Ui.Text(x, y + 104, 76, 22, "通关后", 11, Ui.Rule, TextAnchor.MiddleCenter);
+                if (!locked && Ui.Click(x, y + 72, 76, 60)) speed = speeds[i];
             }
             Ui.Frame(1340, y + 72, 228, 60, 2, Ui.Ink);
         }

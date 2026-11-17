@@ -1,0 +1,44 @@
+{
+ "scale": 4,
+ "torso": {
+  "file": "torso.png",
+  "pivot": [
+   44.29,
+   63.19
+  ]
+ },
+ "arm": {
+  "file": "arm.png",
+  "pivot": [
+   21.15,
+   12.92
+  ],
+  "hand": [
+   17.84,
+   32.81
+  ]
+ },
+ "arm_far": {
+  "file": "arm_far.png",
+  "pivot": [
+   7.25,
+   8.5
+  ],
+  "hand": [
+   9.62,
+   26.89
+  ]
+ },
+ "shoulder": [
+  -12.57,
+  -27.0
+ ],
+ "shoulderF": [
+  13.09,
+  -26
+ ],
+ "pack_off": [
+  -18,
+  -16
+ ]
+}

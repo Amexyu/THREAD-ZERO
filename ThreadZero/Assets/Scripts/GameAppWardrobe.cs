@@ -27,51 +27,59 @@ namespace ThreadZero
             for (int i = 0; i < total; i++) Ui.Fill(144 + i * (segment + 3), 786, segment, 10, i < owned ? Ui.Panel : Ui.Steel);
             bool custom = model.state.appearance.Any(id => !string.IsNullOrEmpty(id));
             if (Ui.Button(128, 828, 440, 48, "恢复实际装备外观", 0, custom, 15))
-            { model.state.appearance = new string[4]; Save(); Notify("已恢复实际装备外观"); }
+            { model.state.appearance = new string[Catalog.SlotCount]; Save(); Notify("已恢复实际装备外观"); }
 
             // 右上：部位标签
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < Catalog.SlotCount; i++)
             {
-                int slot = i; float x = 588 + i * 247;
-                string count = Catalog.All.Count(b => (int)b.slot == slot && model.state.collection.Contains(b.id)) + " / 5";
-                bool on = wardrobeSlot == i, hover = Ui.Hover(x, 20, 239, 52);
-                Ui.Fill(x, 20, 239, 52, on ? Ui.Ink : hover ? Ui.Rule : Ui.Panel); Ui.Frame(x, 20, 239, 52, 2, Ui.Ink);
-                float labelWidth = Ui.Width(Catalog.SlotNames[i], 17, true), countWidth = Ui.Width(count, 18, true, true), start = x + (239 - labelWidth - countWidth - 12) / 2;
+                const float tabW = 190; int slot = i; float x = 588 + i * 197.5f;
+                string count = Catalog.All.Count(b => (int)b.slot == slot && model.state.collection.Contains(b.id)) + " / " + Catalog.All.Count(b => (int)b.slot == slot);
+                bool on = wardrobeSlot == i, hover = Ui.Hover(x, 20, tabW, 52);
+                Ui.Fill(x, 20, tabW, 52, on ? Ui.Ink : hover ? Ui.Rule : Ui.Panel); Ui.Frame(x, 20, tabW, 52, 2, Ui.Ink);
+                float labelWidth = Ui.Width(Catalog.SlotNames[i], 17, true), countWidth = Ui.Width(count, 18, true, true), start = x + (tabW - labelWidth - countWidth - 12) / 2;
                 Ui.Text(start, 20, labelWidth + 4, 52, Catalog.SlotNames[i], 17, on ? Ui.Panel : Ui.Ink, TextAnchor.MiddleLeft, true);
                 Ui.Text(start + labelWidth + 12, 20, countWidth + 4, 52, count, 18, on ? Ui.MuteOnInk : Ui.Mute, TextAnchor.MiddleLeft, true, true);
-                if (Ui.Click(x, 20, 239, 52)) { wardrobeSlot = i; selectedLook = Catalog.All.First(b => (int)b.slot == slot).id; }
+                if (Ui.Click(x, 20, tabW, 52)) { wardrobeSlot = i; selectedLook = Catalog.All.First(b => (int)b.slot == slot).id; }
             }
 
             // 右中：五款外观
-            EquipmentBase[] looks = Catalog.All.Where(b => (int)b.slot == wardrobeSlot).ToArray();
+            // v0.16 按章节分页：每章每个部位 5 款
+            int chapters = Catalog.All.Max(b => Catalog.ChapterOf(b.id));
+            for (int c = 1; c <= chapters; c++)
+            {
+                int ch = c; string label = "第" + "一二三四五"[Mathf.Min(4, c - 1)] + "章";
+                if (Ui.Button(588 + (c - 1) * 128, 80, 120, 30, label, wardrobeChapter == c ? 2 : 0, true, 13)) { wardrobeChapter = ch; selectedLook = null; }
+            }
+            EquipmentBase[] looks = Catalog.All.Where(b => (int)b.slot == wardrobeSlot && Catalog.ChapterOf(b.id) == wardrobeChapter).ToArray();
+            if (looks.Length == 0) { wardrobeChapter = 1; return; }
             if (!looks.Any(b => b.id == selectedLook)) selectedLook = looks[0].id;
-            const float cardW = 186.4f, cardH = 276;
+            const float cardW = 186.4f, cardH = 252;
             for (int i = 0; i < looks.Length; i++)
             {
-                EquipmentBase b = looks[i]; float x = 588 + i * (cardW + 12), y = 86;
+                EquipmentBase b = looks[i]; float x = 588 + i * (cardW + 12), y = 118;
                 bool has = model.state.collection.Contains(b.id), selected = selectedLook == b.id, hover = Ui.Hover(x, y, cardW, cardH);
                 if (selected) Ui.Frame(x - 4, y - 4, cardW + 8, cardH + 8, 3, Ui.Orange);
                 Ui.Fill(x, y, cardW, cardH, hover ? Ui.Tile2 : Ui.Tile);
                 Ui.Text(x + 10, y + 6, 60, 22, "0" + (i + 1), 15, Ui.MuteOnInk, TextAnchor.MiddleLeft, true, true);
-                PaperDollView.DrawEquipmentIcon(b, Ui.R(x + (cardW - 148) / 2, y + 36, 148, 148), !has);
-                Ui.Text(x, y + 196, cardW, 26, b.name, 16, has ? Ui.Panel : Ui.MuteOnInk, TextAnchor.MiddleCenter, true);
-                Ui.Text(x, y + 224, cardW, 22, has ? "已收藏" : "未收藏 · " + Catalog.RegionNames[Catalog.SourceRegion(b.id)], 13, has ? Ui.MuteOnInk : Ui.Grey, TextAnchor.MiddleCenter);
+                PaperDollView.DrawEquipmentIcon(b, Ui.R(x + (cardW - 136) / 2, y + 28, 136, 136), !has);
+                Ui.Text(x, y + 170, cardW, 26, b.name, 16, has ? Ui.Panel : Ui.MuteOnInk, TextAnchor.MiddleCenter, true);
+                Ui.Text(x, y + 198, cardW, 22, has ? "已收藏" : "未收藏 · " + Catalog.SourceStages(b.id), 13, has ? Ui.MuteOnInk : Ui.Grey, TextAnchor.MiddleCenter);
                 if (model.Appearance(b.slot).id == b.id) { Ui.Fill(x + cardW - 74, y, 74, 24, Ui.Panel); Ui.Text(x + cardW - 74, y, 74, 24, "当前外观", 12, Ui.Ink, TextAnchor.MiddleCenter, true); }
-                if (model.state.recoveryTarget == b.id) { Ui.Fill(x, y + cardH - 24, cardW, 24, Ui.Orange); Ui.Text(x, y + cardH - 24, cardW, 24, "回收目标", 12, Ui.Ink, TextAnchor.MiddleCenter, true); }
+                if (model.state.recoveryTarget == b.id) { Ui.Fill(x, y + cardH - 24, cardW, 24, Ui.Orange); Ui.Text(x, y + cardH - 24, cardW, 24, "回收目标", 12, Ui.OnAccent, TextAnchor.MiddleCenter, true); }
                 if (Ui.Click(x, y, cardW, cardH)) selectedLook = b.id;
             }
 
             // 右下：选中外观与定向回收
             EquipmentBase chosen = Catalog.Find(selectedLook); if (chosen == null) return;
             bool unlocked = model.state.collection.Contains(chosen.id), tracked = model.state.recoveryTarget == chosen.id, wearing = model.Appearance(chosen.slot).id == chosen.id;
-            int sourceRegion = Catalog.SourceRegion(chosen.id); string regionName = Catalog.RegionNames[sourceRegion];
+            string regionName = Catalog.SourceStages(chosen.id);
             string effectName, effectText; SplitEffect(chosen.effect, out effectName, out effectText);
             Ui.Fill(588, 380, 980, 496, Ui.Panel);
             Ui.Text(612, 400, 400, 18, "LOOK / " + Catalog.SlotNames[(int)chosen.slot] + "外观", 13, Ui.Mute, TextAnchor.MiddleLeft, true, true);
             Ui.Text(612, 422, 560, 52, chosen.name, 36, Ui.Ink, TextAnchor.MiddleLeft, true);
-            string regionLabel = "产出街区 · " + regionName; float regionWidth = Ui.Width(regionLabel, 14, true) + 58;
+            string regionLabel = "产地 · " + regionName; float regionWidth = Ui.Width(regionLabel, 14, true) + 58;
             Ui.Fill(612, 488, regionWidth, 32, Ui.Ink);
-            Ui.Text(624, 488, 30, 32, "0" + (sourceRegion + 1), 17, Ui.Orange, TextAnchor.MiddleLeft, true, true);
+            Ui.Text(624, 488, 30, 32, "01", 17, Ui.Orange, TextAnchor.MiddleLeft, true, true);
             Ui.Text(654, 488, regionWidth - 46, 32, regionLabel, 14, Ui.Panel, TextAnchor.MiddleLeft, true);
             float effectWidth = Ui.Width(effectName, 14, true) + 28;
             Ui.Frame(612 + regionWidth + 10, 488, effectWidth, 32, 2, Ui.Ink);
@@ -80,7 +88,7 @@ namespace ThreadZero
             Ui.Text(612, 726, 540, 46, "外观只改变样子。属性和模块来自「整备」里实际穿戴的装备，分解装备不会丢失已收藏的外观。", 13, Ui.Mute, TextAnchor.UpperLeft, false, false, true);
             if (Ui.Button(612, 792, 240, 60, !unlocked ? "尚未收藏" : wearing ? "当前外观" : "应用外观", 1, unlocked && !wearing, 19))
             { model.SetAppearance(chosen.id); Save(); Play(equipSound); Notify("已应用外观：" + chosen.name); }
-            if (Ui.Button(862, 792, 180, 60, "查看产出街区", 0, true, 15)) navigation.Open(GameModal.Map);
+            if (Ui.Button(862, 792, 180, 60, "查看产出街区", 0, true, 15)) { mapChapter = Catalog.ChapterOf(chosen.id); navigation.Open(GameModal.Map); }
 
             Ui.Fill(1188, 380, 380, 496, Ui.Ink);
             Ui.Text(1210, 400, 336, 18, "TARGET / 定向回收", 13, Ui.Orange, TextAnchor.MiddleLeft, true, true);
@@ -88,9 +96,9 @@ namespace ThreadZero
             int misses = tracked && model.TargetActive ? model.state.targetBossMisses : 0, guarantee = Balance.TargetBossGuarantee;
             float pip = (336f - (guarantee - 1) * 5) / guarantee;
             for (int i = 0; i < guarantee; i++) Ui.Fill(1210 + i * (pip + 5), 500, pip, 14, i < misses ? Ui.Orange : Ui.Steel);
-            string note = !tracked ? "设为目标后，在「" + regionName + "」击败首领时更容易掉落，连续 " + (guarantee - 1) + " 次未掉落则第 " + guarantee + " 次必得。"
-                : model.TargetActive ? "在「" + regionName + "」击败首领时更容易掉落。已 " + misses + " 次未掉落，最多再 " + (guarantee - misses) + " 次必得。"
-                : "目标产地是「" + regionName + "」。前往该街区后，击败首领才会计入保底。";
+            string note = !tracked ? "设为目标后，击败精英或首领时更容易掉落它，连续 " + (guarantee - 1) + " 次未掉落则第 " + guarantee + " 次必得。"
+                : model.TargetActive ? "击败精英或首领时更容易掉落。已 " + misses + " 次未掉落，最多再 " + (guarantee - misses) + " 次必得。"
+                : "初始装备不会掉落，换一件作为目标吧。";
             Ui.Text(1210, 530, 336, 110, note, 14, Ui.MuteOnInk, TextAnchor.UpperLeft, false, false, true);
             if (Ui.Button(1210, 796, 336, 56, tracked ? "取消回收目标" : "设为回收目标", tracked ? 3 : 1, true, 17))
             { model.SetRecoveryTarget(tracked ? null : chosen.id); Save(); }

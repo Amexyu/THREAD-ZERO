@@ -21,11 +21,11 @@ namespace ThreadZero
                 tabX += width + 8;
             }
 
-            // 资源栏：许可等级、通用零件、四种部位零件、核心。
-            string[] names = { "许可等级", "通用零件", Catalog.PartNames[0], Catalog.PartNames[1], Catalog.PartNames[2], Catalog.PartNames[3], "核心" };
-            int[] values = { model.License, model.state.scrap, model.state.parts[0], model.state.parts[1], model.state.parts[2], model.state.parts[3], model.state.cores };
-            const float chipW = (1440f - 6 * 8) / 7;
-            for (int i = 0; i < 7; i++)
+            // 资源栏（v0.16 统一货币）：等级上限、零件、核心。
+            string[] names = { "等级上限", "零件", "核心" };
+            int[] values = { model.License, model.state.scrap, model.state.cores };
+            const float chipW = (1440f - 2 * 8) / 3;
+            for (int i = 0; i < 3; i++)
             {
                 float x = 128 + i * (chipW + 8);
                 Ui.Fill(x, 78, chipW, 62, Ui.Ink);
@@ -108,7 +108,7 @@ namespace ThreadZero
             }
             int cost = model.UpgradeCost(item);
             if (capped) Ui.Text(772, line + 2, 540, 26, "已到许可上限。击败下一关的首领后可以继续升级。", 13, Ui.OrangeInk, TextAnchor.MiddleLeft, true);
-            else Ui.Text(772, line + 2, 540, 26, "消耗 " + Catalog.PartNames[slot] + " " + cost + "（持有 " + model.state.parts[slot] + "）· 随机词条的数值会同步提高", 13, Ui.Mute, TextAnchor.MiddleLeft);
+            else Ui.Text(772, line + 2, 540, 26, "消耗 零件 " + cost + "（持有 " + model.state.scrap + "）· 随机词条的数值会同步提高", 13, Ui.Mute, TextAnchor.MiddleLeft);
             if (Ui.Button(1348, 340, 196, 60, capped ? "已到上限" : "升级到 Lv." + (item.level + 1), 1, model.CanUpgrade(item), 17))
             { if (model.Upgrade(item.uid)) { combat.ClampHealth(); Save(); Play(equipSound); } }
 
@@ -124,7 +124,7 @@ namespace ThreadZero
                 Ui.Text(796, y, 120, 40, Catalog.StatNames[affix.stat], 16, Ui.Body, TextAnchor.MiddleLeft);
                 Ui.Text(920, y, 200, 40, "+" + Value(affix.stat, affix.value), 22, Ui.Ink, TextAnchor.MiddleLeft, true, true);
                 Ui.Fill(772, y + 40, 772, 1, Ui.Hair);
-                if (Ui.Button(1348, y + 4, 196, 32, "重校 · " + Catalog.PartNames[1] + " " + rerollCost, 0, model.CanReroll(item, i), 13))
+                if (Ui.Button(1348, y + 4, 196, 32, "重校 · 零件 " + rerollCost, 0, model.CanReroll(item, i), 13))
                 { if (model.Reroll(item.uid, i)) { combat.ClampHealth(); Save(); Play(equipSound); } }
             }
             if (item.affixes.Count > 0)
@@ -134,7 +134,8 @@ namespace ThreadZero
             if (item.quality == Quality.Legendary)
             {
                 Ui.Fill(772, 756, 772, 60, Ui.Ink); Ui.Fill(772, 756, 8, 60, QualityVisual.Colors[5]);
-                Ui.Text(796, 756, 520, 60, "突破为「" + Catalog.QualityNames[5] + "」· 多一条词条，属性倍率更高", 15, Ui.Panel, TextAnchor.MiddleLeft, true);
+                string need = item.level < model.License ? "先把等级升到上限 Lv." + model.License + "，再用核心突破" : "突破为「" + Catalog.QualityNames[5] + "」· 多一条词条，属性更高";
+                Ui.Text(796, 756, 540, 60, need, 15, item.level < model.License ? Ui.MuteOnInk : Ui.Panel, TextAnchor.MiddleLeft, true);
                 if (Ui.Button(1348, 762, 188, 48, "核心 " + Balance.AscendCores + "（持有 " + model.state.cores + "）", 1, model.CanAscend(item), 14))
                 { if (model.Ascend(item.uid)) { combat.ClampHealth(); Save(); Play(rareSound); Notify("突破完成：" + b.name + " 现在是「" + Catalog.QualityNames[5] + "」", 5); } }
             }

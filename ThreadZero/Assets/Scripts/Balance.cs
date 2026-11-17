@@ -21,7 +21,8 @@ namespace ThreadZero
         public const float HeavySplash = .7f, HeavyReach = 140;
         public const float BaseHealth=140, BaseAttack=16, BaseDefense=4, BaseCrit=.05f;
         public const float TrainingHealth=8, TrainingAttack=1.5f;
-        public const int TrainingCap=20, MaxItemLevel=100;
+        // v0.16 挂机长线：训练不封顶（费用线性涨）；装备最高 300 级，100 级以后每级收益减半。
+        public const int TrainingCap=9999, MaxItemLevel=300, SoftLevel=100;
         public const float CritCap=.75f, CritMultiplier=1.75f, HasteCap=2, LuckCap=30;
         // v0.14：等级权重调高（每级 +8% / 词条 +6%），高两关的量产装备大致能打平低两关的特装。
         public const float ItemLevelGrowth=.08f, AffixLevelGrowth=.06f;
@@ -43,14 +44,17 @@ namespace ThreadZero
             return (wave==1?2:3)+(region>=3?1:0);
         }
         public static readonly float[] AffixBases={12,3,2,.04f,.025f,2};
+        // v0.16 等级与稀有度分开（借鉴 Task Bar Hero）：等级决定强度，稀有度只给小倍率 + 词条条数（之后再加专属效果）。
+        // 目标手感：差 1 档品质 ≈ 差 1.5 级，高等级蓝装能打过低等级金装。具体数值留到阶段 2 统一调。
+        // 词条数值只看等级（affixMin/Max 各档相同），不再按品质放大。
         public static readonly QualityTier[] Qualities={
-            new QualityTier("量产", "9CABB8", 1,    0,0,   0,   0,   0,  0),
-            new QualityTier("改良", "6BD494", 1.15f,1,.85f,1.15f,0,   0,  0),
-            new QualityTier("特装", "59A6FF", 1.35f,2,.95f,1.25f,.18f,3.2f,0),
-            new QualityTier("军规", "BF80FF", 1.65f,3,1.05f,1.35f,.32f,2.8f,1),
-            new QualityTier("机密", "FFC24D", 2,    4,1.15f,1.45f,.5f, 2.4f,3),
-            // v0.10 第六档。不进普通掉落：只来自深层首领的极低概率，或把「机密」装备用核心突破。
-            new QualityTier("原型", "FF4D5E", 2.5f, 5,1.25f,1.55f,.5f, 2.4f,4)
+            new QualityTier("量产", "9CABB8", 1,    0,.85f,1.15f,0,   0,  0),
+            new QualityTier("改良", "6BD494", 1.04f,1,.85f,1.15f,0,   0,  0),
+            new QualityTier("特装", "59A6FF", 1.08f,2,.85f,1.15f,.18f,3.2f,0),
+            new QualityTier("军规", "BF80FF", 1.12f,3,.85f,1.15f,.32f,2.8f,1),
+            new QualityTier("机密", "FFC24D", 1.16f,4,.85f,1.15f,.5f, 2.4f,3),
+            // 第六档。不进普通掉落：只来自首领的极低概率，或把「机密」装备用核心突破。
+            new QualityTier("原型", "FF4D5E", 1.20f,5,.85f,1.15f,.5f, 2.4f,4)
         };
         public static QualityTier Tier(Quality quality)
         {
@@ -59,19 +63,22 @@ namespace ThreadZero
         }
         // v0.10 许可等级：每通过一关首领，上限提高 5 级，最高 30。装备每级的涨幅随之调小，
         // 第 6 关装备的强度与旧版（6 级、每级 15%）大致相同。
-        public const int LicenseStep=5, MaxLicense=30, AscendCores=5;
+        public const int LicenseStep=5, MaxLicense=30, AscendCores=8;
+        public const double RepeatCoreChance=.25;   // v0.16 首领首通必掉核心，之后每次 25%
         public const double PrototypeBossChance=.02;
         public static readonly int[] ChipSlots={0,0,1,1,2,3};
-        public static float AffixLevelFactor(int level) { return 1+AffixLevelGrowth*(Math.Max(1,Math.Min(MaxItemLevel,level))-1); }
-        public static int UpgradeCost(int level,Quality quality) { return (int)Math.Round((6+Math.Max(1,level)*2)*(1+.4f*(int)quality)); }
+        private static float Soft(int level,float g) { int l=Math.Max(1,Math.Min(MaxItemLevel,level)); return 1+g*(Math.Min(l,SoftLevel)-1)+g*.5f*Math.Max(0,l-SoftLevel); }
+        public static float AffixLevelFactor(int level) { return Soft(level,AffixLevelGrowth); }
+        // v0.16：30 级以后（回声层阶段）升级费用 ×6，靠长期攒零件慢慢升。
+        public static int UpgradeCost(int level,Quality quality) { return (int)Math.Round((6+Math.Max(1,level)*2)*(1+.4f*(int)quality)*(level>=30?6:1)); }
         public static int RerollCost(Quality quality,int rerolls) { return (8+4*(int)quality)*(1+Math.Max(0,Math.Min(9,rerolls))); }
-        public static float LevelFactor(int level) { return 1+ItemLevelGrowth*(Math.Max(1,Math.Min(MaxItemLevel,level))-1); }
+        public static float LevelFactor(int level) { return Soft(level,ItemLevelGrowth); }
         public static float AffixValue(int stat,Quality quality,int level,float roll)
         {
             if(stat<0 || stat>=AffixBases.Length) throw new ArgumentOutOfRangeException(nameof(stat));
             QualityTier q=Tier(quality);
             return AffixBases[stat]*(q.affixMin+(q.affixMax-q.affixMin)*Math.Max(0,Math.Min(1,roll)))
-                *(1+AffixLevelGrowth*(Math.Max(1,Math.Min(MaxItemLevel,level))-1));
+                *Soft(level,AffixLevelGrowth);
         }
         public static int TrainingCost(int level) { return 20+level*15; }
         public static float EnemyHealth(int region,int wave) { return (48+wave*12+region*65)*(wave==5?2.3f:1); }

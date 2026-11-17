@@ -8,13 +8,13 @@ namespace ThreadZero.Editor
         [MenuItem("Thread Zero/Preview Starter Dagger on Play")]
         public static void ToggleAutoReview()
         {
-            bool enabled=EditorPrefs.GetBool(GameApp.DaggerAutoReviewKey,true);
+            bool enabled=EditorPrefs.GetBool(GameApp.DaggerAutoReviewKey,false);
             EditorPrefs.SetBool(GameApp.DaggerAutoReviewKey,!enabled);
         }
         [MenuItem("Thread Zero/Preview Starter Dagger on Play",true)]
         public static bool AutoReviewState()
         {
-            Menu.SetChecked("Thread Zero/Preview Starter Dagger on Play",EditorPrefs.GetBool(GameApp.DaggerAutoReviewKey,true));
+            Menu.SetChecked("Thread Zero/Preview Starter Dagger on Play",EditorPrefs.GetBool(GameApp.DaggerAutoReviewKey,false));
             return true;
         }
         [MenuItem("Thread Zero/Review Starter Dagger (Unsaved)")]

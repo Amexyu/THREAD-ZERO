@@ -129,3 +129,6 @@ __pycache__/
 # Unity crash-recovery scenes
 /ThreadZero/Assets/_Recovery/
 /ThreadZero/Assets/_Recovery.meta
+
+# Gemini raw outputs (processed art goes into Resources)
+/Gemini/*/出图/

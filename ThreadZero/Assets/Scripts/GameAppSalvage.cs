@@ -47,7 +47,7 @@ namespace ThreadZero
                 {
                     SalvageTier(tier, true, out count, out gain);
                     inventoryScroll = 0; Save(); navigation.Close();
-                    Notify("已分解 " + count + " 件，按部位获得共 " + gain + " 个零件。", 4);
+                    Notify("已分解 " + count + " 件，获得 " + gain + " 个零件。", 4);
                     return;
                 }
             }

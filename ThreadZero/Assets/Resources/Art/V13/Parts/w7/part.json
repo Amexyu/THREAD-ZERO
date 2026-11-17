@@ -1,0 +1,22 @@
+{
+ "weapon_class": "chain",
+ "weapon": {
+  "file": "weapon.png",
+  "pivot": [
+   9.5,
+   5.55
+  ],
+  "tip": [
+   9.38,
+   72.75
+  ]
+ },
+ "scale": 4,
+ "hook": {
+  "file": "hook.png",
+  "pivot": [
+   9.5,
+   1.0
+  ]
+ }
+}

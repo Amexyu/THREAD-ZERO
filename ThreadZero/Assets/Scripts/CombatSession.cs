@@ -27,12 +27,19 @@ namespace ThreadZero
         public bool StageCleared { get; private set; }
         public bool RetreatRequested { get; set; }          // 被打倒并修好后，GameApp 退回上一关
         // 转场后角色从地面检修舱口爬上来（EntryTime 秒），期间不战斗、不出怪。
-        public const float EntryTime = .9f;
+        public const float EntryTime = 0f;   // v0.16 快速转场：不再从检修口爬出来，直接接着走
         public float EntryLeft { get; private set; }
         private float droneTimer = 1, markTimer = .7f, dashTimer = 2;
         private string loadoutSignature;
         private bool pendingStrike, testDummy;
         private float strikeDelay, spawnTimer, waveDelay, summonTimer, elapsed;
+        private int firstBossClear;
+        // ---- 锁链模组 ----
+        public const int ChainPullEvery = 3; public const float ChainPull = 170;
+        private int chainHits;
+        public Action<Enemy> OnChainPull;
+        public bool IsChain { get { Item w = model.Equipped(Slot.Weapon); return w != null && w.baseId == "w7"; } }
+        public const float EnemyAccel = 900;   // 和角色 EncounterMovement 的加速度一致   // 本关首领是第几章的首通（ClearStage 里提示一次）
         private int nextId;
         private readonly Random rng = new Random(1234);
         public Action<float> OnAdvance;
@@ -43,12 +50,40 @@ namespace ThreadZero
         public Action OnBasicAttack, OnHit;
         /// 每一次对怪造成伤害（含范围、多段）：伤害值、是否暴击、怪的世界坐标 x。界面用它逐个弹伤害数字。
         public Action<float, bool, float> OnDamage;
+        /// 第一次击败本章首领：装上本章的义体（机械飞升 +1）。
+        public Action<ImplantDef> OnImplant;
+        private void GrantImplant()
+        {
+            if (model.InEcho) return;
+            int ch = model.Chapter;
+            if (model.state.region != Chapters.BossRegion(ch) || ch > Catalog.Implants.Length) return;
+            ImplantDef d = Catalog.Implants[ch - 1];   // 第一章绞盘机械臂，第二章调度义眼
+            if (model.state.implants.Contains(d.id)) return;
+            model.state.implants.Add(d.id); OnImplant?.Invoke(d);
+        }
 
         // 活着的怪 + 刚倒下的残骸（deadAt >= 0）。queue：本波还没出场的怪。
         public readonly List<Enemy> enemies = new List<Enemy>();
         private readonly List<Enemy> queue = new List<Enemy>();
 
-        public StageDef Stage { get { return Chapters.Stage(model.state.region); } }
+        public StageDef Stage
+        {
+            get
+            {
+                if (!model.InEcho) return Chapters.Stage(model.state.region);
+                int key = model.state.echoFloor * 2 + (model.Anomaly("swarm") ? 1 : 0);
+                if (key != echoKey) { echoKey = key; echoStage = Chapters.EchoStage(model.state.echoFloor, model.Anomaly("swarm")); }
+                return echoStage;
+            }
+        }
+        private StageDef echoStage; private int echoKey = -1;
+        // 敌人强度：主线按关卡；回声层以 1-7 为起点按层增长（再叠协议异常）。
+        private float EnemyHealth(int w) { return model.InEcho ? Chapters.Health(Chapters.EchoAnchor, w) * Chapters.EchoScale(model.state.echoFloor, false) * (model.Anomaly("armor") ? 1.5f : 1) : Chapters.Health(model.state.region, w); }
+        private float EnemyAttack(int w) { return model.InEcho ? Chapters.Attack(Chapters.EchoAnchor, w) * Chapters.EchoScale(model.state.echoFloor, true) : Chapters.Attack(model.state.region, w); }
+        /// 当前关卡用哪一章的怪（回声层按场景轮换）。
+        private int Skin { get { return Chapters.SceneChapter(Stage.backdrop) - 1; } }
+        private float EnemyDefense() { return model.InEcho ? Chapters.Defense(Chapters.EchoAnchor) + model.state.echoFloor * .5f : Chapters.Defense(model.state.region); }
+        public Action<int, bool> OnFloorCleared;   // 回声层过层：层数、是否刷新最高层
         public int WaveCount { get { return Stage.waves.Length; } }
         public bool Boss { get { return Stage.kind == StageKind.Boss; } }
         public bool Elite { get { return Stage.kind == StageKind.Elite && wave == WaveCount; } }
@@ -69,9 +104,11 @@ namespace ThreadZero
         public string EnemyName { get { Enemy t = Target; return t == null ? "" : NameOf(t); } }
         public string NameOf(Enemy e)
         {
-            if (e.boss) return Catalog.BossNames[Math.Min(Catalog.BossNames.Length - 1, model.state.region)];
-            string[] names = { "失控巡逻机", "装甲运输机", "信号干扰机" };
-            return (e.elite ? "精英·" : "") + names[(int)e.role];
+            if (e.boss) return (model.InEcho ? "回声 · " : "") + Catalog.BossName(e.skin + 1);
+            if (e.move == EnemyMove.Crusher) return e.skin == 1 ? "精英 · 起重机甲" : "精英 · 拆解者";
+            if (e.move == EnemyMove.Beacon) return e.skin == 1 ? "精英 · 运输母机" : "精英 · 信号塔";
+            string[] names = e.skin == 1 ? new[] { "货运无人机", "叉臂装卸机", "轨道炮车" } : new[] { "失控巡逻机", "装甲运输机", "信号干扰机" };
+            return names[(int)e.role];
         }
 
         public CombatSession(GameModel m)
@@ -95,10 +132,10 @@ namespace ThreadZero
         {
             wave = 1; recovery = 0; StageCleared = false; RetreatRequested = false;
             health = model.Total().health; ResetModules();
-            enemies.Clear(); queue.Clear();
+            enemies.Clear(); queue.Clear(); shots.Clear();
             Movement.ResetAtCamera(Movement.CameraX);
             StartWave();
-            EntryLeft = EntryTime; spawnTimer = .6f;   // 爬出来 0.6 秒后第一波开始涌入
+            EntryLeft = EntryTime; spawnTimer = .6f;   // 0.6 秒后第一波开始涌入
         }
         public void ClampHealth() { health = Math.Min(health, model.Total().health); }
         /// 素材审核用：怪不会死也不会打人。
@@ -112,24 +149,28 @@ namespace ThreadZero
         }
         private void Emit(Ability ability, float damage = 0) { OnAbility?.Invoke(new AbilityEvent(ability, damage)); }
         private float Mitigate(float damage)
-        { Enemy t = Target; return GameModel.Damage(damage, Chapters.Defense(model.state.region) + (t != null && t.boss ? 6 : 0)); }
+        { Enemy t = Target; return GameModel.Damage(damage, EnemyDefense() + (t != null && t.boss ? 6 : 0)); }
 
         // ---------- 波次与出怪 ----------
         private Enemy Make(EnemyRole role, bool elite)
         {
+            if (!elite && model.Anomaly("elite") && rng.NextDouble() < .12) elite = true;   // 协议异常 · 精英化
             RoleStats r = Chapters.Roles[(int)role];
             int region = model.state.region;
             var e = new Enemy
             {
                 id = ++nextId, role = role, elite = elite,
-                health = Chapters.Health(region, wave) * r.health * (elite ? Chapters.EliteHealth : 1),
-                attack = Chapters.Attack(region, wave) * r.attack * (elite ? Chapters.EliteAttack : 1),
+                health = EnemyHealth(wave) * r.health * (elite ? Chapters.EliteHealth : 1),
+                attack = EnemyAttack(wave) * r.attack * (elite ? Chapters.EliteAttack : 1),
                 interval = r.interval, speed = r.speed * (elite ? .85f : 1),
                 stop = r.stopMin + (float)rng.NextDouble() * (r.stopMax - r.stopMin),
                 canvas = r.canvas * (elite ? Chapters.EliteCanvas : 1),
                 depth = (float)rng.NextDouble(),
             };
             e.maxHealth = e.health; e.timer = e.interval * (.4f + .6f * (float)rng.NextDouble());
+            if (model.Anomaly("overload")) e.interval *= .8f;   // 协议异常 · 过载
+            e.move = role == EnemyRole.Swarmer ? EnemyMove.Lunge : role == EnemyRole.Brute ? (elite ? EnemyMove.Crusher : EnemyMove.Slam) : (elite ? EnemyMove.Beacon : EnemyMove.Bolt);
+            e.aux = 1.5f; e.skin = Skin;
             if (testDummy) { e.health = e.maxHealth = 100000; e.attack = 0; }
             return e;
         }
@@ -139,10 +180,11 @@ namespace ThreadZero
             var e = new Enemy
             {
                 id = ++nextId, role = EnemyRole.Brute, boss = true,
-                health = Chapters.Health(region, 5) * Chapters.BossHealth, attack = Chapters.Attack(region, 5) * Chapters.BossAttack,
+                health = EnemyHealth(5) * Chapters.BossHealth, attack = EnemyAttack(5) * Chapters.BossAttack,
                 interval = Chapters.BossInterval, speed = Chapters.BossSpeed, stop = Chapters.BossStop, canvas = Chapters.BossCanvas, depth = .5f,
             };
-            e.maxHealth = e.health; e.timer = 1;
+            e.maxHealth = e.health; e.timer = 1; e.move = EnemyMove.Gate; e.skin = Skin;
+            if (model.Anomaly("overload")) e.interval *= .8f;
             if (testDummy) { e.health = e.maxHealth = 100000; e.attack = 0; }
             return e;
         }
@@ -180,7 +222,7 @@ namespace ThreadZero
             hitFlash = Math.Max(0, hitFlash - dt); hurtFlash = Math.Max(0, hurtFlash - dt);
             droneFlash = Math.Max(0, droneFlash - dt); arcFlash = Math.Max(0, arcFlash - dt);
             dashFlash = Math.Max(0, dashFlash - dt); guardFlash = Math.Max(0, guardFlash - dt);
-            foreach (Enemy e in enemies) { e.hitFlash = Math.Max(0, e.hitFlash - dt); e.strikeFlash = Math.Max(0, e.strikeFlash - dt); }
+            foreach (Enemy e in enemies) { e.hitFlash = Math.Max(0, e.hitFlash - dt); e.sinceStrike += dt; e.hasteLeft = Math.Max(0, e.hasteLeft - dt); }
             enemies.RemoveAll(e => !e.Alive && (elapsed - e.deadAt > 8 || e.x < Movement.CameraX - 300));
             SyncLoadout();
             if (recovery > 0)
@@ -202,8 +244,7 @@ namespace ThreadZero
                 {
                     summonTimer += Chapters.BossSummonInterval;
                     int n = 2 + rng.Next(2);
-                    for (int i = 0; i < n; i++) queue.Add(Make(EnemyRole.Swarmer, false));
-                    OnMessage?.Invoke("首领呼叫了支援");
+                    for (int i = 0; i < n; i++) { Enemy m = Make(EnemyRole.Swarmer, false); m.summoned = true; queue.Add(m); }
                 }
             }
 
@@ -211,13 +252,23 @@ namespace ThreadZero
             Enemy target = Target;
             bool busy = pendingStrike || DaggerActive;
             bool walk = !busy && (target == null || target.x - Movement.HeroX > Movement.HeroRange);
+            Movement.RangeOverride = IsChain ? EncounterMovement.ChainRange : 0;
             Movement.Tick(dt, model.IsMelee, walk);
             foreach (Enemy e in enemies)
             {
                 if (!e.Alive) { e.moving = false; continue; }
-                float want = Movement.HeroX + e.stop;
-                float before = e.x;
-                if (e.x > want) e.x = Math.Max(want, e.x - e.speed * dt);
+                if (e.pull > 0)
+                {   // 被吊钩拽：900 像素/秒往角色身前拉，最近拉到身前 140
+                    float step = Math.Min(e.pull, 900 * dt); e.pull -= step;
+                    e.x = Math.Max(Movement.HeroX + 140, e.x - step); if (e.x <= Movement.HeroX + 140) e.pull = 0;
+                    e.moving = false; continue;
+                }
+                // v0.16 和角色同一套移动：900/s² 加速到自己的速度，快到停步点时按同样的减速度刹住（不再匀速滑行、瞬停）
+                float want = Movement.HeroX + e.stop, before = e.x, dist = Math.Max(0, e.x - want);
+                float top = Math.Min(e.speed, (float)Math.Sqrt(2 * EnemyAccel * dist));
+                e.vel = e.vel < top ? Math.Min(top, e.vel + EnemyAccel * dt) : Math.Max(top, e.vel - EnemyAccel * dt);
+                // 只往角色方向走；角色走近了（e.x 已经在停步点以内）就原地不动，绝不把怪往后推
+                if (dist > 0) e.x = Math.Max(want, e.x - e.vel * dt); else e.vel = 0;
                 e.moving = e.x < before - .01f; e.travel += before - e.x;
             }
 
@@ -329,6 +380,24 @@ namespace ThreadZero
                 DealDamage(target, damage, s);
                 foreach (Enemy e in enemies.ToArray()) if (e != target && e.Alive && Math.Abs(e.x - target.x) <= Balance.CannonRadius) DealDamage(e, damage * Balance.CannonSplash, s);
             }
+            else if (kind == "w5")
+            {
+                // 撞杆矛：长柄穿透，目标身后 160 内的怪排成一线都挨 70%。
+                DealDamage(target, damage, s);
+                foreach (Enemy e in enemies.ToArray()) if (e != target && e.Alive && e.x >= target.x && e.x <= target.x + 160) DealDamage(e, damage * .7f, s);
+            }
+            else if (kind == "w7")
+            {
+                // 吊臂钩索（锁链模组）：甩钩打单体，射程 300；每 3 钩把目标拽到身前（首领拽不动，精英拽一半）。
+                DealDamage(target, damage, s);
+                chainHits++;
+                if (chainHits % ChainPullEvery == 0 && target.Alive && !target.boss)
+                {
+                    float pull = target.elite ? ChainPull * .5f : ChainPull;
+                    target.pull = pull; target.vel = 0;   // 0.2 秒内被链子拽过来（下面移动里结算）
+                    OnChainPull?.Invoke(target);
+                }
+            }
             else if (kind == "w4")
             {
                 // 重锤：砸地横扫，目标及其身后 140 内的怪吃 70%。
@@ -348,37 +417,7 @@ namespace ThreadZero
             for (int i = 0; i < hit.Count && i < limit; i++) DealDamage(hit[i], damage, s);
         }
 
-        private void EnemiesAttack(float dt, Stats s)
-        {
-            // 近战：最靠前的 3 只能打，其余挤在后面等位置（计时不走）；远程走到位就打。
-            var melee = new List<Enemy>();
-            foreach (Enemy e in enemies) if (e.Alive && !e.Ranged && Arrived(e)) melee.Add(e);
-            melee.Sort((a, b) => a.x.CompareTo(b.x));
-            if (melee.Count > Chapters.MeleeAttackers) melee.RemoveRange(Chapters.MeleeAttackers, melee.Count - Chapters.MeleeAttackers);
-            foreach (Enemy e in enemies)
-            {
-                if (!e.Alive || !Arrived(e)) continue;
-                if (!e.Ranged && !melee.Contains(e)) continue;
-                e.timer -= dt;
-                if (e.timer > 0) continue;
-                e.timer += e.interval; e.strikeFlash = .25f;
-                if (e.attack <= 0) continue;
-                float raw = GameModel.Damage(e.attack, s.defense);
-                float blocked = raw * Balance.GuardReduction * model.EffectCount(Effect.Guard);
-                float damage = raw - blocked;
-                if (blocked > 0)
-                { guardCharge = Math.Min(s.attack, guardCharge + blocked * Balance.GuardChargeRatio); guardFlash = .35f; Emit(Ability.GuardCharge, blocked); }
-                health = Math.Max(0, health - damage); lastEnemyDamage = damage; hurtFlash = .25f; lastHurtX = e.x;
-                OnHit?.Invoke();
-                if (health <= 0)
-                {
-                    recovery = 3; ResetModules(); Movement.Stop();
-                    OnMessage?.Invoke(model.state.region > 0 ? "失去战斗能力，修好后撤回上一关补给；变强后自动再挑战。" : "失去战斗能力，3 秒后维修重试；无装备损失。");
-                    OnCheckpoint?.Invoke();
-                    return;
-                }
-            }
-        }
+        // 怪的攻击模组见 CombatEnemyAttacks.cs
 
         /// 对一只怪造成伤害；打死返回 true。
         private bool DealDamage(Enemy e, float damage, Stats s)
@@ -399,12 +438,28 @@ namespace ThreadZero
         {
             StageCleared = true; pendingStrike = false;
             int region = model.state.region;
+            if (model.InEcho)
+            {   // 回声层：记最高层；每 25 层里程碑给核心。不走主线的解锁。
+                int floor = model.state.echoFloor; bool best = floor > model.state.echoBest;
+                if (best)
+                {
+                    model.state.echoBest = floor;
+                    if (floor % Chapters.MilestoneEvery == 0)
+                    { model.state.cores += Chapters.MilestoneCores; OnMessage?.Invoke("回声层第 " + floor + " 层里程碑：核心 +" + Chapters.MilestoneCores); }
+                }
+                if (Boss) health = Math.Min(s.health, health + s.health * Balance.BossRecovery);
+                OnFloorCleared?.Invoke(floor, best);
+                OnCheckpoint?.Invoke();
+                return;
+            }
             if (Boss)
             {
                 health = Math.Min(s.health, health + s.health * Balance.BossRecovery);
-                OnMessage?.Invoke("第一章首领回收完成。");
+                if (firstBossClear == 1) OnMessage?.Invoke("第一章首领回收完成 · 回声层与第二章已开放");   // 只在第一次通关时提示
+                else if (firstBossClear == 2) OnMessage?.Invoke("第二章首领回收完成 · 调度义眼已装上");
+                firstBossClear = 0;
             }
-            int next = Math.Min(Catalog.LastRegion, region + 1);
+            int next = Math.Min(Chapters.ChapterCount * Chapters.StagesPerChapter - 1, region + 1);
             if (next > model.state.unlockedRegion)
             { model.state.unlockedRegion = next; OnMessage?.Invoke("开放 " + Catalog.StageCode(next) + " · " + Catalog.RegionNames[next]); }
             OnCheckpoint?.Invoke();
@@ -412,14 +467,36 @@ namespace ThreadZero
 
         private void Reward(Enemy e)
         {
-            model.state.kills++; model.state.scrap += e.boss ? 8 : e.elite ? 3 : 1;
-            if (e.boss) { model.state.cores++; model.state.bosses++; }
+            model.state.kills++; model.state.scrap += (int)Math.Ceiling((e.boss ? 8 : e.elite ? 3 : 1) * (model.Anomaly("swarm") ? 1.5f : 1));
+            if (e.boss)
+            {   // 首通必掉核心，之后重刷 25%（回声层每 10 层的首领：刷新最高层时算首通）
+                int ch = model.Chapter;
+                bool first = model.InEcho ? model.state.echoFloor > model.state.echoBest : !model.BossCleared(ch);
+                if (first || model.Chance(Balance.RepeatCoreChance)) { model.state.cores++; OnMessage?.Invoke("回收首领核心 +1（持有 " + model.state.cores + "）"); }
+                if (!model.InEcho && first) firstBossClear = ch;
+                model.state.bosses++; if (!model.InEcho) model.state.bossMask |= 1 << (ch - 1);
+                GrantImplant();
+            }
             int before = model.state.collection.Count;
-            Item item = null;
-            if (e.boss) item = model.Drop(true);
-            else if (e.elite) item = model.Drop(false, true, true);
-            else if (rng.NextDouble() < Chapters.Roles[(int)e.role].dropChance) item = model.Drop(false, true);
-            if (item != null) OnDrop?.Invoke(item, model.state.collection.Count > before);
+            // v0.16 掉落：普通怪按分工的概率掉 1 件；精英掉 2 件（至少 1 件特装）；首领掉 3 件（专属件 + 至少 1 件特装）。
+            var drops = new List<Item>();
+            if (e.boss)
+            {
+                drops.Add(model.Drop(true, true, false, Quality.Rare, Catalog.BossExclusiveOf(e.skin + 1)));
+                for (int i = 1; i < Chapters.BossDrops; i++) drops.Add(model.Drop(true, true));
+            }
+            else if (e.elite)
+            {
+                drops.Add(model.Drop(false, true, true, Quality.Rare));
+                for (int i = 1; i < Chapters.EliteDrops; i++) drops.Add(model.Drop(false, true, true));
+            }
+            else if (!e.summoned && rng.NextDouble() < Chapters.Roles[(int)e.role].dropChance * (model.Anomaly("armor") ? 1.4f : 1)) drops.Add(model.Drop(false, true));
+            foreach (Item item in drops)
+            {
+                if (item == null) continue;
+                bool fresh = model.state.collection.Count > before; before = model.state.collection.Count;
+                OnDrop?.Invoke(item, fresh);
+            }
         }
     }
 }

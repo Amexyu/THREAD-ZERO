@@ -42,7 +42,7 @@ namespace ThreadZero {
  // 装备图标：只用 V13 现行部件（Parts/<id>/ 或初始件 Starter/），旧 V08/EquipmentAtlas 图标不再使用。
  static Texture2D PartIcon(EquipmentBase item){
  Texture2D t;if(iconCache.TryGetValue(item.id,out t))return t;
- string file=item.slot==Slot.Head?"head":item.slot==Slot.Coat?"torso":item.slot==Slot.Back?"pack":"weapon";
+ string file=item.slot==Slot.Head?"head":item.slot==Slot.Coat?"torso":item.slot==Slot.Back?"pack":item.slot==Slot.Legs?"leg_near":"weapon";
  t=Resources.Load<Texture2D>("Art/V13/Parts/"+item.id+"/icon");   // 单品图（例如头部装备不带人头），有就优先用
  if(t==null)t=Resources.Load<Texture2D>("Art/V13/Parts/"+item.id+"/"+file);
  if(t==null)t=Resources.Load<Texture2D>("Art/V13/Starter/"+file);
@@ -55,7 +55,7 @@ namespace ThreadZero {
  if(item.slot==Slot.Weapon&&!IsPartIcon(tex)){
  // 武器部件是竖着画的（握把在上、枪口/刃尖朝下），图标里斜放成刃尖朝右上。
  float k=Mathf.Min(area.width,area.height)*.98f/((tex.width+tex.height)*.70711f),w=tex.width*k,h=tex.height*k;
- Matrix4x4 before=GUI.matrix;GUIUtility.RotateAroundPivot(-135,area.center);
+ Matrix4x4 before=GUI.matrix;GUI.matrix=before*Ui.RotateLocal(-135,area.center);
  GUI.DrawTexture(new Rect(area.center.x-w/2,area.center.y-h/2,w,h),tex,ScaleMode.StretchToFill,true);
  GUI.matrix=before;
  }else GUI.DrawTexture(area,tex,ScaleMode.ScaleToFit,true);

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace ThreadZero
 {
@@ -36,6 +37,8 @@ namespace ThreadZero
         private bool skillCanceled = true, daggerBasic;
         public Action<int,float> OnDaggerHit;
         public Action<SkillDef> OnSkillCast;
+        /// 技能每一段命中：技能、第几段、主目标、被范围 / 连锁波及的其他怪（按命中顺序）。界面用它放技能特效。
+        public Action<SkillDef,int,Enemy,List<Enemy>> OnSkillHit;
 
         public SkillDef EquippedSkill {get{return SkillBook.ForWeapon(model.Equipped(Slot.Weapon));}}
         /// 0..1，给 UI 显示充能/冷却进度。
@@ -90,6 +93,23 @@ namespace ThreadZero
                 DealDamage(target,damage,stats);
                 // 最后一段穿透：射程再往前 60 像素内的怪都挨这一下。
                 if(s.pierceLastHit && hit==s.hitTimes.Length-1) Area(target,Movement.HeroX+Movement.HeroRange+60,damage,99,stats);
+                var extra=new List<Enemy>();
+                if(s.splash>0)
+                    foreach(Enemy e in enemies.ToArray())
+                        if(e!=target && e.Alive && Math.Abs(e.x-target.x)<=s.splash) { DealDamage(e,damage*s.splashMult,stats); extra.Add(e); }
+                if(s.chain>0)
+                {
+                    var pool=new List<Enemy>(); foreach(Enemy e in enemies) if(e!=target && e.Alive) pool.Add(e);
+                    Enemy from=target; float d=damage;
+                    for(int c=0;c<s.chain && pool.Count>0;c++)
+                    {
+                        Enemy f=from; pool.Sort((a,b)=>Math.Abs(a.x-f.x).CompareTo(Math.Abs(b.x-f.x)));
+                        Enemy next=pool[0]; pool.RemoveAt(0); d*=s.chainFalloff;
+                        DealDamage(next,d,stats); extra.Add(next); from=next;
+                    }
+                }
+                if(s.push>0){ foreach(Enemy e in extra) if(e.Alive && !e.boss) { e.x+=s.push; e.vel=0; } if(target.Alive && !target.boss){ target.x+=s.push*.6f; target.vel=0; } }
+                OnSkillHit?.Invoke(s,hit,target,extra);
             }
             return false;
         }
