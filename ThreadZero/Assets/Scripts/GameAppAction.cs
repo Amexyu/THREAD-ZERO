@@ -85,7 +85,7 @@ namespace ThreadZero
             string rigWeapon = walkReview ? "w0" : model.Appearance(Slot.Weapon).id;
             string rigBack = walkReview ? "b0" : model.Appearance(Slot.Back).id;
             int daggerFrame=!heroWalking && !down && combat.DaggerActive?DaggerSkill.Frame(combat.DaggerAge,combat.DaggerCombo):0;
-            // V13 layered starter rig (parts + rig.py motion). Hold F7 to compare with the old V12 frames.
+            // V13 layered starter rig (parts + rig.py motion).
             bool layered = LayeredRigView.CanDraw(model);
             if (layered)
             {
@@ -232,7 +232,7 @@ namespace ThreadZero
             // 这里把整个画面按比例缩进小画布：IMGUI 走 GUI.matrix，角色骨骼（GL）走 LayeredRigView.PixelTarget。
             pixelMatrix = GUI.matrix;
             GUI.matrix = Matrix4x4.Scale(new Vector3(w / pixelScreen.x, h / pixelScreen.y, 1)) * GUI.matrix;
-            LayeredRigView.PixelTarget = pixelScreen;
+            LayeredRigView.PixelTarget = new Vector2(w, h);   // 骨骼坐标已经经过 GUI.matrix 缩进画布，投影按画布尺寸铺
         }
         private void EndPixel()
         {

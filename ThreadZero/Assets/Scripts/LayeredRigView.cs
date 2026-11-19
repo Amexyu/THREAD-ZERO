@@ -30,7 +30,7 @@ namespace ThreadZero
         public const float PixelsPerUnit = 1.5f;   // ~140 units tall -> ~210 logical px (v0.13 battle scale)
         private static bool loaded, failed;
         public static Vector2 Muzzle, MuzzleDir = Vector2.right;
-        /// 像素试验时真实屏幕的尺寸（0 = 正常画到屏幕）：投影按它铺，画面整体缩进小画布。
+        /// 像素试验时小画布的尺寸（0 = 正常画到屏幕）。
         public static Vector2 PixelTarget;
         /// 义体位置（Ui 逻辑坐标），装义体的提示特效对准这里：近侧肩膀、近侧眼睛。
         public static Vector2 ArmAnchor, EyeAnchor;
@@ -616,7 +616,7 @@ namespace ThreadZero
         }
 
         // ---------- game hookups ----------
-        public static bool Enabled { get { return !Input.GetKey(KeyCode.F7); } }   // hold F7 to compare with the old V12 frames
+        public static bool Enabled { get { return true; } }   // 旧的「按住 F7 看 V12 旧形象」对比已去掉（F7 现在是像素试验开关，按下那一瞬会闪出旧形象）
         public static bool CanDraw(GameModel model) { return Enabled && Application.isPlaying && Ready(); }
         /// 普通攻击动作按武器类别：短刃前刺 / 枪械射击 / 重武器下砸。
         public static Anim ClassAttack(GameModel model)
