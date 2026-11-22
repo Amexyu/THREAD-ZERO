@@ -196,7 +196,7 @@ namespace ThreadZero.EditorTools
                 else if (combat.StageCleared) { t += .5f; Policy(model); model.state.echoFloor++; combat.ResetRegion(); t += .45f; }
             }
             model.state.echoFloor = 0; Policy(model); combat.ResetRegion();
-            run.Note(t0 + t, "卡关，去回声层刷了 " + EchoDetourMinutes + " 分钟（最高 " + model.state.echoBest + " 层）");
+            run.Note(t0 + t, "卡关，去零号深网刷了 " + EchoDetourMinutes + " 分钟（最高 " + model.state.echoBest + " 层）");
             return t;
         }
         private static float Go(GameModel model, CombatSession combat, RunLog run, int to, int from)
@@ -417,7 +417,7 @@ namespace ThreadZero.EditorTools
             sb.AppendLine("- 结论：**" + Verdict + "**");
             sb.AppendLine("- 生成时间：" + DateTime.Now.ToString("yyyy-MM-dd HH:mm") + "（" + why + "，耗时 " + took.ToString("F0") + " 秒，脚本指纹 " + hash + "）");
             sb.AppendLine("- 方法：用游戏里真实的模型和战斗代码，从新存档开始，" + Seeds + " 个随机种子各模拟最多 " + MaxHours + " 小时（1× 速度）。开着自动推进；被打倒就按游戏规则撤回上一关，变强后自动再挑战。");
-            sb.AppendLine("- 模拟玩家的做法：每次过关 / 被打倒后，立刻给每个部位换上评分最高的装备（评分 = 攻击×攻速×暴击期望 × 生命×防御减伤），没穿的全部分解，零件每次买“每个零件涨分最多”的一项（升级已穿装备或训练）。**不重校、不突破、不看词条特效；只在卡关（最前面那一关连着倒 6 次）时去回声层刷 20 分钟再回来**。换装和花零件比真人勤快，回声层和特效又没用上，两头抵消，大致相当于“认真管装备、只打主线”的玩家。");
+            sb.AppendLine("- 模拟玩家的做法：每次过关 / 被打倒后，立刻给每个部位换上评分最高的装备（评分 = 攻击×攻速×暴击期望 × 生命×防御减伤），没穿的全部分解，零件每次买“每个零件涨分最多”的一项（升级已穿装备或训练）。**不重校、不突破、不看词条特效；只在卡关（最前面那一关连着倒 6 次）时去零号深网刷 20 分钟再回来**。换装和花零件比真人勤快，零号深网和特效又没用上，两头抵消，大致相当于“认真管装备、只打主线”的玩家。");
             sb.AppendLine("- 时间都是 1× 速度的游戏时间；2× / 4× 按比例缩短。");
             sb.AppendLine();
             sb.AppendLine("## 检查");
@@ -441,7 +441,7 @@ namespace ThreadZero.EditorTools
             sb.AppendLine();
             if (EchoHours > 0)
             {
-                sb.AppendLine("## 打完主线以后：回声层");
+                sb.AppendLine("## 打完主线以后：零号深网");
                 sb.AppendLine();
                 sb.AppendLine("打完 5-7 接着挂 " + EchoHours + " 小时：从第几层开始，之后每小时的最高层（第 48 层 ≈ 5-7 的强度，之后每层敌人约 +4%、掉落约 +1.2 级）。");
                 sb.AppendLine();
@@ -485,7 +485,7 @@ namespace ThreadZero.EditorTools
             sb.AppendLine();
             sb.AppendLine("卡关时洗炼（同一关连续倒 3 次起，每次最多花三成零件）：" + string.Join("；", runs.Select(x => "种子 " + x.seed + " 洗了 " + x.reforges + " 次、花 " + x.reforgeScrap + " 零件")));
             sb.AppendLine();
-            sb.AppendLine("卡关时去回声层（最前面那一关连着倒 " + EchoDetourAfter + " 次、洗炼也不够时，刷 " + EchoDetourMinutes + " 分钟再回来）：" + string.Join("；", runs.Select(x => "种子 " + x.seed + " 去了 " + x.echoDetours + " 次（" + (x.echoDetourTime / 60).ToString("F0") + " 分钟）")));
+            sb.AppendLine("卡关时去零号深网（最前面那一关连着倒 " + EchoDetourAfter + " 次、洗炼也不够时，刷 " + EchoDetourMinutes + " 分钟再回来）：" + string.Join("；", runs.Select(x => "种子 " + x.seed + " 去了 " + x.echoDetours + " 次（" + (x.echoDetourTime / 60).ToString("F0") + " 分钟）")));
             foreach (RunLog x in runs.Where(x => x.stalled || x == runs.OrderByDescending(y => y.time).First()))
             {
                 sb.AppendLine();

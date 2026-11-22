@@ -193,11 +193,12 @@ namespace ThreadZero
         public static string SourceStages(string id)
         {
             if (IsStarter(id)) return "初始装备";
+            if (IsDeepNet(id)) return "零号深网第 " + DeepNetFloorOf(id) + " 层 · 限定";
             int ch = ChapterOf(id); string name = "第" + ChapterNumber(ch) + "章全关";
             string where = id == BossExclusiveOf(ch) ? name + " · " + ch + "-7 首领必掉" : name;
             // v0.18 还没有自己装备的章节（第三章起）掉前面所有章节的装备
             for (int c = GearChapters + 1; c <= Chapters.ChapterCount; c++) where += " · 第" + ChapterNumber(c) + "章" + (id == BossExclusiveOf(c) ? "（" + c + "-7 首领必掉）" : "");
-            return where + " · 回声层";
+            return where + " · 零号深网";
         }
         /// v0.20 能打一群的武器（霰弹、线圈跳电、手炮、重锤、撞杆矛这几类招式，后面章节借用同一套招式的也算）。
         /// 整备页武器详情标「群伤 / 单体」，卡关提示也按这个判断。
@@ -206,6 +207,7 @@ namespace ThreadZero
         public static string SourceShort(string id)
         {
             if (IsStarter(id)) return "初始装备";
+            if (IsDeepNet(id)) return "深网第 " + DeepNetFloorOf(id) + " 层";
             int ch = ChapterOf(id);
             return id == BossExclusiveOf(ch) ? ch + "-7 首领必掉" : "第" + ChapterNumber(ch) + "章全关";
         }
@@ -347,8 +349,20 @@ namespace ThreadZero
             new EquipmentBase("l21", "协议护胫", Slot.Legs, 1, new Stats(37.7f, 0f, 5.8f), Effect.None, AttackStyle.Ranged, "l6", null),
             new EquipmentBase("l22", "线缆护腿", Slot.Legs, 2, new Stats(31.9f, 0f, 4.3f, 0.02f), Effect.None, AttackStyle.Ranged, "l7", null),
             new EquipmentBase("l23", "零号战裤", Slot.Legs, 3, new Stats(26.1f, 1.4f, 2.9f, 0.03f), Effect.None, AttackStyle.Ranged, "l8", null),
-            new EquipmentBase("l24", "终装长靴", Slot.Legs, 4, new Stats(23.2f, 1.4f, 2.9f, 0f, 0.02f, 2), Effect.None, AttackStyle.Ranged, "l9", null)
+            new EquipmentBase("l24", "终装长靴", Slot.Legs, 4, new Stats(23.2f, 1.4f, 2.9f, 0f, 0.02f, 2), Effect.None, AttackStyle.Ranged, "l9", null),
+            // v0.21 零号深网限定（第 50 / 100 / 150 层各一件，只能在深网拿到；编号 90 不属于任何一章，不会掉落）。美术未到前借第二章首领那套的图。
+            new EquipmentBase("h90", "深网 · 零号视界", Slot.Head, 2, new Stats(26f, 2f, 4.3f, .03f, .02f, 2), Effect.Mark, AttackStyle.Ranged, "h9", null),
+            new EquipmentBase("c90", "深网 · 织网长衣", Slot.Coat, 2, new Stats(44f, 2f, 5.8f, .03f), Effect.Guard, AttackStyle.Ranged, "c9", null),
+            new EquipmentBase("b90", "深网 · 母线之翼", Slot.Back, 2, new Stats(30f, 2f, 2.9f, .04f, .02f, 2), Effect.Drone, AttackStyle.Ranged, "b9", null)
         };
+        /// v0.21 零号深网限定外观：在第几层拿（50 / 100 / 150），以及判断某件是不是。
+        public static readonly int[] DeepNetFloors = { 50, 100, 150 };
+        public static readonly string[] DeepNetLooks = { "h90", "c90", "b90" };
+        public static bool IsDeepNet(string id) { return Array.IndexOf(DeepNetLooks, id) >= 0; }
+        public static int DeepNetFloorOf(string id) { int i = Array.IndexOf(DeepNetLooks, id); return i >= 0 ? DeepNetFloors[i] : 0; }
+        /// 衣柜分页：第 1–5 章，深网限定放第 6 页。
+        public const int DeepNetPage = 6;
+        public static int LookPage(string id) { return IsDeepNet(id) ? DeepNetPage : ChapterOf(id); }
         public static EquipmentBase Find(string id) { return All.FirstOrDefault(x => x.id == id); }
         // v0.16 掉落池：整章通用——第一章任何一关都能掉全章 16 件（初始的 4 件不掉）。
         // 首领关额外必掉专属件；以后每章一个池子，按章节切换。
@@ -789,6 +803,15 @@ namespace ThreadZero
         }
         public bool TargetActive
         { get { return !string.IsNullOrEmpty(state.recoveryTarget) && Catalog.DropsIn(state.recoveryTarget, InEcho, DropChapter); } }
+        /// v0.21 零号深网第 50 / 100 / 150 层第一次打过：给那一层的限定外观（原型品质，等级按这一层的掉落等级），收进衣柜。没有就返回 null。
+        public Item GrantDeepNetLook(int floor)
+        {
+            int i = Array.IndexOf(Catalog.DeepNetFloors, floor); if (i < 0) return null;
+            string id = Catalog.DeepNetLooks[i];
+            if (state.collection.Contains(id)) return null;
+            Item item = Create(id, Quality.Prototype, Chapters.EchoDropLevel(floor, true, false, .5));
+            state.items.Add(item); Unlock(id); return item;
+        }
         public bool Equip(string uid)
         {
             Item item = state.items.FirstOrDefault(x => x.uid == uid);
@@ -882,6 +905,7 @@ namespace ThreadZero
         {
             int gained = 0;
             for (int f = state.echoBest + 1; f < start; f++) if (f % Chapters.MilestoneEvery == 0) gained += Chapters.MilestoneCores;
+            for (int f = state.echoBest + 1; f < start; f++) GrantDeepNetLook(f);   // v0.21 跳过的限定外观层也补上
             state.cores += gained; state.echoBest = Math.Max(state.echoBest, start - 1); return gained;
         }
         /// 当前主线所在章节（回声层里也按进入前的关卡算）。

@@ -58,7 +58,7 @@ namespace ThreadZero.Editor
             if (Math.Abs(back.scrapRate - 12.5f) > .001f) bad.Add("离线收入 " + back.scrapRate);
             if (back.savedAt != 638000000000000000L) bad.Add("存档时间 " + back.savedAt);
             if (back.implantLevels == null || back.implantLevels.Length < 2 || back.implantLevels[1] != 7) bad.Add("义体等级");
-            if (back.echoBest != 44 || back.echoFloor != 40) bad.Add("回声层 " + back.echoFloor + "/" + back.echoBest);
+            if (back.echoBest != 44 || back.echoFloor != 40) bad.Add("零号深网 " + back.echoFloor + "/" + back.echoBest);
             if (back.sinceEpic != 30 || back.sinceLegendary != 100) bad.Add("保底计数 " + back.sinceEpic + "/" + back.sinceLegendary);
             if (back.board == null || back.board[0] != 57 || back.board[1] != 57 || back.boardVersion != 1 || back.boardPerks != 5) bad.Add("改造板 " + (back.board == null ? "null" : back.board[0] + "/" + back.board[1]) + " 节点 " + back.boardPerks);
             if (back.chipBag == null || back.chipBag.Count != 1 || back.chipBag[0].kind != 4 || back.chipBag[0].tier != 2) bad.Add("芯片库存");
@@ -67,7 +67,7 @@ namespace ThreadZero.Editor
             if (back.robotLevels == null || back.robotLevels[1] != 9 || back.robotLevels[3] != 4 || !back.hangarGift) bad.Add("机器人等级");
             if (back.deployed == null || back.deployed[0] != 1 || back.deployed[1] != -1) bad.Add("上场 " + (back.deployed == null ? "null" : back.deployed[0] + "/" + back.deployed[1]));
             if (bad.Count > 0) throw new Exception("存档字段往返不对：" + string.Join("，", bad.ToArray()));
-            sb.AppendLine("存档字段往返：训练 57 级（换算成改造板火力 57 + 机体 57）、改造板节点、芯片 / 改装件库存、机库（碎片、等级、上场，同分工两台读档时清掉一台）、织网碎片、核心、震屏、辉光、离线收入、存档时间、义体等级、回声层、保底计数都对。");
+            sb.AppendLine("存档字段往返：训练 57 级（换算成改造板火力 57 + 机体 57）、改造板节点、芯片 / 改装件库存、机库（碎片、等级、上场，同分工两台读档时清掉一台）、织网碎片、核心、震屏、辉光、离线收入、存档时间、义体等级、零号深网、保底计数都对。");
         }
 
         [MenuItem("Thread Zero/检查/打包检查（当前平台，不切换）")]

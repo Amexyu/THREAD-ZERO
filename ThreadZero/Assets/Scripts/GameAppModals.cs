@@ -77,9 +77,12 @@ namespace ThreadZero
                 Ui.Fill(x + 28, top, w - 56, 76, here ? Ui.Ink : Ui.Stage); Ui.Frame(x + 28, top, w - 56, 76, 2, here ? Ui.Ink : open ? Ui.Orange : Ui.Rule);
                 Color main = here ? Ui.Panel : open ? Ui.Ink : Ui.Grey, sub = here ? Ui.MuteOnInk : Ui.Mute;
                 Ui.Text(x + 48, top, 110, 76, "∞", 40, here || open ? Ui.Orange : main, TextAnchor.MiddleLeft, true);
-                Ui.Text(x + 160, top + 6, 420, 30, "回声层" + (here ? " · 第 " + model.state.echoFloor + " 层" : ""), 20, main, TextAnchor.MiddleLeft, true);
+                Ui.Text(x + 160, top + 6, 420, 30, "零号深网" + (here ? " · 第 " + model.state.echoFloor + " 层" : ""), 20, main, TextAnchor.MiddleLeft, true);
                 int resume = model.EchoStartFloor();
-                string hint = !open ? "击败 1-7 闸门看守后开放" : "无尽楼层 · 最高 " + model.state.echoBest + " 层 · 从第 " + resume + " 层开始" + (model.state.anomalies.Count > 0 ? " · 异常 " + model.state.anomalies.Count : "");
+                // v0.21 零号深网：最高层、从哪层开始、下一个里程碑（每 25 层核心 +2；第 50 / 100 / 150 层另给限定外观）
+                int nextMile = (model.state.echoBest / Chapters.MilestoneEvery + 1) * Chapters.MilestoneEvery;
+                string hint = !open ? "击败 1-7 闸门看守后开放" : "最高 " + model.state.echoBest + " 层 · 从第 " + resume + " 层开始 · 下一奖励 第 " + nextMile + " 层" + (System.Array.IndexOf(Catalog.DeepNetFloors, nextMile) >= 0 ? "（限定外观）" : "");
+                if (open && model.state.anomalies.Count > 0 && Ui.Width(hint + " · 异常 " + model.state.anomalies.Count, 14) < 436) hint += " · 异常 " + model.state.anomalies.Count;
                 Ui.Text(x + 160, top + 38, 440, 24, hint, 14, sub, TextAnchor.MiddleLeft);
                 if (open && model.state.anomalies.Count > 0 && Ui.Button(x + w - 336, top + 14, 120, 48, "清除异常", 0, true, 14)) { model.state.anomalies.Clear(); Save(); Notify("协议异常已清除", 2); }
                 if (Ui.Button(x + w - 208, top + 14, 160, 48, here ? "正在行动" : open ? "进入" : "未开放", here ? 3 : 1, open && !here, 16))
@@ -128,13 +131,13 @@ namespace ThreadZero
         private void HelpModal(float x, float y, float w)
         {
             // v0.20 更新：原来写的“每个街区第 5 波是首领”早就不对了；加上回声层 / 机械飞升和离线收益。
-            string[] titles = { "自动行动", "装备与外观", "有目标地回收", "设备联动", "回声层与机械飞升" };
+            string[] titles = { "自动行动", "装备与外观", "有目标地回收", "设备联动", "零号深网与机械飞升" };
             string[] body = {
                 "角色会自动战斗、自动推进。每章 7 关，x-3、x-6 是精英，x-7 是首领。倒下只要维修几秒：先回刷前面的关攒零件，变强后自动再挑战。关掉游戏也有离线收益（最多算 2 小时）。",
                 "在整备里穿戴装备改变属性；在衣柜里应用外观只改变样子（武器外观只能套在同类武器上）。锁定或穿戴中的装备不能分解。",
                 "在衣柜里把想要的装备设为回收目标并查看产地：在它那一章打精英和首领，最多 8 次必得；品质和随机属性另行抽取。",
                 "无人机自动射击；标记会强化无人机和电弧；推进器搭配近战武器冲击更强；护盾会为下一次攻击蓄能。成群的关用手炮、重锤这类群伤武器更轻松。",
-                "打过第一个首领后，选关最下面可以进回声层：一层层往上刷，每层都有掉落和织网碎片。织网碎片在整备页左边升级义体，义体越多越强，主角一步步机械飞升。" };
+                "打过第一个首领后，选关最下面可以进零号深网：一层层往上刷，每层都有掉落和织网碎片。织网碎片在整备页左边升级义体，义体越多越强，主角一步步机械飞升。" };
             for (int i = 0; i < titles.Length; i++)
             {
                 float top = y + 90 + i * 108;

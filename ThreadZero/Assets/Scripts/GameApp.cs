@@ -213,7 +213,7 @@ namespace ThreadZero
             // 进精英 / 首领关用快闸；回到一章开头（第一次进本章）用织线一扫；其余（过关、撤回、重刷）无缝推进
             transitionKind = next.kind != StageKind.Normal && transitionTo != transitionFrom ? TransGate
                 : transitionTo % Chapters.StagesPerChapter == 0 && transitionFrom != transitionTo ? TransWeave : TransPush;
-            stageTagNote = IsEcho(transitionFrom) ? "离开回声层" : transitionTo < transitionFrom ? "撤回补给" : transitionTo == transitionFrom ? "重刷本关" : "";
+            stageTagNote = IsEcho(transitionFrom) ? "离开零号深网" : transitionTo < transitionFrom ? "撤回补给" : transitionTo == transitionFrom ? "重刷本关" : "";
             transitionDur = TransitionLength(transitionKind);
             transitionLeft = transitionDur; transitionSwapped = false; clearedFor = 0;
         }
@@ -223,7 +223,7 @@ namespace ThreadZero
         {
             if (transitionLeft > 0 || !model.EchoUnlocked) return;
             int start = model.EchoStartFloor(), got = model.CatchUpEcho(start);
-            if (got > 0) Notify("回声层从第 " + start + " 层开始 · 跳过的里程碑补发核心 +" + got, 4);
+            if (got > 0) Notify("零号深网从第 " + start + " 层开始 · 跳过的里程碑补发核心 +" + got, 4);
             BeginEchoTransition(start);
         }
         private void BeginEchoTransition(int floor)
@@ -234,7 +234,7 @@ namespace ThreadZero
             transitionFrom = CurrentCode; transitionTo = EchoCode + floor;
             StageKind kind = Chapters.EchoKind(floor);
             transitionKind = !IsEcho(transitionFrom) ? TransWeave : kind != StageKind.Normal && floor != cur ? TransGate : TransPush;
-            stageTagNote = !IsEcho(transitionFrom) ? "进入回声层" : floor < cur ? "退回 " + (cur - floor) + " 层" : floor == cur ? "重刷本层" : "";
+            stageTagNote = !IsEcho(transitionFrom) ? "进入零号深网" : floor < cur ? "退回 " + (cur - floor) + " 层" : floor == cur ? "重刷本层" : "";
             transitionDur = TransitionLength(transitionKind);
             transitionLeft = transitionDur; transitionSwapped = false; clearedFor = 0;
         }
@@ -245,7 +245,7 @@ namespace ThreadZero
         private static int SceneOf(int code) { return IsEcho(code) ? Chapters.EchoScene(code - EchoCode) : Chapters.Stage(code).backdrop; }
         private static StageKind KindOf(int code) { return IsEcho(code) ? Chapters.EchoKind(code - EchoCode) : Chapters.Stage(code).kind; }
         private static string CodeLabel(int code) { return IsEcho(code) ? "E" + (code - EchoCode) : Catalog.StageCode(code); }
-        private static string NameLabel(int code) { return IsEcho(code) ? "回声层 · 第 " + (code - EchoCode) + " 层" : Catalog.RegionNames[code]; }
+        private static string NameLabel(int code) { return IsEcho(code) ? "零号深网 · 第 " + (code - EchoCode) + " 层" : Catalog.RegionNames[code]; }
         private static string LineOf(int code) { return IsEcho(code) ? "织网用记忆重建的楼层，越往上越不稳定" : code < Catalog.StageLines.Length ? Catalog.StageLines[code] : ""; }
         private void BeginTravel(int kind, int region, bool boss, bool leaveWreck)
         {
@@ -358,7 +358,7 @@ namespace ThreadZero
             bool single = w != null && !Catalog.IsGroupWeapon(w.baseId);
             bool boss = Chapters.Stage(model.state.retryRegion).kind == StageKind.Boss;
             if (single && !boss) return "卡关提示：这一关的怪成群地来，单体武器很吃亏。换一把标着「群伤」的武器（整备页武器详情里看，手炮、重锤、撞杆矛、霰弹、线圈这几类）会轻松很多。";
-            if (model.EchoUnlocked && model.state.retryStreak >= 5) return "卡关提示：可以先去回声层刷一会（选关最下面）——每层都有掉落，还能攒织网碎片升义体。";
+            if (model.EchoUnlocked && model.state.retryStreak >= 5) return "卡关提示：可以先去零号深网刷一会（选关最下面）——每层都有掉落，还能攒织网碎片升义体。";
             if (model.ReforgeUnlocked) return "卡关提示：工坊可以洗炼词条，把用不上的词条换成攻击、暴击或生命。";
             return "卡关提示：开着自动推进会先回刷前一关攒零件，升级装备、训练变强后再自动挑战。";
         }

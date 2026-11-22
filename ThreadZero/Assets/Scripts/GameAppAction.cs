@@ -533,7 +533,7 @@ namespace ThreadZero
             float nameWidth = Ui.Width(name, 30, true);
             bool hover = Ui.Hover(128, 16, 190 + nameWidth, 76);
             Ui.Text(128, 12, 120, 80, CodeLabel(code), model.InEcho ? 40 : 52, Ui.Ink, TextAnchor.MiddleLeft, true, true);
-            Ui.Text(250, 22, 240, 18, model.InEcho ? "ECHO / 回声层" : "CHAPTER " + model.Chapter + " / 第" + "一二三四五"[model.Chapter - 1] + "章", 13, Ui.Mute, TextAnchor.MiddleLeft, true, true);
+            Ui.Text(250, 22, 240, 18, model.InEcho ? "DEEP NET / 零号深网" : "CHAPTER " + model.Chapter + " / 第" + "一二三四五"[model.Chapter - 1] + "章", 13, Ui.Mute, TextAnchor.MiddleLeft, true, true);
             // 机械飞升进度：5 格，一件义体一格
             Ui.Text(420, 20, 44, 22, "飞升", 13, model.state.implants.Count > 0 ? Ui.Orange : Ui.Mute, TextAnchor.MiddleLeft, true);
             for (int i = 0; i < Catalog.AscensionTotal; i++)

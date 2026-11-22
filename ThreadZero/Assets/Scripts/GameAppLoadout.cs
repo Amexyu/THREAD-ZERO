@@ -111,7 +111,7 @@ namespace ThreadZero
                 bool okS = model.state.shards >= sc, okP = model.state.scrap >= pc;
                 Ui.Text(x + 18, y + 134, w - 30, 20, "织网碎片 " + sc + "（持有 " + model.state.shards + "）", 13, okS ? Ui.Panel : Ui.Orange, TextAnchor.MiddleLeft, true);
                 Ui.Text(x + 18, y + 154, w - 30, 20, "零件 " + pc + "（持有 " + model.state.scrap + "）", 13, okP ? Ui.Panel : Ui.Orange, TextAnchor.MiddleLeft, true);
-                if (Ui.Button(x + 18, y + 182, w - 36, 40, okS && okP ? "升级到 Lv " + (lv + 1) : !okS ? "织网碎片不足 · 去回声层刷" : "零件不足", 1, okS && okP, 15))
+                if (Ui.Button(x + 18, y + 182, w - 36, 40, okS && okP ? "升级到 Lv " + (lv + 1) : !okS ? "织网碎片不足 · 去零号深网刷" : "零件不足", 1, okS && okP, 15))
                     UpgradeImplantClicked(i);
             }
             else Ui.Text(x + 18, y + 140, w - 30, 60, "这件义体已经满级。其余义体升满后机械飞升完成。", 13, Ui.Panel, TextAnchor.UpperLeft, false, false, true);

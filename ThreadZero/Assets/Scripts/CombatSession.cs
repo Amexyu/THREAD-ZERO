@@ -114,7 +114,7 @@ namespace ThreadZero
         public string EnemyName { get { Enemy t = Target; return t == null ? "" : NameOf(t); } }
         public string NameOf(Enemy e)
         {
-            if (e.boss) return (model.InEcho ? "回声 · " : "") + Catalog.BossName(e.skin + 1);
+            if (e.boss) return (model.InEcho ? "深网 · " : "") + Catalog.BossName(e.skin + 1);
             int k = Math.Max(0, Math.Min(EliteCrusherNames.Length - 1, e.skin));
             if (e.move == EnemyMove.Crusher) return "精英 · " + EliteCrusherNames[k];
             if (e.move == EnemyMove.Beacon) return "精英 · " + EliteBeaconNames[k];
@@ -494,7 +494,13 @@ namespace ThreadZero
                 {
                     model.state.echoBest = floor;
                     if (floor % Chapters.MilestoneEvery == 0)
-                    { model.state.cores += Chapters.MilestoneCores; model.state.shards += Balance.ShardsMilestone; OnMessage?.Invoke("回声层第 " + floor + " 层里程碑：核心 +" + Chapters.MilestoneCores + "，织网碎片 +" + Balance.ShardsMilestone); }
+                    { model.state.cores += Chapters.MilestoneCores; model.state.shards += Balance.ShardsMilestone; OnMessage?.Invoke("零号深网第 " + floor + " 层里程碑：核心 +" + Chapters.MilestoneCores + "，织网碎片 +" + Balance.ShardsMilestone); }
+                    Item look = model.GrantDeepNetLook(floor);   // v0.21 第 50 / 100 / 150 层：深网限定外观
+                    if (look != null)
+                    {
+                        OnDrop?.Invoke(look, true);
+                        OnMessage?.Invoke("零号深网第 " + floor + " 层：拿到深网限定「" + Catalog.Find(look.baseId).name + "」（原型），已收进衣柜");
+                    }
                 }
                 model.state.shards += Boss ? Balance.ShardsEchoBoss : Balance.ShardsEchoFloor;   // v0.20 机械飞升材料：回声层每过一层都给（首领层多给）
                 if (Boss) health = Math.Min(s.health, health + s.health * Balance.BossRecovery);
@@ -505,7 +511,7 @@ namespace ThreadZero
             if (Boss)
             {
                 health = Math.Min(s.health, health + s.health * Balance.BossRecovery);
-                if (firstBossClear == 1) OnMessage?.Invoke("第一章首领回收完成 · 回声层与第二章已开放");   // 只在第一次通关时提示
+                if (firstBossClear == 1) OnMessage?.Invoke("第一章首领回收完成 · 零号深网与第二章已开放");   // 只在第一次通关时提示
                 else if (firstBossClear == 2) OnMessage?.Invoke("第二章首领回收完成 · 调度义眼已装上 · 第三章已开放");
                 else if (firstBossClear == 3) OnMessage?.Invoke("第三章首领回收完成 · 中继脊柱已装上 · 第四章已开放");
                 else if (firstBossClear == 4) OnMessage?.Invoke("第四章首领回收完成 · 冷核心脏已装上 · 第五章已开放");
