@@ -901,7 +901,9 @@ namespace ThreadZero
             if (stageShown <= 0) return;
             if (stagePending) { stagePending = false; stageAt = clock + .35f; }   // 在整备页升级跨过阶段：回到行动页后再放
             bool done = stageShown >= Catalog.AscensionStageAt.Length;
-            float t = clock - stageAt, life = done ? 9 : 6; if (t < 0 || t > life) return;
+            float t = clock - stageAt, life = done ? 9 : 6;
+            if (done && t > life + .3f && !model.state.epilogueSeen && !navigation.HasModal) OpenEpilogue();   // v0.20 飞升完成的横幅放完 → 尾声
+            if (t < 0 || t > life) return;
             float a = t < .3f ? t / .3f : t > life - .5f ? (life - t) / .5f : 1, open = Mathf.SmoothStep(0, 1, Mathf.Clamp01(t / .35f));
             float w = done ? 900 : 780, h = (done ? 250 : 200) * open, x = StageW / 2 - w / 2, y = 250 - h / 2 + 95;
             Ui.Fill(x, y, w, h, Ui.Alpha(Ui.Ink, .95f * a)); Ui.Fill(x, y, w, 4, Ui.Alpha(Ui.Orange, a)); Ui.Fill(x, y + h - 4, w, 4, Ui.Alpha(Ui.Orange, a));

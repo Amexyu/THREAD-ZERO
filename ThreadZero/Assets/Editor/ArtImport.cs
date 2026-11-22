@@ -14,7 +14,11 @@ namespace ThreadZero.Editor
         public override uint GetVersion() { return Compress ? 2u : 1u; }
 
         internal static bool IsEnemy(string path) { return path.StartsWith("Assets/Resources/Art/V16/Enemies/"); }
-        internal static bool IsBackdrop(string path) { return path.StartsWith("Assets/Resources/Art/V16/Stage") && (path.EndsWith("_far.png") || path.EndsWith("_mid.png")); }
+        internal static bool IsBackdrop(string path)
+        {
+            return (path.StartsWith("Assets/Resources/Art/V16/Stage") && (path.EndsWith("_far.png") || path.EndsWith("_mid.png")))
+                || path.StartsWith("Assets/Resources/Art/V16/Ascension/epilogue");   // 尾声插图（2048×1152，按 0.6～1 倍画）也按背景处理
+        }
 
         private void OnPreprocessTexture()
         {

@@ -6,6 +6,7 @@ namespace ThreadZero
     {
         private void Modal()
         {
+            if (navigation.Modal == GameModal.Epilogue) { EpilogueModal(); return; }   // v0.20 尾声：整屏插图，不用通用弹窗框
             Ui.FillScreen(Ui.Alpha(Ui.Ink, .62f));
             bool map = navigation.Modal == GameModal.Map, offline = navigation.Modal == GameModal.Offline;
             // 选关弹窗 v0.20 加宽 820 → 1000：五章的分页按钮（5 × 152）放在标题栏右侧，原来的宽度下第一章按钮伸出弹窗左边、压住标题

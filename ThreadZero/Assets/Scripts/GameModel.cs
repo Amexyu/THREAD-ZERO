@@ -86,6 +86,7 @@ namespace ThreadZero
         public float scrapRate;   // v0.20 挂机时每秒（游戏时间）的零件收入：击杀给的 + 掉落装备的分解价，慢慢平均
         public List<string> anomalies = new List<string>();
         public int tips, tipsVersion;   // v0.20 新手提示：看过的按位记（GameApp.Tip）；tipsVersion 0 = 还没做过老存档迁移
+        public bool epilogueSeen;       // v0.20 机械飞升 100% 的尾声看过了（横幅放完后只自动弹一次）
     }
 
     public sealed class ImplantDef

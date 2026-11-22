@@ -309,6 +309,7 @@ namespace ThreadZero
                 model.state.implantLevels[i] = 1 + add; rest -= add;
             }
             int now = model.AscensionStage;
+            if (now > 0) { stageShown = now; stagePending = true; }   // 回到行动页时放这一阶段的横幅（100% 的横幅放完会接着弹尾声）
             Notify("测试：机械飞升 " + Mathf.RoundToInt(model.Ascension * 100) + "%" + (now > 0 ? "（" + Catalog.AscensionStageNames[now - 1] + "）" : "") + "，再按 F7 下一阶段", 3);
             Save();
         }

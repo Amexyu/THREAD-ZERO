@@ -129,6 +129,12 @@ namespace ThreadZero
             int have = model.state.implants.Count;
             Ui.Text(x, y, 160, 18, "机械飞升 " + (model.Ascension * 100).ToString("0") + "%", 13, have > 0 ? Ui.Orange : Ui.Mute, TextAnchor.MiddleLeft, true);
             if (model.AscensionStage > 0) Ui.Text(x + 100, y, 220, 18, Catalog.AscensionStageNames[model.AscensionStage - 1], 11, Ui.Alpha(Ui.Orange, .8f), TextAnchor.MiddleLeft, false);   // 和百分比同一行（放下一行会被第一个义体格子压住）
+            if (model.AscensionStage >= Catalog.AscensionStageAt.Length)
+            {   // v0.20 飞升完成以后可以重看尾声
+                float lx = x + 100 + Ui.Width(Catalog.AscensionStageNames[model.AscensionStage - 1], 11) + 12; bool hv = Ui.Hover(lx, y, 70, 18);
+                Ui.Text(lx, y, 70, 18, "重看尾声 ›", 11, hv ? Ui.Ink : Ui.Orange, TextAnchor.MiddleLeft, true);
+                if (Ui.Click(lx, y, 70, 18)) OpenEpilogue();
+            }
             if (have > 0) Ui.Text(x, y + 280, 160, 18, "织网碎片 " + model.state.shards, 12, Ui.Mute, TextAnchor.MiddleLeft, true);
             string tipTitle = null, tipBody = null; float tipY = 0;
             for (int i = 0; i < Catalog.AscensionTotal; i++)
