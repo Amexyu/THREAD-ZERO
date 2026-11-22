@@ -6,9 +6,9 @@ namespace ThreadZero
     // Initial dagger only. Higher qualities require their own skill/animation definitions.
     public static class DaggerSkill
     {
-        public const float Duration = .68f, BasicDuration = .35f, BasicHit = .14f, Cooldown = 5f;
+        public const float Duration = 1f, BasicDuration = .35f, BasicHit = .14f, Cooldown = 5f;   // v0.20 迅切连击改成 1 秒四段连招（动作表 SkillMoves.cs 的 Combo）
         public static readonly int[] FrameMilliseconds = {120,40,50,20,20,30,20,20,40,30,30,50,20,20,50,30,30,60};
-        public static readonly float[] Hits = {.23f,.32f,.51f};
+        public static readonly float[] Hits = {.22f,.36f,.55f,.74f};
         private static readonly int[] basicFrames = {11,12,13,14,15,16,17};
         private static readonly int[] basicTimes = {90,30,20,40,40,50,80};
         public static bool Matches(GameModel model)
@@ -92,7 +92,7 @@ namespace ThreadZero
                 OnDaggerHit?.Invoke(hit,damage);
                 DealDamage(target,damage,stats);
                 // 最后一段穿透：射程再往前 60 像素内的怪都挨这一下。
-                if(s.pierceLastHit && hit==s.hitTimes.Length-1) Area(target,Movement.HeroX+Movement.HeroRange+60,damage,99,stats);
+                if((s.pierceLastHit && hit==s.hitTimes.Length-1) || s.pierceAll) Area(target,Movement.HeroX+Movement.HeroRange+60,damage,99,stats);
                 var extra=new List<Enemy>();
                 if(s.splash>0)
                     foreach(Enemy e in enemies.ToArray())

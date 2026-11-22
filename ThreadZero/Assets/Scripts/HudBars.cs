@@ -131,8 +131,8 @@ namespace ThreadZero
                 Ui.Text(x + 104 * s, top + 38 * s, 60 * s, 58 * s, "首", 16, Ui.Hex(0xFFB02E), TextAnchor.MiddleCenter, true);
             }
             else { Ui.Fill(x, top + 20, W, 12, Ui.Alpha(Ui.Ink, .8f)); Ui.Fill(x, top + 20, W * hp01, 12, red); }
-            Ui.Text(x + 120, top - 22, 300, 22, name, 16, Ui.Panel, TextAnchor.LowerLeft, true);
-            Ui.Text(x + W - 420, top - 22, 300, 22, Mathf.Max(0, hpNow).ToString("F0") + " / " + hpMax.ToString("F0"), 14, Ui.Alpha(Ui.Panel, .85f), TextAnchor.LowerRight, false, true);
+            Ui.ShadowText(x + 120, top - 22, 300, 22, name, 16, Ui.Panel, TextAnchor.LowerLeft, true);   // v0.20 加投影：第四章亮背景上原来看不见
+            Ui.ShadowText(x + W - 420, top - 22, 300, 22, Mathf.Max(0, hpNow).ToString("F0") + " / " + hpMax.ToString("F0"), 14, Ui.Alpha(Ui.Panel, .85f), TextAnchor.LowerRight, false, true);
         }
 
         // ---------- helpers ----------

@@ -1,0 +1,80 @@
+{
+ "lamps": [
+  {
+   "layer": 1,
+   "u": 0.1631,
+   "v": 0.2484,
+   "r": 0.12
+  },
+  {
+   "layer": 1,
+   "u": 0.5903,
+   "v": 0.2458,
+   "r": 0.12
+  }
+ ],
+ "water": [
+  {
+   "layer": 2,
+   "v0": 0.76,
+   "v1": 0.97,
+   "count": 16
+  }
+ ],
+ "drips": [
+  {
+   "layer": 2,
+   "u": 0.32,
+   "v": 0.6,
+   "fall": 0.18,
+   "every": 3.3
+  },
+  {
+   "layer": 2,
+   "u": 0.55,
+   "v": 0.33,
+   "fall": 0.45,
+   "every": 4.4
+  },
+  {
+   "layer": 2,
+   "u": 0.905,
+   "v": 0.6,
+   "fall": 0.18,
+   "every": 5.1
+  }
+ ],
+ "steam": [
+  {
+   "layer": 1,
+   "u": 0.28,
+   "v": 0.16,
+   "every": 5.5
+  },
+  {
+   "layer": 1,
+   "u": 0.755,
+   "v": 0.49,
+   "every": 7.5
+  }
+ ],
+ "props": [
+  {
+   "layer": 1,
+   "body": "C_pump_body",
+   "wheel": "C_pump_wheel",
+   "x0": 1150,
+   "spacing": 2600,
+   "baseV": 0.775,
+   "height": 0.26,
+   "wheelU": 0.7744,
+   "wheelV": 0.5698,
+   "wheelSize": 0.34,
+   "wheelSpeed": 0,
+   "hubR": 0.105,
+   "gaugeU": 0.8906,
+   "gaugeV": 0.1028,
+   "gaugeR": 0.057
+  }
+ ]
+}

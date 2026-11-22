@@ -18,11 +18,12 @@ namespace ThreadZero
         public float windLeft, windDur, sinceStrike = 9, hasteLeft, aux;   // 蓄力剩余 / 总时长、距上次出手、加速剩余、模组自用计时
         public int phase;          // 首领阶段：0 正常，1 已放水，2 过载
         public bool special;       // 下一次出手是特殊招式（首领放水 / 吊箱砸落）
-        public int skin;           // 外观与招式变体：0 第一章，1 第二章（物流高架）
+        public int skin;           // 外观与招式变体：0 第一章，1 第二章（物流高架），2 第三章（信号禁区）
         public bool summoned;      // 首领 / 运输母机放出来的小怪：不掉装备
         public int aux2;           // 运输母机放的无人机：记住母机 id
         public float pull;         // 还要被吊钩拽过来的距离
         public float vel;          // 当前移动速度（和角色一样有加速 / 减速，不再瞬间起步、瞬间停）
+        public float popAt = -10, popAmp, zapAt = -10;   // v0.20 只管画面：被震起的时刻 / 高度、被电到的时刻
         public float Wind01 { get { return windLeft > 0 && windDur > 0 ? 1 - windLeft / windDur : 0; } }
         public bool Heavy { get { return move == EnemyMove.Slam || move == EnemyMove.Crusher || move == EnemyMove.Gate; } }
         public bool moving;

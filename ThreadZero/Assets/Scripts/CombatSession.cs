@@ -26,6 +26,11 @@ namespace ThreadZero
         public float lastHitX, lastKillX, lastHurtX;      // 世界坐标：伤害数字、掉落位置
         public bool StageCleared { get; private set; }
         public bool RetreatRequested { get; set; }          // 被打倒并修好后，GameApp 退回上一关
+        // v0.18 僵持保护：一关打太久（首领 3 分钟、普通 6 分钟）说明打不动——角色不死、怪也打不完（比如首领一直召小怪），
+        // 这时也按“打不过”处理：撤回上一关刷，变强后自动再挑战。数值测试发现第三章首领会这样卡住好几个小时。
+        public const float BossTimeLimit = 240, StageTimeLimit = 360;   // v0.19 首领 3 → 4 分钟：后几章首领会叫小怪、断讯，慢一点的配装常常差一口气就超时
+        public int timeouts;
+        private float stageTime;
         // 转场后角色从地面检修舱口爬上来（EntryTime 秒），期间不战斗、不出怪。
         public const float EntryTime = 0f;   // v0.16 快速转场：不再从检修口爬出来，直接接着走
         public float EntryLeft { get; private set; }
@@ -38,7 +43,8 @@ namespace ThreadZero
         public const int ChainPullEvery = 3; public const float ChainPull = 170;
         private int chainHits;
         public Action<Enemy> OnChainPull;
-        public bool IsChain { get { Item w = model.Equipped(Slot.Weapon); return w != null && w.baseId == "w7"; } }
+        public Action<Enemy, Enemy> OnCoilJump;   // v0.20 线圈普攻的电流从第一只跳到第二只
+        public bool IsChain { get { Item w = model.Equipped(Slot.Weapon); return w != null && Catalog.MechOf(w.baseId) == "w7"; } }
         public const float EnemyAccel = 900;   // 和角色 EncounterMovement 的加速度一致   // 本关首领是第几章的首通（ClearStage 里提示一次）
         private int nextId;
         private readonly Random rng = new Random(1234);
@@ -57,9 +63,11 @@ namespace ThreadZero
             if (model.InEcho) return;
             int ch = model.Chapter;
             if (model.state.region != Chapters.BossRegion(ch) || ch > Catalog.Implants.Length) return;
-            ImplantDef d = Catalog.Implants[ch - 1];   // 第一章绞盘机械臂，第二章调度义眼
+            ImplantDef d = Catalog.Implants[ch - 1];   // 第一章绞盘机械臂，第二章调度义眼，第三章中继脊柱
             if (model.state.implants.Contains(d.id)) return;
-            model.state.implants.Add(d.id); OnImplant?.Invoke(d);
+            model.state.implants.Add(d.id);
+            int idx = Catalog.ImplantIndex(d.id); if (idx >= 0 && model.state.implantLevels != null && idx < model.state.implantLevels.Length) model.state.implantLevels[idx] = Math.Max(1, model.state.implantLevels[idx]);
+            OnImplant?.Invoke(d);
         }
 
         // 活着的怪 + 刚倒下的残骸（deadAt >= 0）。queue：本波还没出场的怪。
@@ -78,11 +86,11 @@ namespace ThreadZero
         }
         private StageDef echoStage; private int echoKey = -1;
         // 敌人强度：主线按关卡；回声层以 1-7 为起点按层增长（再叠协议异常）。
-        private float EnemyHealth(int w) { return model.InEcho ? Chapters.Health(Chapters.EchoAnchor, w) * Chapters.EchoScale(model.state.echoFloor, false) * (model.Anomaly("armor") ? 1.5f : 1) : Chapters.Health(model.state.region, w); }
-        private float EnemyAttack(int w) { return model.InEcho ? Chapters.Attack(Chapters.EchoAnchor, w) * Chapters.EchoScale(model.state.echoFloor, true) : Chapters.Attack(model.state.region, w); }
+        private float EnemyHealth(int w) { return model.InEcho ? Chapters.EchoHealth(model.state.echoFloor, w) * (model.Anomaly("armor") ? 1.5f : 1) : Chapters.Health(model.state.region, w); }
+        private float EnemyAttack(int w) { return model.InEcho ? Chapters.EchoAttack(model.state.echoFloor, w) : Chapters.Attack(model.state.region, w); }
         /// 当前关卡用哪一章的怪（回声层按场景轮换）。
         private int Skin { get { return Chapters.SceneChapter(Stage.backdrop) - 1; } }
-        private float EnemyDefense() { return model.InEcho ? Chapters.Defense(Chapters.EchoAnchor) + model.state.echoFloor * .5f : Chapters.Defense(model.state.region); }
+        private float EnemyDefense() { return model.InEcho ? Chapters.EchoDefense(model.state.echoFloor) : Chapters.Defense(model.state.region); }
         public Action<int, bool> OnFloorCleared;   // 回声层过层：层数、是否刷新最高层
         public int WaveCount { get { return Stage.waves.Length; } }
         public bool Boss { get { return Stage.kind == StageKind.Boss; } }
@@ -105,11 +113,18 @@ namespace ThreadZero
         public string NameOf(Enemy e)
         {
             if (e.boss) return (model.InEcho ? "回声 · " : "") + Catalog.BossName(e.skin + 1);
-            if (e.move == EnemyMove.Crusher) return e.skin == 1 ? "精英 · 起重机甲" : "精英 · 拆解者";
-            if (e.move == EnemyMove.Beacon) return e.skin == 1 ? "精英 · 运输母机" : "精英 · 信号塔";
-            string[] names = e.skin == 1 ? new[] { "货运无人机", "叉臂装卸机", "轨道炮车" } : new[] { "失控巡逻机", "装甲运输机", "信号干扰机" };
-            return names[(int)e.role];
+            int k = Math.Max(0, Math.Min(EliteCrusherNames.Length - 1, e.skin));
+            if (e.move == EnemyMove.Crusher) return "精英 · " + EliteCrusherNames[k];
+            if (e.move == EnemyMove.Beacon) return "精英 · " + EliteBeaconNames[k];
+            return MobNames[k][(int)e.role];
         }
+
+        // 每章的怪名（skin = 章节 - 1）：冲锋 / 重型 / 远程，两种精英。
+        private static readonly string[][] MobNames = { new[] { "失控巡逻机", "装甲运输机", "信号干扰机" }, new[] { "货运无人机", "叉臂装卸机", "轨道炮车" },
+                                                          new[] { "断讯飞蛾", "屏蔽甲兵", "定向干扰塔" }, new[] { "镜面无人机", "审计卫兵", "折光炮台" },
+                                                          new[] { "织网线虫", "协议守卫", "母线炮" } };
+        private static readonly string[] EliteCrusherNames = { "拆解者", "起重机甲", "屏蔽重甲", "镜甲重卫", "织网重甲" },
+                                         EliteBeaconNames = { "信号塔", "运输母机", "干扰中继", "棱镜中继", "协议中继" };
 
         public CombatSession(GameModel m)
         { model = m; health = m.Total().health; loadoutSignature = Signature(); StartWave(); }
@@ -118,7 +133,7 @@ namespace ThreadZero
         {
             droneTimer = Balance.DroneInterval; markTimer = .7f; dashTimer = Balance.ThrusterInterval;
             markTime = guardCharge = droneFlash = arcFlash = dashFlash = guardFlash = 0;
-            attackNumber = 0; pendingStrike = false;
+            attackNumber = 0; pendingStrike = false; JamLeft = 0; MirrorLeft = 0;
             ResetDagger();
         }
         public void SyncLoadout()
@@ -130,7 +145,7 @@ namespace ThreadZero
         /// 重新开始当前关（换关、转场、维修后）。
         public void ResetRegion()
         {
-            wave = 1; recovery = 0; StageCleared = false; RetreatRequested = false;
+            wave = 1; recovery = 0; StageCleared = false; RetreatRequested = false; stageTime = 0;
             health = model.Total().health; ResetModules();
             enemies.Clear(); queue.Clear(); shots.Clear();
             Movement.ResetAtCamera(Movement.CameraX);
@@ -184,6 +199,7 @@ namespace ThreadZero
                 interval = Chapters.BossInterval, speed = Chapters.BossSpeed, stop = Chapters.BossStop, canvas = Chapters.BossCanvas, depth = .5f,
             };
             e.maxHealth = e.health; e.timer = 1; e.move = EnemyMove.Gate; e.skin = Skin;
+            if (Skin >= 4) e.canvas *= Chapters.FinalBossScale;   // v0.20 织网母体是最终首领：画大一圈（图是横着的章鱼，同样的画布显得比前几章首领小）。（试过让它站远一点免得触足盖住近战角色，但那会改变战斗站位——手炮溅射够不够得着首领身边的小怪——为了不动已经调好的数值，只改大小）
             if (model.Anomaly("overload")) e.interval *= .8f;
             if (testDummy) { e.health = e.maxHealth = 100000; e.attack = 0; }
             return e;
@@ -215,9 +231,18 @@ namespace ThreadZero
         }
 
         // ---------- 每一小步 ----------
+        // v0.20 离线收益用：统计零件收入（击杀 + 掉落的分解价），每 10 秒游戏时间并进 state.scrapRate（约 100 秒的滑动平均）
+        private float incomeSince, incomeClock;
+        private void TrackIncome(float dt)
+        {
+            if (testDummy) return;
+            incomeClock += dt; if (incomeClock < 10) return;
+            float r = incomeSince / incomeClock; incomeSince = 0; incomeClock = 0;
+            model.state.scrapRate = model.state.scrapRate <= 0 ? r : model.state.scrapRate + (r - model.state.scrapRate) * .1f;
+        }
         private void Step(float dt)
         {
-            elapsed += dt;
+            elapsed += dt; TrackIncome(dt);
             OnAdvance?.Invoke(dt);
             hitFlash = Math.Max(0, hitFlash - dt); hurtFlash = Math.Max(0, hurtFlash - dt);
             droneFlash = Math.Max(0, droneFlash - dt); arcFlash = Math.Max(0, arcFlash - dt);
@@ -229,11 +254,18 @@ namespace ThreadZero
             {
                 Movement.Stop();
                 recovery -= dt;
-                if (recovery <= 0) RetreatRequested = true;
+                if (recovery <= 0) { RetreatRequested = true; model.NoteDefeat(); }
                 return;
             }
             if (StageCleared) { Movement.Tick(dt, model.IsMelee, true); return; }
             if (EntryLeft > 0) { EntryLeft = Math.Max(0, EntryLeft - dt); Movement.Tick(dt, model.IsMelee, false); return; }
+            stageTime += dt;
+            if (stageTime > (Boss ? BossTimeLimit : StageTimeLimit))
+            {
+                timeouts++; stageTime = 0; RetreatRequested = true; shots.Clear(); model.NoteDefeat();
+                OnMessage?.Invoke(Boss ? "首领战拖了 3 分钟还没打下来：撤回上一关补给，变强后自动再挑战。" : "这一关打了太久：撤回上一关补给，变强后自动再挑战。");
+                return;
+            }
             Stats s = model.Total(); health = Math.Min(health, s.health);
 
             SpawnFromQueue(dt);
@@ -244,7 +276,7 @@ namespace ThreadZero
                 {
                     summonTimer += Chapters.BossSummonInterval;
                     int n = 2 + rng.Next(2);
-                    for (int i = 0; i < n; i++) { Enemy m = Make(EnemyRole.Swarmer, false); m.summoned = true; queue.Add(m); }
+                    for (int i = 0; i < n; i++) { Enemy m = Make(EnemyRole.Swarmer, false); m.summoned = true; m.health = m.maxHealth = m.health * Chapters.SummonHealth; queue.Add(m); }
                 }
             }
 
@@ -279,7 +311,8 @@ namespace ThreadZero
                 markTimer -= dt;
                 if (markTimer <= 0) { markTime = Balance.MarkDuration; markTimer += Balance.MarkInterval; Emit(Ability.Mark); }
             }
-            attackTimer -= dt;
+            attackTimer -= dt * (JamLeft > 0 ? JamRate : 1);   // 第三章首领的断讯脉冲：出手变慢
+            JamLeft = Math.Max(0, JamLeft - dt); MirrorLeft = Math.Max(0, MirrorLeft - dt);
             if (!engaged) { attackTimer = Math.Max(0, attackTimer); pendingStrike = false; }
             AdvanceDagger(dt, s);
             if (pendingStrike) strikeDelay -= dt;
@@ -304,7 +337,7 @@ namespace ThreadZero
                 if (droneTimer <= 0)
                 {
                     droneTimer += Balance.DroneInterval; droneFlash = .35f; droneHits++;
-                    lastDroneDamage = Mitigate(s.attack * Balance.DroneDamage) * (markTime > 0 ? Balance.MarkedDroneMultiplier : 1);
+                    lastDroneDamage = Mitigate(s.attack * Balance.DroneDamage) * (markTime > 0 ? Balance.MarkedDroneMultiplier : 1) * (1 + s.effectDamage);
                     Emit(Ability.Drone, lastDroneDamage); lastCritical = false;
                     Enemy t = Target; if (t != null) DealDamage(t, lastDroneDamage, s);
                 }
@@ -315,7 +348,7 @@ namespace ThreadZero
                 if (dashTimer <= 0)
                 {
                     dashTimer += Balance.ThrusterInterval; dashFlash = .4f; dashHits++;
-                    lastDashDamage = Mitigate(s.attack * Balance.ThrusterDamage) * (model.IsMelee ? Balance.AssaultMultiplier : 1);
+                    lastDashDamage = Mitigate(s.attack * Balance.ThrusterDamage) * (model.IsMelee ? Balance.AssaultMultiplier : 1) * (1 + s.effectDamage);
                     if (model.IsMelee) combos++;
                     Emit(model.IsMelee ? Ability.Assault : Ability.Dash, lastDashDamage); lastCritical = false;
                     Enemy t = Target;
@@ -345,7 +378,7 @@ namespace ThreadZero
         {
             lastCritical = model.Chance(s.crit);
             float damage = Mitigate(s.attack);
-            if (lastCritical) damage *= Balance.CritMultiplier;
+            if (lastCritical) damage *= Balance.CritMultiplier + s.critDamage;   // v0.18 暴击伤害词条
             if (target.health < target.maxHealth * Balance.ExecuteThreshold && model.Has(Effect.Execute)) damage *= Balance.ExecuteMultiplier;
             if (guardCharge > 0 && model.Has(Effect.Guard))
             { damage += guardCharge; Emit(Ability.GuardRelease, guardCharge); guardCharge = 0; guardFlash = .45f; }
@@ -353,7 +386,7 @@ namespace ThreadZero
             if (arc)
             {
                 bool surge = markTime > 0;
-                lastArcDamage = Mitigate(s.attack * Balance.ArcDamage * model.EffectCount(Effect.Arc)) * (surge ? Balance.MarkedArcMultiplier : 1);
+                lastArcDamage = Mitigate(s.attack * Balance.ArcDamage * model.EffectCount(Effect.Arc)) * (surge ? Balance.MarkedArcMultiplier : 1) * (1 + s.effectDamage);
                 damage += lastArcDamage; arcFlash = .45f; arcHits++;
                 if (surge) { markTime = 0; combos++; }
                 Emit(surge ? Ability.Surge : Ability.Arc, lastArcDamage);
@@ -361,7 +394,7 @@ namespace ThreadZero
             // 普攻小击退：把贴身的怪推开一点，免得一群怪全糊在角色身上。
             if (!target.boss) target.x += target.elite ? 8 : 16;
             Item weapon = model.Equipped(Slot.Weapon);
-            string kind = weapon == null ? "" : weapon.baseId;
+            string kind = weapon == null ? "" : Catalog.MechOf(weapon.baseId);   // 新装备借旧武器的招式
             if (kind == "w0")
             {
                 // 霰弹：6 颗弹丸各算一次伤害。一半必中目标，其余落在目标身后 150 内的怪（没有就也打目标）。
@@ -398,6 +431,14 @@ namespace ThreadZero
                     OnChainPull?.Invoke(target);
                 }
             }
+            else if (kind == "w2")
+            {
+                // 线圈：电流从目标跳到它身后最近的一只怪（CoilJumpReach 内），吃 CoilJump。
+                DealDamage(target, damage, s);
+                Enemy jump = null;
+                foreach (Enemy e in enemies) if (e != target && e.Alive && e.x >= target.x - 20 && e.x <= target.x + Balance.CoilJumpReach && (jump == null || e.x < jump.x)) jump = e;
+                if (jump != null) { DealDamage(jump, damage * Balance.CoilJump, s); OnCoilJump?.Invoke(target, jump); }
+            }
             else if (kind == "w4")
             {
                 // 重锤：砸地横扫，目标及其身后 140 内的怪吃 70%。
@@ -423,9 +464,11 @@ namespace ThreadZero
         private bool DealDamage(Enemy e, float damage, Stats s)
         {
             if (!e.Alive) return false;
+            if (e.boss || e.elite) damage *= 1 + s.bossDamage;   // v0.18 首领伤害词条（对精英也生效）
             float actual = Math.Min(e.health, damage);
             health = Math.Min(s.health, health + actual * Balance.LeechRatio * model.EffectCount(Effect.Leech));
             e.health -= damage; e.hitFlash = .3f;
+            if (e.boss && MirrorLeft > 0 && recovery <= 0) Hurt(actual * MirrorRatio, e.x, s);   // 镜面审计官的镜面反射
             lastPlayerDamage = damage; hitFlash = .3f; lastHitX = e.x;
             OnDamage?.Invoke(damage, lastCritical, e.x);
             if (e.health > 0) return false;
@@ -436,7 +479,7 @@ namespace ThreadZero
 
         private void ClearStage(Stats s)
         {
-            StageCleared = true; pendingStrike = false;
+            StageCleared = true; pendingStrike = false; model.state.retryStreak = 0;
             int region = model.state.region;
             if (model.InEcho)
             {   // 回声层：记最高层；每 25 层里程碑给核心。不走主线的解锁。
@@ -445,8 +488,9 @@ namespace ThreadZero
                 {
                     model.state.echoBest = floor;
                     if (floor % Chapters.MilestoneEvery == 0)
-                    { model.state.cores += Chapters.MilestoneCores; OnMessage?.Invoke("回声层第 " + floor + " 层里程碑：核心 +" + Chapters.MilestoneCores); }
+                    { model.state.cores += Chapters.MilestoneCores; model.state.shards += Balance.ShardsMilestone; OnMessage?.Invoke("回声层第 " + floor + " 层里程碑：核心 +" + Chapters.MilestoneCores + "，织网碎片 +" + Balance.ShardsMilestone); }
                 }
+                model.state.shards += Boss ? Balance.ShardsEchoBoss : Balance.ShardsEchoFloor;   // v0.20 机械飞升材料：回声层每过一层都给（首领层多给）
                 if (Boss) health = Math.Min(s.health, health + s.health * Balance.BossRecovery);
                 OnFloorCleared?.Invoke(floor, best);
                 OnCheckpoint?.Invoke();
@@ -456,24 +500,29 @@ namespace ThreadZero
             {
                 health = Math.Min(s.health, health + s.health * Balance.BossRecovery);
                 if (firstBossClear == 1) OnMessage?.Invoke("第一章首领回收完成 · 回声层与第二章已开放");   // 只在第一次通关时提示
-                else if (firstBossClear == 2) OnMessage?.Invoke("第二章首领回收完成 · 调度义眼已装上");
+                else if (firstBossClear == 2) OnMessage?.Invoke("第二章首领回收完成 · 调度义眼已装上 · 第三章已开放");
+                else if (firstBossClear == 3) OnMessage?.Invoke("第三章首领回收完成 · 中继脊柱已装上 · 第四章已开放");
+                else if (firstBossClear == 4) OnMessage?.Invoke("第四章首领回收完成 · 冷核心脏已装上 · 第五章已开放");
+                else if (firstBossClear == 5) OnMessage?.Invoke("织网母体回收完成 · 织网接口已接上 · 机械飞升开始");   // v0.20 飞升是打完主线后的长线目标，这里是“开始”不是“完成”
                 firstBossClear = 0;
             }
             int next = Math.Min(Chapters.ChapterCount * Chapters.StagesPerChapter - 1, region + 1);
             if (next > model.state.unlockedRegion)
-            { model.state.unlockedRegion = next; OnMessage?.Invoke("开放 " + Catalog.StageCode(next) + " · " + Catalog.RegionNames[next]); }
+            { model.state.unlockedRegion = next; model.ClearRetry(); OnMessage?.Invoke("开放 " + Catalog.StageCode(next) + " · " + Catalog.RegionNames[next]); }
             OnCheckpoint?.Invoke();
         }
 
         private void Reward(Enemy e)
         {
-            model.state.kills++; model.state.scrap += (int)Math.Ceiling((e.boss ? 8 : e.elite ? 3 : 1) * (model.Anomaly("swarm") ? 1.5f : 1));
+            int killScrap = (int)Math.Ceiling((e.boss ? 8 : e.elite ? 3 : 1) * (model.Anomaly("swarm") ? 1.5f : 1) * (1 + model.Total().scrapBonus));
+            model.state.kills++; model.state.scrap += killScrap; incomeSince += killScrap;
             if (e.boss)
             {   // 首通必掉核心，之后重刷 25%（回声层每 10 层的首领：刷新最高层时算首通）
                 int ch = model.Chapter;
                 bool first = model.InEcho ? model.state.echoFloor > model.state.echoBest : !model.BossCleared(ch);
                 if (first || model.Chance(Balance.RepeatCoreChance)) { model.state.cores++; OnMessage?.Invoke("回收首领核心 +1（持有 " + model.state.cores + "）"); }
                 if (!model.InEcho && first) firstBossClear = ch;
+                if (!model.InEcho && !first) model.state.shards += Balance.ShardsBossRepeat;   // v0.20 重复打主线首领也给一点织网碎片
                 model.state.bosses++; if (!model.InEcho) model.state.bossMask |= 1 << (ch - 1);
                 GrantImplant();
             }
@@ -482,7 +531,9 @@ namespace ThreadZero
             var drops = new List<Item>();
             if (e.boss)
             {
-                drops.Add(model.Drop(true, true, false, Quality.Rare, Catalog.BossExclusiveOf(e.skin + 1)));
+                string exclusive = Catalog.BossExclusiveOf(e.skin + 1);
+                if (model.InEcho && Catalog.ChapterOf(exclusive) > model.DropChapter) exclusive = Catalog.BossExclusiveOf(model.DropChapter);   // v0.20 回声层只掉到过的章节（首领层按场景换专属件，原来第四章去回声层就能拿到第五章首领的武器）
+                drops.Add(model.Drop(true, true, false, Quality.Rare, exclusive));
                 for (int i = 1; i < Chapters.BossDrops; i++) drops.Add(model.Drop(true, true));
             }
             else if (e.elite)
@@ -494,6 +545,7 @@ namespace ThreadZero
             foreach (Item item in drops)
             {
                 if (item == null) continue;
+                incomeSince += GameModel.SalvageValue(item);
                 bool fresh = model.state.collection.Count > before; before = model.state.collection.Count;
                 OnDrop?.Invoke(item, fresh);
             }

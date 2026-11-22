@@ -34,10 +34,11 @@ namespace ThreadZero
             bool nearCombat = combat.HeroInRange || combat.EnemyInRange;
             float hit = moving || !nearCombat ? 0 : combat.hitFlash, dash = moving || !nearCombat ? 0 : combat.dashFlash;
 
-            bool pixel = pixelScale > 0 && Event.current.type == EventType.Repaint;
-            if (pixel) BeginPixel();
             Ui.Fill(StageX, StageY, StageW, StageH, deep ? Ui.Hex(0xE9EAE5) : Ui.Stage);
             Ui.BeginClip(StageX, StageY, StageW, StageH, 0);
+            { Impact.Scale = model.state.shakeMode == 0 ? 1 : model.state.shakeMode == 1 ? .5f : 0; Vector2 q = Impact.Offset(clock); Ui.Nudge(q.x, q.y); }   // v0.20 震屏：舞台里的东西整体抖，界面不抖
+            float camZoom = LayeredRigView.SkillZoom; bool zoomed = Mathf.Abs(camZoom - 1) > .002f;   // v0.20 技能镜头推近（用上一帧的值）
+            if (zoomed) Ui.ZoomBegin(lastHeroFeetX, GroundY - 100, camZoom);
             Backdrop(region, district, deep);
             TransitionUnder();
 
@@ -59,7 +60,7 @@ namespace ThreadZero
             float heroWalkPhase = combat.Movement.HeroTravel / 24f;
             DollPose pose = animationState.Pose(down);
             float stride = heroWalking ? Mathf.Abs(Mathf.Sin(heroWalkPhase)) * 7 : 0;
-            float heroFeetX = combat.Movement.HeroScreenX;
+            float heroFeetX = combat.Movement.HeroScreenX; lastHeroFeetX = heroFeetX;
             // 登场：转场后从地面检修舱口爬上来（先落到地面以下，再弹起落地）。
             float entry = combat.EntryLeft > 0 ? 1 - combat.EntryLeft / CombatSession.EntryTime : 1;
             float rise = entry < 1 ? (1 - EaseOutBack(Mathf.Clamp01(entry / .75f))) * 210 : 0;
@@ -93,9 +94,14 @@ namespace ThreadZero
                 LayeredRigView.Anim rigAnim = LayeredRigView.Anim.Idle; float rigT = clock / 1.2f;
                 if (heroWalking && !down) { rigAnim = LayeredRigView.Anim.Walk; rigT = heroWalkPhase / (2 * Mathf.PI); }
                 else if (!down && combat.DaggerActive && combat.ActiveSkill != null && combat.ActiveSkill != SkillBook.QuickCut)
-                {   // 其他武器的技能：按技能的每一段，把射击 / 重砸动作对到命中时刻
-                    rigAnim = LayeredRigView.ClassAttack(model); rigT = SkillRigT(combat.ActiveSkill, combat.DaggerAge, rigAnim);
-                    if (combat.ActiveSkill.animation == "sweep") rigAnim = LayeredRigView.Anim.Sweep;
+                {   // 其他武器的技能：有专属动作的整段播（v0.19：震地 / 贯穿突刺 / 回旋切割）；还没有的按技能每一段把普攻动作对到命中时刻
+                    LayeredRigView.Anim own = LayeredRigView.SkillAnim(combat.ActiveSkill.animation);
+                    if (own != LayeredRigView.Anim.Idle) { rigAnim = own; rigT = Mathf.Clamp01(combat.DaggerAge / combat.ActiveSkill.duration); }
+                    else
+                    {
+                        rigAnim = LayeredRigView.ClassAttack(model); rigT = SkillRigT(combat.ActiveSkill, combat.DaggerAge, rigAnim);
+                        if (combat.ActiveSkill.animation == "sweep") rigAnim = LayeredRigView.Anim.Sweep;
+                    }
                 }
                 else if (!down && combat.DaggerActive) { rigAnim = LayeredRigView.DaggerAnim(combat.DaggerCombo); rigT = LayeredRigView.DaggerT(combat.DaggerAge, combat.DaggerCombo); }
                 else if (!down && pose.attackProgress > 0) { rigAnim = LayeredRigView.ClassAttack(model); rigT = pose.attackProgress; }
@@ -113,6 +119,10 @@ namespace ThreadZero
                         EnemyFx.Burst(clock, LayeredRigView.Muzzle.x + worldX, LayeredRigView.Muzzle.y, new Color(1, .62f, .25f), .9f);   // 吊钩打中：火星
                     if (rigAnim == LayeredRigView.Anim.Smash && prevT < .42f && rigT >= .42f)
                         WeaponFx.Slam(clock, new Vector2(LayeredRigView.Muzzle.x, GroundY));
+                    SkillDef act = combat.DaggerActive ? combat.ActiveSkill : null;   // 技能专属动作：命中帧特效、顿帧、震屏，蓄能 / 排气这类按动作进度触发的效果
+                    if (act != null && (LayeredRigView.SkillAnim(act.animation) == rigAnim || (act == SkillBook.QuickCut && rigAnim == LayeredRigView.Anim.Combo)))
+                        SkillFrameFx(rigAnim, act, prevT, rigT, target, targetCanvas, enemyMid);
+                    else if (act == null && LayeredRigView.SkillCharge > .01f) LayeredRigView.SkillCharge = 0;
                     lastRigAnim = rigAnim; lastRigT = rigT;
                 }
             }
@@ -153,6 +163,18 @@ namespace ThreadZero
                 HudBars.Hero(heroFeetX, GroundY + rise - 224, hp01, HudBars.Ghost(-1, hp01, clock), combat.SkillCharge, chargeMax,
                     skill != null ? combat.SkillReadiness : 0, combat.health, stats.health, clock);
                 SkillCallout(heroFeetX, GroundY + rise - 262);
+                if (combat.JamLeft > 0)
+                {   // 第三章首领的断讯脉冲：头顶挂一个闪烁的标签，提醒现在出手变慢了
+                    float a = .65f + .35f * Mathf.Abs(Mathf.Sin(clock * 9));
+                    Ui.Fill(heroFeetX - 80, GroundY + rise - 300, 160, 26, Ui.Alpha(Ui.Ink, .85f * a));
+                    Ui.Text(heroFeetX - 80, GroundY + rise - 300, 160, 26, "断讯 · 出手变慢 " + combat.JamLeft.ToString("F1"), 13, Ui.Alpha(Ui.Orange, a), TextAnchor.MiddleCenter, true);
+                }
+                if (combat.MirrorLeft > 0)
+                {   // 第四章首领的镜面反射：打它会反伤
+                    float a = .65f + .35f * Mathf.Abs(Mathf.Sin(clock * 7));
+                    Ui.Fill(heroFeetX - 80, GroundY + rise - 330, 160, 26, Ui.Alpha(Ui.Ink, .85f * a));
+                    Ui.Text(heroFeetX - 80, GroundY + rise - 330, 160, 26, "镜面 · 打它会反伤 " + combat.MirrorLeft.ToString("F1"), 13, Ui.Alpha(new Color(.75f, .95f, 1f), a), TextAnchor.MiddleCenter, true);
+                }
             }
 
             if (!layered && pose.projectile > 0 && target != null)
@@ -175,8 +197,8 @@ namespace ThreadZero
             EnemyFx.Draw(clock, worldX);
             ModuleEffects(heroFeetX, enemyMid, moving);
             DropEffect(heroFeetX);
-            if (pixel) { Ui.EndClip(); EndPixel(); Ui.BeginClip(StageX, StageY, StageW, StageH, 0); }   // 伤害数字不进像素画布，保持清楚
             DrawFloaters(heroFeetX);
+            if (zoomed) Ui.ZoomEnd();
             Ui.EndClip();
 
             // 首领：屏幕上方长血条。其余信息在纯净模式只留四角细字，终端滑出时看完整界面。
@@ -210,38 +232,6 @@ namespace ThreadZero
                 GUI.matrix = m0;
             }
         }
-        // ---------- 像素试验（F7）：战斗画面先画到 1/3 或 1/4 分辨率的小画布，再按最近邻放大回全屏 ----------
-        // 背景、角色、敌人、特效都落在同一套像素格上；界面和伤害数字照常高清。
-        private int pixelScale; private bool pixelFlip;
-        private RenderTexture pixelRT, pixelPrev;
-        private Vector2 pixelScreen; private Matrix4x4 pixelMatrix;
-        private void BeginPixel()
-        {
-            int w = Mathf.Max(64, Screen.width / pixelScale), h = Mathf.Max(36, Screen.height / pixelScale);
-            if (pixelRT == null || pixelRT.width != w || pixelRT.height != h)
-            {
-                if (pixelRT != null) pixelRT.Release();
-                pixelRT = new RenderTexture(w, h, 0, RenderTextureFormat.ARGB32) { filterMode = FilterMode.Point, useMipMap = false };
-                pixelRT.Create();
-            }
-            pixelPrev = RenderTexture.active;
-            pixelScreen = new Vector2(Screen.width, Screen.height);
-            RenderTexture.active = pixelRT;
-            GL.Clear(true, true, Color.black);
-            // 画布激活后 Screen.width/height 变成小画布的尺寸、坐标 1:1 对到画布像素 → 只画到了左上角一块（上一版的 bug）。
-            // 这里把整个画面按比例缩进小画布：IMGUI 走 GUI.matrix，角色骨骼（GL）走 LayeredRigView.PixelTarget。
-            pixelMatrix = GUI.matrix;
-            GUI.matrix = Matrix4x4.Scale(new Vector3(w / pixelScreen.x, h / pixelScreen.y, 1)) * GUI.matrix;
-            LayeredRigView.PixelTarget = new Vector2(w, h);   // 骨骼坐标已经经过 GUI.matrix 缩进画布，投影按画布尺寸铺
-        }
-        private void EndPixel()
-        {
-            GUI.matrix = pixelMatrix; LayeredRigView.PixelTarget = Vector2.zero;
-            RenderTexture.active = pixelPrev;
-            Matrix4x4 m = GUI.matrix; GUI.matrix = Matrix4x4.identity;
-            GUI.DrawTextureWithTexCoords(new Rect(0, 0, Screen.width, Screen.height), pixelRT, pixelFlip ? new Rect(0, 1, 1, -1) : new Rect(0, 0, 1, 1), false);
-            GUI.matrix = m;
-        }
         private float HudEase { get { float h = hudShow; return h < .5f ? 4 * h * h * h : 1 - Mathf.Pow(-2 * h + 2, 3) / 2; } }
 
         // 一只活怪：影子、本体（走路/出手姿态）、头顶小血条。
@@ -252,9 +242,10 @@ namespace ThreadZero
             float feetY = GroundY + 2 + (e.depth - .5f) * 18;
             bool floating = StageArt.GaitOf(e) == StageArt.Gait.Flying;
             if (floating) feetY += Mathf.Sin(clock * 2 + e.id) * 5 - 8;
+            feetY -= PopLift(e); x += ZapJitter(e);   // v0.20 被震起 / 被电到
             Ui.Fill(x - e.canvas * .26f, GroundY - 3 + (e.depth - .5f) * 18, e.canvas * .52f, 5, Ui.Alpha(Ui.Ink, .16f));
             float recoil = e.hitFlash > 0 ? e.hitFlash / .3f * 6 : 0;
-            Color tint = e.hitFlash > 0 ? new Color(1, .74f, .68f) : e.elite ? new Color(1, .86f, .8f) : deep ? new Color(.84f, .88f, 1) : Color.white;
+            Color tint = e.hitFlash > 0 ? (e.boss ? new Color(1, .88f, .84f) : new Color(1, .74f, .68f)) : e.elite ? new Color(1, .86f, .8f) : deep ? new Color(.84f, .88f, 1) : Color.white;
             if (e.boss && e.phase >= 2) tint = Color.Lerp(tint, new Color(1, .55f, .5f), .45f + .15f * Mathf.Sin(clock * 8));
             if (e.hasteLeft > 0) tint = Color.Lerp(tint, new Color(.85f, .7f, 1), .35f);
             EnemyPoseT pose = EnemyPose(e);
@@ -329,7 +320,7 @@ namespace ThreadZero
         private void StageTransitionOverlay()
         {
             StageTag();
-            AscensionBanner();
+            AscensionBanner(); AscensionStageBanner(); ShardTicker();
             AnomalyOffer();
             if (transitionLeft <= 0) return;
             float p = TransitionP;
@@ -510,20 +501,26 @@ namespace ThreadZero
             Ui.Fill(m, 900 - m - t, L, t, ink); Ui.Fill(m, 900 - m - L, t, L, ink);
             Ui.Fill(1600 - m - L, 900 - m - t, L, t, ink); Ui.Fill(1600 - m - t, 900 - m - L, t, L, ink);
             int region = model.state.region, code = CurrentCode;
-            Ui.Text(40, 30, 200, 56, CodeLabel(code), 48, ink, TextAnchor.MiddleLeft, true, true);
+            Ui.ShadowText(40, 30, 200, 56, CodeLabel(code), 48, ink, TextAnchor.MiddleLeft, true, true);
             StageKind kind = KindOf(code);
             string kindText = kind == StageKind.Boss ? " · 首领" : kind == StageKind.Elite ? " · 精英" : "";
-            Ui.Text(42, 84, 460, 22, NameLabel(code) + kindText + (model.InEcho ? " · 最高 " + model.state.echoBest : ""), 15, ink, TextAnchor.MiddleLeft, true);
+            Ui.ShadowText(42, 84, 460, 22, NameLabel(code) + kindText + (model.InEcho ? " · 最高 " + model.state.echoBest : ""), 15, ink, TextAnchor.MiddleLeft, true);
             if (!model.InEcho) for (int i = 0; i < Chapters.StagesPerChapter; i++)
             {
                 int r = Chapters.FirstRegion(model.Chapter) + i;
                 bool now = r == region, done = r < model.state.unlockedRegion;
                 float size = now ? 10 : 8, x = 44 + i * 16 + (now ? -1 : 0);
+                Ui.Fill(x - 1, 116 - size / 2 - 1, size + 2, size + 2, new Color(.02f, .02f, .03f, .35f * a));   // 深色衬底：亮背景上也看得见
                 Ui.Fill(x, 116 - size / 2, size, size, now ? Ui.Alpha(Ui.Orange, a) : done ? ink : Ui.Alpha(Ui.Rule, a));
             }
+            if (model.Farming)
+            {   // 墙前回刷：战力涨够了 / 刷够次数就自动回去
+                int gain = Mathf.RoundToInt((model.Power() / Mathf.Max(1, model.state.retryPower) - 1) * 100), left = Mathf.Max(1, Balance.RetryFarms - model.state.retryFarms);
+                Ui.ShadowText(44 + Chapters.StagesPerChapter * 16 + 8, 106, 420, 20, "回刷补给 · 战力 " + (gain >= 0 ? "+" : "") + gain + "%（+" + Mathf.RoundToInt(Balance.RetryGain * 100) + "% 或再刷 " + left + " 次后再挑战）", 13, Ui.Alpha(Ui.Orange, a), TextAnchor.MiddleLeft, true);
+            }
             if (combat.BossEnemy == null)
-                Ui.Text(500, 30, 600, 24, "—  第 " + combat.wave + " / " + combat.WaveCount + " 波 · 剩余 " + combat.Alive + "  —", 14, mute, TextAnchor.MiddleCenter, true);
-            Ui.Text(1200, 900 - 52, 360, 20, "鼠标移到边缘 · 呼出终端", 12, Ui.Alpha(Ui.Mute, .6f * a), TextAnchor.MiddleRight);
+                Ui.ShadowText(500, 30, 600, 24, "—  第 " + combat.wave + " / " + combat.WaveCount + " 波 · 剩余 " + combat.Alive + "  —", 14, mute, TextAnchor.MiddleCenter, true);
+            Ui.ShadowText(1200, 900 - 52, 360, 20, "鼠标移到边缘 · 呼出终端", 12, Ui.Alpha(Ui.Mute, .6f * a), TextAnchor.MiddleRight);
             Ui.Fill(0, 0, 1600, 2, Ui.Alpha(Ui.Ink, .18f * a)); Ui.Fill(0, 898, 1600, 2, Ui.Alpha(Ui.Ink, .18f * a));
         }
 
@@ -537,7 +534,11 @@ namespace ThreadZero
             Ui.Text(250, 22, 240, 18, model.InEcho ? "ECHO / 回声层" : "CHAPTER " + model.Chapter + " / 第" + "一二三四五"[model.Chapter - 1] + "章", 13, Ui.Mute, TextAnchor.MiddleLeft, true, true);
             // 机械飞升进度：5 格，一件义体一格
             Ui.Text(420, 20, 44, 22, "飞升", 13, model.state.implants.Count > 0 ? Ui.Orange : Ui.Mute, TextAnchor.MiddleLeft, true);
-            for (int i = 0; i < Catalog.AscensionTotal; i++) Ui.Fill(456 + i * 20, 24, 16, 14, i < model.state.implants.Count ? Ui.Orange : Ui.Rule);
+            for (int i = 0; i < Catalog.AscensionTotal; i++)
+            {   // v0.20 一格 = 一件义体，按等级从下往上填（10 级填满）
+                int lv = model.ImplantLevel(i); Ui.Fill(456 + i * 20, 24, 16, 14, Ui.Rule);
+                if (lv > 0) { float hgt = 14 * Mathf.Max(.25f, lv / (float)Catalog.ImplantMaxLevel); Ui.Fill(456 + i * 20, 38 - hgt, 16, hgt, Ui.Orange); }
+            }
             Ui.Text(250, 42, nameWidth + 10, 40, name, 30, Ui.Ink, TextAnchor.MiddleLeft, true);
             float boxX = 250 + nameWidth + 16;
             Ui.Fill(boxX, 44, 36, 36, hover ? Ui.Ink : Ui.Ground); Ui.Frame(boxX, 44, 36, 36, 2, Ui.Ink);
@@ -880,6 +881,40 @@ namespace ThreadZero
             Ui.Text(x + 40, y + 120, w - 80, 48, implantShown.desc + "  身上又多了一根「线」。", 17, Ui.Alpha(Ui.MuteOnInk, a), TextAnchor.MiddleLeft, false, false, true);
         }
 
+        // ---------- v0.20 拿到织网碎片（回声层每过一层、重复打主线首领）：角色头顶冒一个「+N 织网碎片」 ----------
+        private int shardsSeen = -1, shardGain; private float shardGainAt = -10;
+        private void ShardTicker()
+        {
+            if (shardsSeen < 0 || model.state.shards < shardsSeen) shardsSeen = model.state.shards;   // 第一次 / 花掉了：只记下来，不冒字
+            if (model.state.shards > shardsSeen) { shardGain = model.state.shards - shardsSeen; shardGainAt = clock; shardsSeen = model.state.shards; }
+            float age = clock - shardGainAt; if (age > 1.6f || Event.current.type != EventType.Repaint) return;
+            float a = age < .15f ? age / .15f : 1 - Mathf.Clamp01((age - 1.1f) / .5f);
+            float cx = combat.Movement.HeroScreenX, y = GroundY - 372 - age * 26;   // 深色底条 + 橙色左边线（和关卡条同一套样子），亮背景上也看得清
+            Ui.Fill(cx - 86, y, 172, 28, Ui.Alpha(Ui.Ink, .82f * a)); Ui.Fill(cx - 86, y, 4, 28, Ui.Alpha(Ui.Orange, a));
+            Ui.Text(cx - 82, y + 1, 168, 26, "+" + shardGain + " 织网碎片", 16, Ui.Alpha(Ui.Orange, a), TextAnchor.MiddleCenter, true);
+        }
+
+        // ---------- v0.20 机械飞升跨过一个阶段（30 / 60 / 90 / 100%）：横幅停 6 秒，飞升完成停 9 秒 ----------
+        private int stageShown; private float stageAt = -10; private bool stagePending;
+        private void AscensionStageBanner()
+        {
+            if (stageShown <= 0) return;
+            if (stagePending) { stagePending = false; stageAt = clock + .35f; }   // 在整备页升级跨过阶段：回到行动页后再放
+            bool done = stageShown >= Catalog.AscensionStageAt.Length;
+            float t = clock - stageAt, life = done ? 9 : 6; if (t < 0 || t > life) return;
+            float a = t < .3f ? t / .3f : t > life - .5f ? (life - t) / .5f : 1, open = Mathf.SmoothStep(0, 1, Mathf.Clamp01(t / .35f));
+            float w = done ? 900 : 780, h = (done ? 250 : 200) * open, x = StageW / 2 - w / 2, y = 250 - h / 2 + 95;
+            Ui.Fill(x, y, w, h, Ui.Alpha(Ui.Ink, .95f * a)); Ui.Fill(x, y, w, 4, Ui.Alpha(Ui.Orange, a)); Ui.Fill(x, y + h - 4, w, 4, Ui.Alpha(Ui.Orange, a));
+            if (open < .95f) return;
+            Ui.Text(x + 40, y + 20, w - 80, 26, "机械飞升 " + (model.Ascension * 100).ToString("0") + "%", 18, Ui.Alpha(Ui.Orange, a), TextAnchor.MiddleLeft, true);
+            for (int i = 0; i < Catalog.AscensionStageAt.Length; i++) Ui.Fill(x + w - 40 - (Catalog.AscensionStageAt.Length - i) * 44, y + 26, 36, 14, Ui.Alpha(i < stageShown ? Ui.Orange : Ui.Steel, a));
+            Ui.Text(x + 40, y + 58, w - 80, 60, Catalog.AscensionStageNames[stageShown - 1], done ? 46 : 40, Ui.Alpha(Ui.Panel, a), TextAnchor.MiddleLeft, true);
+            Ui.Text(x + 40, y + 126, w - 80, done ? 90 : 56, Catalog.AscensionStageLines[stageShown - 1], 18, Ui.Alpha(Ui.MuteOnInk, a), TextAnchor.UpperLeft, false, false, true);
+            if (done) Ui.Text(x + 40, y + h - 46, w - 80, 26, "获得称号「零号」", 16, Ui.Alpha(Ui.Orange, a), TextAnchor.MiddleLeft, true);
+        }
+        /// 测试用（桥接 call TestStageBanner 1）：直接放第几阶段的横幅。
+        public void TestStageBanner(int stage) { stageShown = Mathf.Clamp(stage, 1, Catalog.AscensionStageAt.Length); stageAt = clock; }
+
         // ---------- 武器技能：动作对时、技能名提示、技能特效 ----------
         private string calloutName = ""; private float calloutAt = -10;
         /// 技能的第 i 段命中时刻对到动作的「开火 / 落锤」帧；一段动作约 0.56 秒（射击）/ 0.7 秒（重砸）。
@@ -891,7 +926,116 @@ namespace ThreadZero
             for (int i = 1; i < s.hitTimes.Length; i++) { float st = s.hitTimes[i] - impact * seg; if (age >= st) start = st; }
             return Mathf.Clamp01((age - start) / seg);
         }
-        private void OnSkillCast(SkillDef s) { if (s != SkillBook.QuickCut) { calloutName = s.displayName; calloutAt = clock; } }
+        /// v0.20 技能专属动作的画面节点（只在 Repaint 调）：每一段命中那一帧的特效 + 顿帧 + 震屏；以及蓄能、排气这类按动作进度出现的效果。
+        private void SkillFrameFx(LayeredRigView.Anim anim, SkillDef act, float prevT, float t, Enemy target, float targetCanvas, float enemyMid)
+        {
+            Vector2 muzzle = LayeredRigView.Muzzle, aim = LayeredRigView.MuzzleDir, feet = new Vector2(LayeredRigView.RootPos.x, GroundY);
+            Vector2 aimPt = new Vector2(liveEnemyX - targetCanvas * .2f, enemyMid + UnityEngine.Random.Range(-10f, 10f));
+            bool Cross(float at) { return prevT < at && t >= at; }
+            if (LayeredRigView.SkillCharge > .01f) WeaponFx.DrawCharge(clock, muzzle, aim, LayeredRigView.SkillCharge, ChargeColor(anim));
+            HookTrail(anim == LayeredRigView.Anim.HookCombo);
+            moveEvents.Clear(); LayeredRigView.MoveEvents(anim, prevT, t, moveEvents);
+            foreach (string ev in moveEvents) MoveEvent(ev, muzzle, aim, feet, aimPt, target, act);
+            if (act.hitTimes == null || target == null) return;
+            int n = act.hitTimes.Length;
+            for (int i = 0; i < n; i++)
+            {
+                if (!Cross(act.hitTimes[i] / act.duration)) continue;
+                bool last = i == n - 1;
+                switch (anim)
+                {
+                    case LayeredRigView.Anim.ChainArc:   // 第一枪、收尾一枪是大光束；中间补的是普通电弧
+                        if (i == 1) { WeaponFx.Fire("coil", clock, muzzle, aim, aimPt); Impact.Stop(.04f); Impact.Shake(clock, 3, .18f); }
+                        else { WeaponFx.CoilBlast(clock, muzzle, aim, aimPt); Impact.Stop(last ? .09f : .06f); Impact.Shake(clock, last ? 8 : 5, .3f); }
+                        break;
+                    case LayeredRigView.Anim.PointBlank:  // 三枪：上轰 / 空中下轰 / 落地重轰
+                        WeaponFx.Fire(LayeredRigView.Kind, clock, muzzle, aim, aimPt);
+                        Impact.Stop(last ? .09f : .05f); Impact.Shake(clock, last ? 8 : 5, .26f);
+                        if (i == 0 && target != null) Pop(target, 30);
+                        break;
+                    case LayeredRigView.Anim.NailBurst:   // 每钉一下小顿
+                        WeaponFx.Fire(LayeredRigView.Kind, clock, muzzle, aim, aimPt);
+                        Impact.Stop(.02f); Impact.Shake(clock, i >= 4 ? 3 : 2, .12f);
+                        break;
+                    case LayeredRigView.Anim.Overpressure:   // 爆炸在 OnSkillHit（blast）里画；这里只加重震屏
+                    case LayeredRigView.Anim.FlareBolt:
+                        Impact.Stop(i == 0 ? .08f : .05f); Impact.Shake(clock, i == 0 ? 9 : 5, .35f, true);
+                        break;
+                    case LayeredRigView.Anim.Thrust:      // 两次冲刺各拉一道穿刺光，最后矛杆砸地
+                        if (i < 2) { float dir = i == 0 ? 1 : -1; WeaponFx.Pierce(clock, new Vector2(muzzle.x - dir * 220, muzzle.y), new Vector2(muzzle.x + dir * 30, muzzle.y)); Impact.Stop(.06f); Impact.Shake(clock, 5, .22f); }
+                        else { WeaponFx.Slam(clock, new Vector2(muzzle.x, GroundY)); Impact.Stop(.07f); Impact.Shake(clock, 7, .3f, true); }
+                        break;
+                    case LayeredRigView.Anim.Whirl:       // 空中五切火星，最后劈地
+                        if (!last) { EnemyFx.Burst(clock, muzzle.x + worldX, muzzle.y, new Color(1, .7f, .3f), .8f); Impact.Stop(.02f); Impact.Shake(clock, 2, .1f); }
+                        else { WeaponFx.Slam(clock, new Vector2(muzzle.x, GroundY)); Impact.Stop(.08f); Impact.Shake(clock, 8, .32f, true); }
+                        break;
+                    case LayeredRigView.Anim.Combo:       // 迅切连击：火星在动作里画，这里只给顿帧 / 震屏
+                        Impact.Stop(last ? .07f : .03f); Impact.Shake(clock, last ? 6 : 2, last ? .26f : .12f, last);
+                        if (last && target != null) Pop(target, 28);
+                        break;
+                    case LayeredRigView.Anim.HookCombo:   // 钩中 / 横扫 / 下砸
+                        if (i == 2) { WeaponFx.Slam(clock, new Vector2(aimPt.x, GroundY)); Impact.Stop(.08f); Impact.Shake(clock, 8, .32f, true); }
+                        else { Impact.Stop(i == 0 ? .05f : .07f); Impact.Shake(clock, i == 0 ? 4 : 6, .24f); }
+                        break;
+                    case LayeredRigView.Anim.Quake:      // 砸地 → 撩锤掀地
+                        if (i == 0) { WeaponFx.QuakeHit(clock, new Vector2(muzzle.x, GroundY)); Impact.Stop(.11f); Impact.Shake(clock, 11, .42f, true); }
+                        else { WeaponFx.Upheave(clock, new Vector2(aimPt.x, GroundY)); Impact.Stop(.08f); Impact.Shake(clock, 7, .3f, true); }
+                        break;
+                    default:
+                        if (LayeredRigView.IsGun(LayeredRigView.Kind)) WeaponFx.Fire(LayeredRigView.Kind, clock, muzzle, aim, aimPt);
+                        else EnemyFx.Burst(clock, muzzle.x + worldX, muzzle.y, new Color(1, .62f, .25f), .9f);
+                        break;
+                }
+            }
+        }
+        private readonly List<string> moveEvents = new List<string>();
+        private readonly List<Vector2> hookTrail = new List<Vector2>();
+        /// 吊钩连招：吊钩最近几帧的位置连成一道渐隐的弧光，套索 / 横扫才看得出在转。
+        private void HookTrail(bool on)
+        {
+            if (!on) { hookTrail.Clear(); return; }
+            hookTrail.Add(LayeredRigView.Muzzle); if (hookTrail.Count > 9) hookTrail.RemoveAt(0);
+            for (int i = 1; i < hookTrail.Count; i++)
+            {
+                float k = i / (float)hookTrail.Count;
+                Ui.Stroke(hookTrail[i - 1].x, hookTrail[i - 1].y, hookTrail[i].x, hookTrail[i].y, 2 + 6 * k, new Color(1, .55f, .2f, .55f * k));
+            }
+        }
+        private float lastHeroFeetX;
+        private static Color ChargeColor(LayeredRigView.Anim a)
+        {
+            switch (a)
+            {
+                case LayeredRigView.Anim.Overpressure: return new Color(1, .55f, .2f);
+                case LayeredRigView.Anim.FlareBolt: return new Color(1, .35f, .3f);
+                default: return new Color(.45f, 1, .92f);
+            }
+        }
+        /// 动作表里的 !事件 → 画面效果。
+        private void MoveEvent(string ev, Vector2 muzzle, Vector2 aim, Vector2 feet, Vector2 aimPt, Enemy target, SkillDef act)
+        {
+            switch (ev)
+            {
+                case "fire":    // 抛射类：开火比命中早一点，弹道飞过去刚好在命中那一下落地
+                    if (act.animation == "flarebolt") WeaponFx.Lob(clock, muzzle, new Vector2(aimPt.x, GroundY - 30), .18f);
+                    else WeaponFx.Fire(LayeredRigView.Kind, clock, muzzle, aim, aimPt);
+                    Impact.Shake(clock, 6, .25f); break;
+                case "fire2": WeaponFx.Bolt(clock, muzzle, aimPt, new Color(1, .45f, .3f)); Impact.Shake(clock, 3, .15f); break;
+                case "steam": WeaponFx.SteamPuff(clock, muzzle); break;
+                case "land": WeaponFx.Land(clock, feet); break;
+                case "skid": WeaponFx.Skid(clock, feet); break;
+                case "residue": WeaponFx.Residue(clock, muzzle, aim); break;
+                case "casing": WeaponFx.Casing(clock, muzzle - aim * 30); break;
+                case "twinkle": WeaponFx.Twinkle(clock, muzzle); break;
+                case "thud": Impact.Shake(clock, 4, .2f, true); WeaponFx.Land(clock, feet); break;
+            }
+        }
+        /// 被重击打中的怪弹一下 / 被电到抖一下（只是画面，不改位置）。首领、重型弹得低。
+        private void Pop(Enemy e, float amp) { if (e == null) return; e.popAt = clock; e.popAmp = e.boss ? amp * .25f : e.Heavy ? amp * .5f : amp; }
+        private void Zap(Enemy e, float delay) { if (e != null) e.zapAt = clock + delay; }
+        private float PopLift(Enemy e) { float k = (clock - e.popAt) / .45f; return k < 0 || k >= 1 ? 0 : e.popAmp * 4 * k * (1 - k); }
+        private float ZapJitter(Enemy e) { float k = (clock - e.zapAt) / .32f; return k < 0 || k >= 1 ? 0 : Mathf.Sin(clock * 120 + e.id) * 4 * (1 - k); }
+        private void OnSkillCast(SkillDef s) { hookTrail.Clear(); if (s != SkillBook.QuickCut) { calloutName = s.displayName; calloutAt = clock; } }
         private void SkillCallout(float x, float y)
         {
             float t = clock - calloutAt; if (t < 0 || t > 1.1f || calloutName.Length == 0) return;
@@ -901,33 +1045,45 @@ namespace ThreadZero
             Ui.Fill(x - w / 2, y - h / 2, 5, h, Ui.Alpha(Ui.Orange, fade));
             if (pop > .7f) Ui.Text(x - w / 2 + 6, y - 17, w - 6, 34, calloutName, 22, Ui.Alpha(Ui.Orange, fade), TextAnchor.MiddleCenter, true);
         }
+        /// v0.20 线圈普攻跳电：一小段拱起来的电弧从第一只怪连到第二只，第二只抖一下。
+        private void CoilJumpFx(Enemy a, Enemy b)
+        {
+            var pts = new List<Vector2> { new Vector2(a.x - worldX, GroundY + 2 - a.canvas * .5f), new Vector2(b.x - worldX + 8, GroundY + 2 - b.canvas * .38f) };
+            WeaponFx.Chain(clock, pts); Zap(b, .04f);
+        }
         private void OnSkillHit(SkillDef s, int hit, Enemy target, List<Enemy> extra)
         {
             float Mid(Enemy e) { return GroundY + 2 - e.canvas * .45f; }
             switch (s.fx)
             {
-                case "chain":   // 电弧在怪之间一跳一跳
+                case "chain":   // v0.20 电弧从被光束打中的那只开始，在怪之间一跳一跳（每跳晚 0.05 秒），被电到的抖一下
                 {
-                    Enemy from = target;
-                    foreach (Enemy e in extra)
+                    var pts = new List<Vector2> { new Vector2(target.x - worldX, Mid(target)) };
+                    Zap(target, 0);
+                    for (int i = 0; i < extra.Count; i++)   // 落点上下错开，怪挤在一起时也看得出是一跳一跳
                     {
-                        Vector2 a = new Vector2(from.x - worldX, Mid(from)), b = new Vector2(e.x - worldX, Mid(e));
-                        WeaponFx.Fire("coil", clock, a, (b - a).normalized, b); from = e;
+                        Enemy e = extra[i]; float y = GroundY + 2 - e.canvas * (i % 2 == 0 ? .62f : .32f);
+                        pts.Add(new Vector2(e.x - worldX + (i % 2 == 0 ? 10 : -10), y)); Zap(e, .05f + i * .05f);
                     }
+                    WeaponFx.Chain(clock, pts);
                     break;
                 }
+                case "flare":   // 信号爆矢：目标处红色信号弹炸开，周围的怪各闪一下
+                    WeaponFx.FlareBurst(clock, new Vector2(target.x - worldX, Mid(target)), hit == 0 ? 1.4f : 1f);
+                    foreach (Enemy e in extra) EnemyFx.Burst(clock + .03f, e.x, Mid(e), new Color(1, .45f, .3f), .8f);
+                    break;
                 case "blast":   // 过压弹：目标处一团大爆炸
                     EnemyFx.Burst(clock, target.x, Mid(target), new Color(1, .55f, .2f), 2.6f);
                     WeaponFx.Slam(clock, new Vector2(target.x - worldX, GroundY));
                     break;
                 case "sweep":   // 吊钩横扫：链子甩过的一道弧光（不是锤子的砸地冲击波），扫到的怪各闪一下
-                    EnemyFx.Sweep(clock - .15f, combat.Movement.HeroX + 30, GroundY - 70, 300);
+                    if (hit == 1) EnemyFx.Sweep(clock - .15f, combat.Movement.HeroX + 30, GroundY - 70, 300);   // v0.20 只有横扫那一下画弧光
                     EnemyFx.Burst(clock, target.x, Mid(target), new Color(1, .62f, .25f), 1.4f);
                     foreach (Enemy e in extra) EnemyFx.Burst(clock + .03f, e.x, Mid(e), new Color(1, .62f, .25f), .9f);
                     break;
                 case "quake":   // 震地：冲击波一路传过去
                     EnemyFx.Shock(clock, combat.Movement.HeroX + 120, GroundY, true);
-                    foreach (Enemy e in extra) EnemyFx.Shock(clock + .04f, e.x, GroundY, false);
+                    Pop(target, hit == 0 ? 34 : 64); foreach (Enemy e in extra) Pop(e, hit == 0 ? 26 : 50);   // 被震起来；第二下撩锤掀得更高
                     break;
                 case "burst":   // 贴脸轰击：目标和周围各炸一下
                     EnemyFx.Burst(clock, target.x, Mid(target), new Color(1, .8f, .45f), 1.5f);
@@ -1023,10 +1179,11 @@ namespace ThreadZero
                 case EnemyActKind.ShotHit: EnemyFx.Burst(clock, act.x, heroY, e.move == EnemyMove.Beacon ? EnemyFx.Beacon : EnemyFx.Bolt); break;
                 case EnemyActKind.Flood:
                     if (e.skin == 1) EnemyFx.Crate(clock, act.x, GroundY);
+                    else if (e.skin >= 2) { EnemyFx.Pulse(clock, e.x, mid); EnemyFx.Burst(clock, act.x, heroY, EnemyFx.Beacon, 1.6f); EnemyFx.Shock(clock, act.x, GroundY, true); }   // 断讯脉冲
                     else { EnemyFx.Flood(clock, e.x, act.x, GroundY); EnemyFx.Shock(clock, act.x, GroundY, true); }
                     break;
                 case EnemyActKind.Windup:
-                    if (e.boss && e.special && e.skin == 1) EnemyFx.Target(clock, combat.Movement.HeroX, GroundY, e.windDur);
+                    if (e.boss && e.special && e.skin >= 1) EnemyFx.Target(clock, combat.Movement.HeroX, GroundY, e.windDur);
                     break;
                 case EnemyActKind.Deploy: EnemyFx.Burst(clock, e.x - 40, mid + 40, EnemyFx.Bolt, .9f); break;
                 case EnemyActKind.Pulse: EnemyFx.Pulse(clock, e.x, mid); break;
@@ -1044,9 +1201,9 @@ namespace ThreadZero
                     float size = f.critical ? 42 : 28, x = f.x - worldX - 30 + f.drift, y = GroundY - 230 - rise - f.lift;
                     string value = f.value.ToString("F0");
                     if (f.critical) { Ui.Fill(x - 56, y + 20, 48, 24, Ui.Alpha(Ui.Orange, alpha)); Ui.Text(x - 56, y + 20, 48, 24, "暴击", 14, Ui.Alpha(Ui.OnAccent, alpha), TextAnchor.MiddleCenter, true); }
-                    Ui.Text(x, y, 220, 64, value, size, Ui.Alpha(Ui.Ink, alpha), TextAnchor.MiddleLeft, true, true);
+                    Ui.ShadowText(x, y, 220, 64, value, size, Ui.Alpha(Ui.Ink, alpha), TextAnchor.MiddleLeft, true, true, .7f);
                 }
-                else Ui.Text(feetX + 56 + f.drift, GroundY - 250 - rise, 160, 44, "-" + f.value.ToString("F0"), 32, Ui.Alpha(Ui.OrangeInk, alpha), TextAnchor.MiddleLeft, true, true);
+                else Ui.ShadowText(feetX + 56 + f.drift, GroundY - 250 - rise, 160, 44, "-" + f.value.ToString("F0"), 32, Ui.Alpha(Ui.OrangeInk, alpha), TextAnchor.MiddleLeft, true, true, .7f);
             }
         }
 

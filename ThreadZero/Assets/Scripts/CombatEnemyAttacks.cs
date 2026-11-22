@@ -17,6 +17,14 @@ namespace ThreadZero
         public const float CrusherPush = 90, FloodPush = 240, FloodHit = 1.5f, EnragedInterval = .65f;
         public const float CratePush = 110, CrateHit = 1.8f, DeployEvery = 6;   // 第二章：吊箱砸落、运输母机放无人机
         public const int DeployCap = 3;
+        // v0.18 第三章首领「断讯监视者」：断讯脉冲——重击（×1.3）、推开一小段，并且 4 秒内角色出手变慢（攻速 ×0.45）。
+        public const float JamTime = 4, JamRate = .45f, JamHit = 1.3f, JamPush = 60;
+        public float JamLeft { get; private set; }
+        // v0.18 第四章首领「镜面审计官」：镜面反射——5 秒内角色打它的伤害有 20% 反弹给角色（受防御减免）。
+        public const float MirrorTime = 5, MirrorRatio = .2f;
+        public float MirrorLeft { get; private set; }
+        // v0.18 第五章首领「织网母体」：织网收束——重击 ×1.6、3 秒断讯，并立刻放出 3 只织网线虫。
+        public const float WeaveHit = 1.6f, WeaveJam = 3; public const int WeaveSummon = 3;
 
         private static float WindTime(Enemy e)
         {
@@ -86,6 +94,25 @@ namespace ThreadZero
                     if (e.special)
                     {   // 闸门看守：开闸放水，把角色冲后一大段；总调度吊臂：吊箱砸在角色头上，冲击小但更痛
                         e.special = false;
+                        if (e.skin == 3)
+                        {   // 镜面反射：举起镜面，这一下不痛，但接下来 5 秒打它会反伤
+                            Act(e, EnemyActKind.Flood, Movement.HeroX);
+                            MirrorLeft = MirrorTime;
+                            return Hurt(e.attack * .8f, e.x, s);
+                        }
+                        if (e.skin >= 4)
+                        {   // 织网收束
+                            Act(e, EnemyActKind.Flood, Movement.HeroX);
+                            JamLeft = WeaveJam; Movement.Push(JamPush);
+                            for (int i = 0; i < WeaveSummon; i++) { Enemy m = Make(EnemyRole.Swarmer, false); m.summoned = true; m.health = m.maxHealth = m.health * Chapters.SummonHealth; queue.Add(m); }
+                            return Hurt(e.attack * WeaveHit, e.x, s);
+                        }
+                        if (e.skin >= 2)
+                        {
+                            Act(e, EnemyActKind.Flood, Movement.HeroX);
+                            JamLeft = JamTime; Movement.Push(JamPush);
+                            return Hurt(e.attack * JamHit, e.x, s);
+                        }
                         Act(e, EnemyActKind.Flood, Movement.HeroX);
                         Movement.Push(e.skin == 1 ? CratePush : FloodPush);
                         return Hurt(e.attack * (e.skin == 1 ? CrateHit : FloodHit), e.x, s);

@@ -63,7 +63,7 @@ namespace ThreadZero
                 Ui.Text(x + 10, y + 6, 60, 22, "0" + (i + 1), 15, Ui.MuteOnInk, TextAnchor.MiddleLeft, true, true);
                 PaperDollView.DrawEquipmentIcon(b, Ui.R(x + (cardW - 136) / 2, y + 28, 136, 136), !has);
                 Ui.Text(x, y + 170, cardW, 26, b.name, 16, has ? Ui.Panel : Ui.MuteOnInk, TextAnchor.MiddleCenter, true);
-                Ui.Text(x, y + 198, cardW, 22, has ? "已收藏" : "未收藏 · " + Catalog.SourceStages(b.id), 13, has ? Ui.MuteOnInk : Ui.Grey, TextAnchor.MiddleCenter);
+                Ui.Text(x, y + 198, cardW, 22, has ? "已收藏" : "未收藏 · " + Catalog.SourceShort(b.id), 13, has ? Ui.MuteOnInk : Ui.Grey, TextAnchor.MiddleCenter);
                 if (model.Appearance(b.slot).id == b.id) { Ui.Fill(x + cardW - 74, y, 74, 24, Ui.Panel); Ui.Text(x + cardW - 74, y, 74, 24, "当前外观", 12, Ui.Ink, TextAnchor.MiddleCenter, true); }
                 if (model.state.recoveryTarget == b.id) { Ui.Fill(x, y + cardH - 24, cardW, 24, Ui.Orange); Ui.Text(x, y + cardH - 24, cardW, 24, "回收目标", 12, Ui.OnAccent, TextAnchor.MiddleCenter, true); }
                 if (Ui.Click(x, y, cardW, cardH)) selectedLook = b.id;
@@ -84,9 +84,15 @@ namespace ThreadZero
             float effectWidth = Ui.Width(effectName, 14, true) + 28;
             Ui.Frame(612 + regionWidth + 10, 488, effectWidth, 32, 2, Ui.Ink);
             Ui.Text(612 + regionWidth + 10, 488, effectWidth, 32, effectName, 14, Ui.Ink, TextAnchor.MiddleCenter, true);
+            if (chosen.slot == Slot.Weapon)
+            {   // v0.20 武器标群伤 / 单体（和整备页一致），挑回收目标时也看得到
+                string reach = Catalog.IsGroupWeapon(chosen.id) ? "群伤" : "单体"; float rx = 612 + regionWidth + 10 + effectWidth + 10, rw = Ui.Width(reach, 14, true) + 28;
+                Ui.Frame(rx, 488, rw, 32, 2, Ui.Ink); Ui.Text(rx, 488, rw, 32, reach, 14, Ui.Ink, TextAnchor.MiddleCenter, true);
+            }
             Ui.Text(612, 536, 540, 56, chosen.effect == Effect.None ? "这款外观对应的装备只提供属性，没有固定模块。" : "对应装备 · " + effectText, 15, Ui.Body, TextAnchor.UpperLeft, false, false, true);
-            Ui.Text(612, 726, 540, 46, "外观只改变样子。属性和模块来自「整备」里实际穿戴的装备，分解装备不会丢失已收藏的外观。", 13, Ui.Mute, TextAnchor.UpperLeft, false, false, true);
-            if (Ui.Button(612, 792, 240, 60, !unlocked ? "尚未收藏" : wearing ? "当前外观" : "应用外观", 1, unlocked && !wearing, 19))
+            Ui.Text(612, 726, 540, 46, "外观只改变样子。属性和模块来自「整备」里实际穿戴的装备，分解装备不会丢失已收藏的外观。武器外观只能套在同类武器上（近战 / 远程）。", 13, Ui.Mute, TextAnchor.UpperLeft, false, false, true);
+            bool fits = model.LookFits(chosen);   // v0.20 武器外观只能套在同类武器上
+            if (Ui.Button(612, 792, 240, 60, !unlocked ? "尚未收藏" : wearing ? "当前外观" : !fits ? (chosen.attackStyle == AttackStyle.Melee ? "需装备近战武器" : "需装备远程武器") : "应用外观", 1, unlocked && !wearing && fits, 19))
             { model.SetAppearance(chosen.id); Save(); Play(equipSound); Notify("已应用外观：" + chosen.name); }
             if (Ui.Button(862, 792, 180, 60, "查看产出街区", 0, true, 15)) { mapChapter = Catalog.ChapterOf(chosen.id); navigation.Open(GameModal.Map); }
 

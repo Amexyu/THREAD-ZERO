@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -20,8 +20,10 @@ namespace ThreadZero
         private readonly HashSet<string> unseen = new HashSet<string>();
         private readonly List<Floater> floaters = new List<Floater>();
         private AudioSource source;
-        private AudioClip equipSound, dropSound, rareSound;
+        private AudioClip equipSound, dropSound, rareSound, salvageSound, bossSound;   // v0.20 企划要求分解、首领出现也有各自的提示音
+        private bool bossWas;
         private bool paused, sound = true, lastSaveOk = true;
+        private float slowMo = 1;   // 测试用慢放（桥接脚本 set slowMo 0.2 录技能动作）
         private int speed = 1, slotFilter = -1, wardrobeSlot, wardrobeChapter = 1, mapChapter;
         private string selectedItem, selectedLook = "w0", toast = "", toastItem;
         private float clock, saveTimer, toastUntil, toastFrom, dropEffectUntil, dropEffectFrom;
@@ -49,7 +51,6 @@ namespace ThreadZero
             Camera.main.backgroundColor = Ui.Ground;
             // F8 切换正式存档 / 测试存档（测试进度存在另一个文件，不碰正式存档）；F9 清空测试存档重开。
             testSave = PlayerPrefs.GetInt(TestSaveKey, 0) == 1;
-            pixelScale = PlayerPrefs.GetInt("tz_pixel_scale", 0); pixelFlip = PlayerPrefs.GetInt("tz_pixel_flip", 0) == 1;
             saves = new SaveService(Application.persistentDataPath, JsonUtility.FromJson<GameState>, data => JsonUtility.ToJson(data, true), message => Debug.LogWarning(message),
                 testSave ? "thread-zero-save-test.json" : "thread-zero-save.json");
             daggerReview = DaggerReviewRequested();
@@ -64,6 +65,7 @@ namespace ThreadZero
             combat.OnFloorCleared = (floor, best) => { if (best && floor % 10 == 0 && model.state.anomalies.Count < Chapters.MaxAnomalies) OfferAnomalies(); };
             combat.OnSkillCast = OnSkillCast; combat.OnSkillHit = OnSkillHit; combat.OnAbility = OnAbilityFx;
             combat.OnChainPull = e => EnemyFx.Burst(clock, e.x, GroundY - e.canvas * .4f, new Color(1, .62f, .25f), 1.1f);   // 钩拉：被拽的怪身上闪一下
+            combat.OnCoilJump = CoilJumpFx;   // 线圈普攻：电流跳到第二只怪
             combat.OnImplant = d => { implantShown = d; implantAt = clock; implantNew = d.id; implantNewSeenAt = -1; Play(rareSound); Save(); };
             combat.OnDamage = (value, critical, x) => AddFloater(value, critical, true, x);
             combat.OnCheckpoint = Save;
@@ -80,8 +82,26 @@ namespace ThreadZero
             selectedItem = model.state.items.Last().uid;
             source = gameObject.AddComponent<AudioSource>(); source.playOnAwake = false;
             equipSound = Tone("equip", 620, .065f); dropSound = Tone("drop", 840, .07f); rareSound = Tone("rare", 1060, .18f);
+            salvageSound = Tones("salvage", new[] { 700f, 470f }, .05f, .015f); bossSound = Tones("boss", new[] { 196f, 196f, 147f }, .11f, .05f);
             if (!saves.Writable) Notify("已有存档暂不可读，本次进度不会覆盖原文件。", 10);
             if(daggerReview) BeginDaggerReviewCapture();
+            else ApplyOffline();
+        }
+
+        // v0.20 离线收益：上次存档到现在过了多久，按挂机时的零件收入 × 25% 补给零件（最多算 2 小时），弹「欢迎回来」。
+        private double offlineAway; private float offlineCounted; private int offlineGain;
+        /// 测试用（桥接 call TestOffline 180）：假装离开了这么多分钟。
+        public void TestOffline(int minutes) { model.state.savedAt = System.DateTime.UtcNow.AddMinutes(-minutes).Ticks; ApplyOffline(); }
+        public void ApplyOffline()
+        {
+            long now = System.DateTime.UtcNow.Ticks, then = model.state.savedAt; model.state.savedAt = now;
+            if (then <= 0 || now <= then) return;
+            double away = (now - then) / 1e7; if (away < Balance.OfflineMinSeconds) return;
+            float counted = (float)System.Math.Min(away, Balance.OfflineMaxSeconds);
+            int gain = Mathf.RoundToInt(model.state.scrapRate * counted * Balance.OfflineEfficiency);
+            if (gain <= 0) return;
+            model.state.scrap += gain; offlineAway = away; offlineCounted = counted; offlineGain = gain;
+            navigation.Open(GameModal.Offline); Save();
         }
         private static AudioClip Tone(string name, float frequency, float duration)
         {
@@ -89,16 +109,30 @@ namespace ThreadZero
             for (int i = 0; i < data.Length; i++) data[i] = Mathf.Sin(i * 2 * Mathf.PI * frequency / rate) * .12f * (1 - (float)i / data.Length);
             var clip = AudioClip.Create(name, data.Length, 1, rate, false); clip.SetData(data, 0); return clip;
         }
+        /// 几个音连着（每个音线性衰减，中间留一点空），和 Tone 一样是程序生成的短音（企划：原型不依赖来源不明的音频）。
+        private static AudioClip Tones(string name, float[] frequencies, float note, float gap)
+        {
+            const int rate = 22050; int per = (int)(rate * note), pause = (int)(rate * gap);
+            var data = new float[frequencies.Length * (per + pause)];
+            for (int n = 0; n < frequencies.Length; n++)
+                for (int i = 0; i < per; i++) data[n * (per + pause) + i] = Mathf.Sin(i * 2 * Mathf.PI * frequencies[n] / rate) * .12f * (1 - (float)i / per);
+            var clip = AudioClip.Create(name, data.Length, 1, rate, false); clip.SetData(data, 0); return clip;
+        }
         private void Play(AudioClip clip) { if (sound && source != null && clip != null) source.PlayOneShot(clip); }
 
         private void Update()
         {
             float delta = Time.unscaledDeltaTime;
-            clock += delta;
+            clock += delta * slowMo;   // 慢放录像时画面特效也一起慢下来
+            bool bossNow = combat != null && combat.BossEnemy != null;   // v0.20 首领出场：低沉的两短一长提示音
+            if (bossNow && !bossWas) Play(bossSound);
+            bossWas = bossNow;
             // 战斗按不超过 0.05 秒的小步推进；一旦击败敌人就切到行进，下一只敌人不会在行进途中挨打。
-            float budget = paused ? 0 : Mathf.Min(.15f, delta) * speed;
+            float budget = paused ? 0 : Mathf.Min(.15f, delta) * speed * slowMo;
             for (int guard = 0; guard < 64 && budget > .0001f; guard++)
             {
+                budget = Impact.Absorb(budget);   // v0.20 顿帧：重击命中后战斗停一小会儿
+                if (budget <= .0001f) break;
                 if (transitionLeft > 0)
                 {
                     float part = Mathf.Min(transitionLeft, budget); budget -= part; transitionLeft -= part;
@@ -123,7 +157,7 @@ namespace ThreadZero
                     // 被打倒：撤回上一关刷（开着自动推进时，过关后会自动再挑战）。
                     combat.RetreatRequested = false;
                     if (model.InEcho) BeginEchoTransition(Mathf.Max(1, model.state.echoFloor - 3));   // 回声层：退 3 层继续刷
-                    else BeginStageTransition(Mathf.Max(Chapters.FirstRegion(model.Chapter), region - 1));   // 不跨章撤回
+                    else { StuckHint(); BeginStageTransition(model.RetreatTarget()); }   // 不跨章；在回刷的关倒下就重打这一关
                 }
                 else if (combat.StageCleared)
                 {
@@ -132,8 +166,8 @@ namespace ThreadZero
                     if (clearedFor >= .5f)
                     {
                         if (model.InEcho) BeginEchoTransition(autoAdvance ? model.state.echoFloor + 1 : model.state.echoFloor);
-                        else if (region == Catalog.LastRegion && autoAdvance && model.EchoUnlocked) BeginEchoTransition(Mathf.Max(1, model.state.echoBest - 2));
-                        else BeginStageTransition(autoAdvance && region < model.state.unlockedRegion ? region + 1 : region);
+                        else if (region == Catalog.LastRegion && autoAdvance && model.EchoUnlocked) EnterEcho();
+                        else BeginStageTransition(autoAdvance && region < model.state.unlockedRegion && model.CanAdvanceAfterClear() ? region + 1 : region);   // 墙前回刷：变强了才往前
                     }
                 }
             }
@@ -179,6 +213,14 @@ namespace ThreadZero
             transitionLeft = transitionDur; transitionSwapped = false; clearedFor = 0;
         }
         // 回声层换层。进入回声层用织线一扫；精英 / 首领层用快闸；其余无缝推进。
+        /// 进回声层：从 EchoStartFloor 开始，跳过的里程碑补发核心。
+        private void EnterEcho()
+        {
+            if (transitionLeft > 0 || !model.EchoUnlocked) return;
+            int start = model.EchoStartFloor(), got = model.CatchUpEcho(start);
+            if (got > 0) Notify("回声层从第 " + start + " 层开始 · 跳过的里程碑补发核心 +" + got, 4);
+            BeginEchoTransition(start);
+        }
         private void BeginEchoTransition(int floor)
         {
             if (transitionLeft > 0 || !model.EchoUnlocked) return;
@@ -206,7 +248,7 @@ namespace ThreadZero
             travelFrom = worldX; travelDistance = kind == 1 ? 900 : kind == 2 ? 1700 : 2800;
             wreckShown = leaveWreck; if(!combat.MovementEnabled)wreckWorldX = worldX; wreckDistrict = Catalog.District(region); wreckBoss = boss;
         }
-        private void Save() { if (!daggerReview && !restarting && model != null && saves != null) lastSaveOk = saves.Save(model.state); saveTimer = 0; }
+        private void Save() { if (!daggerReview && !restarting && model != null && saves != null) { model.state.savedAt = System.DateTime.UtcNow.Ticks; lastSaveOk = saves.Save(model.state); } saveTimer = 0; }
         private void OnApplicationQuit() { Save(); }
 
         // ---------- 测试存档 ----------
@@ -240,6 +282,37 @@ namespace ThreadZero
             // 第二章 5 套
             new[] { "h5", "c5", "b5", "w5", "l5" }, new[] { "h6", "c6", "b6", "w6", "l6" }, new[] { "h7", "c7", "b7", "w7", "l7" },
             new[] { "h8", "c8", "b8", "w8", "l8" }, new[] { "h9", "c9", "b9", "w9", "l9" } };
+        /// 测试（桥接脚本用）：给一件第五章史诗武器、5000 零件，在工坊里选中、锁住第一条词条，用来看洗炼界面。
+        private void TestReforgeItem()
+        {
+            Item item = model.Create("w22", Quality.Epic, 80); model.state.items.Add(item); model.Unlock("w22");
+            model.state.scrap += 5000; model.ToggleLock(item, 0); selectedItem = item.uid;
+        }
+        private void TestReforgeOnce() { if (selectedItem != null) model.Reforge(selectedItem); }
+        /// 测试（桥接脚本用）：换上某把武器（录技能动作 GIF 用）。
+        /// 测试（桥接脚本用）：往背包里放一件指定等级的装备（不穿）。
+        private void TestAddItem(string id, int level) { Item item = model.Create(id, Quality.Rare, level); model.state.items.Add(item); model.Unlock(id); }
+        private void TestEquip(string id) { Item item = model.Create(id, Quality.Rare, 30); model.state.items.Add(item); model.Unlock(id); model.Equip(item.uid); }
+
+        /// v0.20 开发用：F7 把飞升度跳到下一个阶段（10% → 30% → 60% → 90% → 100% → 回到 10%），看各阶段的外观。
+        /// 五个义体都装上，等级从第一个开始往上填；只在测试存档里能用（按 F8 切换），正式进度不动。
+        private void TestNextAscension()
+        {
+            if (!testSave) { Notify("F7 只在测试存档里能用（先按 F8 切到测试存档）", 2.5f); return; }
+            foreach (ImplantDef d in Catalog.Implants) if (!model.state.implants.Contains(d.id)) model.state.implants.Add(d.id);
+            int stage = model.AscensionStage, n = Catalog.Implants.Length;
+            int pct = stage >= Catalog.AscensionStageAt.Length ? 10 : Catalog.AscensionStageAt[stage];
+            int rest = Mathf.RoundToInt(pct / 100f * n * Catalog.ImplantMaxLevel) - n;   // 每个至少 1 级，剩下的从第一个往上填
+            for (int i = 0; i < n && i < model.state.implantLevels.Length; i++)
+            {
+                int add = Mathf.Clamp(rest, 0, Catalog.ImplantMaxLevel - 1);
+                model.state.implantLevels[i] = 1 + add; rest -= add;
+            }
+            int now = model.AscensionStage;
+            Notify("测试：机械飞升 " + Mathf.RoundToInt(model.Ascension * 100) + "%" + (now > 0 ? "（" + Catalog.AscensionStageNames[now - 1] + "）" : "") + "，再按 F7 下一阶段", 3);
+            Save();
+        }
+
         private void GrantTestOutfit()
         {
             string[] set = TestOutfits[testOutfit++ % TestOutfits.Length];
@@ -251,6 +324,30 @@ namespace ThreadZero
             }
             Notify("测试外观：" + string.Join(" / ", set), 3);
         }
+
+        // v0.20 卡关提示：在最前面那一关连着倒 3 次起，按情况给一句建议（同一关 10 分钟内只说一次）。
+        private int hintRegion = -1; private float hintAt = -999;
+        private void StuckHint()
+        {
+            int r = model.state.retryRegion;
+            if (r != model.state.unlockedRegion || model.state.retryStreak < 3) return;
+            if (r == hintRegion && clock - hintAt < 600) return;
+            hintRegion = r; hintAt = clock; Notify(StuckHintText(), 10);
+        }
+        public string StuckHintText()
+        {
+            Item w = model.Equipped(Slot.Weapon);
+            bool single = w != null && !Catalog.IsGroupWeapon(w.baseId);
+            bool boss = Chapters.Stage(model.state.retryRegion).kind == StageKind.Boss;
+            if (single && !boss) return "卡关提示：这一关的怪成群地来，单体武器很吃亏。换一把标着「群伤」的武器（整备页武器详情里看，手炮、重锤、撞杆矛、霰弹、线圈这几类）会轻松很多。";
+            if (model.EchoUnlocked && model.state.retryStreak >= 5) return "卡关提示：可以先去回声层刷一会（选关最下面）——每层都有掉落，还能攒织网碎片升义体。";
+            if (model.ReforgeUnlocked) return "卡关提示：工坊可以洗炼词条，把用不上的词条换成攻击、暴击或生命。";
+            return "卡关提示：开着自动推进会先回刷前一关攒零件，升级装备、训练变强后再自动挑战。";
+        }
+        /// 测试用（桥接 call TestOpenHelp）：打开行动指南。
+        public void TestOpenHelp() { navigation.Open(GameModal.Help); }
+        /// 测试用（桥接 call TestStuckHint）：直接弹一条卡关提示。
+        public void TestStuckHint() { model.state.retryRegion = model.state.unlockedRegion; model.state.retryStreak = 3; hintRegion = -1; StuckHint(); }
 
         private void Notify(string value, float duration = 3, string item = null)
         { toast = value; toastFrom = clock; toastUntil = clock + duration; toastItem = item; }
@@ -293,15 +390,10 @@ namespace ThreadZero
                 else if (!navigation.HasModal && current.keyCode == KeyCode.F2) { GrantTestOutfit(); current.Use(); }
                 else if (navigation.Screen == GameScreen.Action && !navigation.HasModal && current.keyCode == KeyCode.F4) { PreviewTransition(); current.Use(); }
                 else if (current.keyCode == KeyCode.F6) { GameModel.TestPower = !GameModel.TestPower; combat.ClampHealth(); if (GameModel.TestPower) combat.health = model.Total().health; Notify(GameModel.TestPower ? "测试：无敌 + 攻击 ×10（再按 F6 关闭）" : "测试模式已关闭", 2.5f); current.Use(); }
+                else if (current.keyCode == KeyCode.F7) { TestNextAscension(); current.Use(); }
                 else if (current.keyCode == KeyCode.F8) { SwitchSaveSlot(); current.Use(); }
-                else if (current.keyCode == KeyCode.F7)
-                {   // 像素试验：关 → 1/3 → 1/4 → 关；Shift+F7 上下翻转（某些显卡渲染到小画布会倒过来）
-                    if (current.shift) { pixelFlip = !pixelFlip; PlayerPrefs.SetInt("tz_pixel_flip", pixelFlip ? 1 : 0); }
-                    else { pixelScale = pixelScale == 0 ? 3 : pixelScale == 3 ? 4 : 0; PlayerPrefs.SetInt("tz_pixel_scale", pixelScale); }
-                    Notify(pixelScale == 0 ? "像素试验：关（高清）" : "像素试验：1/" + pixelScale + " 分辨率" + (pixelFlip ? " · 已翻转" : ""), 2); current.Use();
-                }
                 else if (current.keyCode == KeyCode.F9 && testSave) { saves.Delete(); RestartGame(); current.Use(); }
-                else if (current.keyCode == KeyCode.F5) { model.state.unlockedRegion = Catalog.LastRegion; Save(); Notify("测试：两章 14 关已全部解锁（点关卡名打开地图切章）", 2.5f); current.Use(); }
+                else if (current.keyCode == KeyCode.F5) { model.state.unlockedRegion = Catalog.LastRegion; Save(); Notify("测试：" + Chapters.ChapterCount + " 章 " + (Catalog.LastRegion + 1) + " 关已全部解锁（点关卡名打开地图切章）", 2.5f); current.Use(); }
                 else if (current.keyCode == KeyCode.F3) { UiTheme.Next(); Notify("界面配色：" + UiTheme.Name + "（F3 切换）", 2.5f); current.Use(); }
             }
             Ui.FillScreen(Ui.Ground);
@@ -372,15 +464,17 @@ namespace ThreadZero
             }
             else
             {
-                float width = Mathf.Min(760, Ui.Width(toast, 15, true) + 56), x = 800 - width / 2;
-                Ui.Fill(x, y, width, 52, Ui.Ink); Ui.Fill(x, y, 6, 52, Ui.Orange);
-                Ui.Text(x + 24, y, width - 40, 52, toast, 15, Ui.Panel, TextAnchor.MiddleLeft, true);
+                float tw = Ui.Width(toast, 15, true); bool two = tw + 56 > 760;   // v0.20 长提示（卡关提示）换成两行
+                float width = Mathf.Min(760, tw + 56), h = two ? 74 : 52, x = 800 - width / 2;
+                Ui.Fill(x, y, width, h, Ui.Ink); Ui.Fill(x, y, 6, h, Ui.Orange);
+                Ui.Text(x + 24, y + (two ? 9 : 0), width - 40, two ? h - 14 : 52, toast, 15, Ui.Panel, two ? TextAnchor.UpperLeft : TextAnchor.MiddleLeft, true, false, two);
             }
         }
 
         // 整备和衣柜里的角色预览：按外套外观显示整帧，持近战武器外观时用持刃站姿。缺图时退回旧绘制。
         private void PreviewHero(float feetX, float feetY, float canvas, float oldX, float oldY, float oldW, float oldH)
         {
+            if(model.AscensionStage>=2)feetX+=canvas*.025f;   // v0.20 飞升 60% 起背后有散热鳍，人往右挪一点，鳍不出框
             if(LayeredRigView.CanDraw(model)){LayeredRigView.Draw(model,feetX,feetY,canvas/HeroCanvas,LayeredRigView.Anim.Idle,clock/1.2f,Color.white);return;}
             if(DaggerActorView.Draw(model,feetX,feetY,canvas,0,Color.white))return;
             bool blade = model.Appearance(Slot.Weapon).attackStyle == AttackStyle.Melee;
@@ -394,8 +488,9 @@ namespace ThreadZero
                 CharacterView.Draw(model, Ui.R(oldX, oldY, oldW, oldH), clock);
         }
 
-        private static float[] Values(Stats s) { return new[] { s.health, s.attack, s.defense, s.haste, s.crit, s.luck }; }
-        private static string Value(int stat, float value) { return stat == 3 || stat == 4 ? (value * 100).ToString("F1") + "%" : value.ToString("F1"); }
+        /// 前 6 项是基础属性，后 4 项是 v0.18 的特殊词条（暴击伤害、特效伤害、首领伤害、零件回收），顺序同 Catalog.StatNames。
+        private static float[] Values(Stats s) { return new[] { s.health, s.attack, s.defense, s.haste, s.crit, s.luck, s.critDamage, s.effectDamage, s.bossDamage, s.scrapBonus }; }
+        private static string Value(int stat, float value) { return stat == 3 || stat == 4 || stat >= Balance.BasicStats ? (value * 100).ToString("F1") + "%" : value.ToString("F1"); }
         private static void SplitEffect(Effect effect, out string name, out string description)
         {
             string full = Catalog.EffectName(effect); int cut = full.IndexOf('：');

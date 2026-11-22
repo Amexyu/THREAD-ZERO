@@ -112,8 +112,15 @@ namespace ThreadZero
             if (Ui.Button(1348, 340, 196, 60, capped ? "已到上限" : "升级到 Lv." + (item.level + 1), 1, model.CanUpgrade(item), 17))
             { if (model.Upgrade(item.uid)) { combat.ClampHealth(); Save(); Play(equipSound); } }
 
-            // 重校
-            Ui.Text(772, 470, 400, 20, "RECALIBRATE / 重校词条", 12, Ui.Mute, TextAnchor.MiddleLeft, true, true);
+            // 重校 / 洗炼
+            Ui.Text(772, 470, 400, 20, "RECALIBRATE / 重校 · 洗炼", 12, Ui.Mute, TextAnchor.MiddleLeft, true, true);
+            if (item.affixes.Count > 0)
+            {   // v0.18 洗炼：锁住的词条不动，其余全部重抽（换属性 + 重抽数值）
+                int locked = model.LockedCount(item);
+                if (!model.ReforgeUnlocked) Ui.Button(1196, 462, 348, 28, "洗炼 · 进入第三章后开放", 0, false, 13);
+                else if (Ui.Button(1196, 462, 348, 28, "洗炼" + (locked > 0 ? "（锁 " + locked + " 条）" : "全部") + " · 零件 " + model.ReforgeCost(item), 1, model.CanReforge(item), 13))
+                { if (model.Reforge(item.uid)) { combat.ClampHealth(); Save(); Play(equipSound); } }
+            }
             Ui.Fill(772, 492, 772, 2, Ui.Ink);
             if (item.affixes.Count == 0) Ui.Text(772, 500, 700, 40, "这件装备没有随机词条。" + Catalog.QualityNames[1] + "及以上的装备才有。", 14, Ui.Mute, TextAnchor.MiddleLeft);
             int rerollCost = model.RerollCost(item);
@@ -121,21 +128,23 @@ namespace ThreadZero
             {
                 Affix affix = item.affixes[i]; float y = 500 + i * 42;
                 Ui.Text(772, y, 30, 40, "◆", 12, QualityVisual.Ink(item.quality), TextAnchor.MiddleLeft);
-                Ui.Text(796, y, 120, 40, Catalog.StatNames[affix.stat], 16, Ui.Body, TextAnchor.MiddleLeft);
+                Ui.Text(796, y, 120, 40, Catalog.StatNames[affix.stat], 16, Balance.SpecialStat(affix.stat) ? Ui.OrangeInk : Ui.Body, TextAnchor.MiddleLeft, Balance.SpecialStat(affix.stat));
+                bool isLocked = (item.affixLocks & (1 << i)) != 0;
+                if (Ui.Button(1270, y + 4, 70, 32, isLocked ? "已锁" : "锁定", isLocked ? 2 : 0, true, 13)) { model.ToggleLock(item, i); Save(); }
                 Ui.Text(920, y, 200, 40, "+" + Value(affix.stat, affix.value), 22, Ui.Ink, TextAnchor.MiddleLeft, true, true);
                 Ui.Fill(772, y + 40, 772, 1, Ui.Hair);
-                if (Ui.Button(1348, y + 4, 196, 32, "重校 · 零件 " + rerollCost, 0, model.CanReroll(item, i), 13))
+                if (Ui.Button(1348, y + 4, 196, 32, model.RecalibrateUnlocked ? "重校 · 零件 " + rerollCost : "重校 · 第二章开放", 0, model.CanReroll(item, i), 13))
                 { if (model.Reroll(item.uid, i)) { combat.ClampHealth(); Save(); Play(equipSound); } }
             }
             if (item.affixes.Count > 0)
-                Ui.Text(772, 500 + item.affixes.Count * 42 + 4, 772, 22, "重校会把这一条换成这件装备上没有的另一种属性，并重新抽取数值。每重校一次，这件装备的下一次更贵。", 12, Ui.Mute, TextAnchor.MiddleLeft);
+                Ui.Text(772, 500 + item.affixes.Count * 42 + 8, 772, 40, "重校：只换这一条。洗炼：没锁的全部重抽，每锁一条费用多一倍。特装及以上可能出橙色的特殊词条（暴击伤害、特效伤害、首领伤害、零件回收）。", 12, Ui.Mute, TextAnchor.UpperLeft, false, false, true);   // 一行放不下（会顶出面板边），自动换行
 
             // 突破（仅「机密」）
             if (item.quality == Quality.Legendary)
             {
                 Ui.Fill(772, 756, 772, 60, Ui.Ink); Ui.Fill(772, 756, 8, 60, QualityVisual.Colors[5]);
-                string need = item.level < model.License ? "先把等级升到上限 Lv." + model.License + "，再用核心突破" : "突破为「" + Catalog.QualityNames[5] + "」· 多一条词条，属性更高";
-                Ui.Text(796, 756, 540, 60, need, 15, item.level < model.License ? Ui.MuteOnInk : Ui.Panel, TextAnchor.MiddleLeft, true);
+                string need = !model.AscendUnlocked ? "进入第四章后开放：用核心把「" + Catalog.QualityNames[4] + "」突破为「" + Catalog.QualityNames[5] + "」" : item.level < model.AscendLevel ? "先把等级升到 Lv." + model.AscendLevel + "，再用核心突破" : "突破为「" + Catalog.QualityNames[5] + "」· 多一条词条，属性更高";
+                Ui.Text(796, 756, 540, 60, need, 15, !model.AscendUnlocked || item.level < model.AscendLevel ? Ui.MuteOnInk : Ui.Panel, TextAnchor.MiddleLeft, true);
                 if (Ui.Button(1348, 762, 188, 48, "核心 " + Balance.AscendCores + "（持有 " + model.state.cores + "）", 1, model.CanAscend(item), 14))
                 { if (model.Ascend(item.uid)) { combat.ClampHealth(); Save(); Play(rareSound); Notify("突破完成：" + b.name + " 现在是「" + Catalog.QualityNames[5] + "」", 5); } }
             }

@@ -7,9 +7,21 @@ namespace ThreadZero
     // V13 layered rigid-part character (S1 starter outfit). Port of Tools/RigPrototype/rig.py.
     // Parts + parts.json live in Resources/Art/V13/Starter. Units: 1 unit = 4 texture px; y points down.
     // Angle convention (same as rig.py): 0 = limb hangs down, positive = swings forward (+x, facing right).
-    public static class LayeredRigView
+    public static partial class LayeredRigView
     {
-        public enum Anim { Idle, Walk, Attack, Combo, Shoot, Smash, Throw, Sweep }   // Throw/Sweep：锁链甩钩 / 横扫
+        public enum Anim { Idle, Walk, Attack, Combo, Shoot, Smash, Throw, Sweep, Quake, Thrust, Whirl, PointBlank, Overpressure, NailBurst, FlareBolt, ChainArc, HookCombo }   // Throw/Sweep：锁链甩钩 / 横扫；Quake 起：技能专属动作（v0.19）
+        /// 技能专属动作：SkillDef.animation → 动作。不在表里的技能还是按武器类别的普攻动作逐段对时（返回 Idle 表示“没有专属动作”）。
+        public static Anim SkillAnim(string id)
+        {
+            switch (id)
+            {
+                case "quake": return Anim.Quake; case "thrust": return Anim.Thrust; case "whirl": return Anim.Whirl;
+                case "pointblank": return Anim.PointBlank; case "overpressure": return Anim.Overpressure; case "nailburst": return Anim.NailBurst;
+                case "flarebolt": return Anim.FlareBolt; case "chainarc": return Anim.ChainArc; case "sweep": return Anim.HookCombo;
+                default: return Anim.Idle;
+            }
+        }
+        private static float Lin(float t, float[] k) { if (t <= k[0]) return k[1]; for (int i = 0; i + 3 < k.Length; i += 2) if (t <= k[i + 2]) return k[i + 1] + (k[i + 3] - k[i + 1]) * (t - k[i]) / (k[i + 2] - k[i]); return k[k.Length - 1]; }
 
         [Serializable] public class PartEntry { public string file; public float[] pivot; public float[] hand; public float[] tip; public float[] eye; }
         [Serializable] public class PartSet { public PartEntry head, torso, arm, arm_far, hand, hand_far, leg_near, leg_far, pack, weapon; }
@@ -22,6 +34,25 @@ namespace ThreadZero
 
         private sealed class Part { public Texture2D tex; public Vector2 pivot, size; }
 
+        // v0.20 机械飞升第一阶段起（飞升度 30%）：两只手换成机械手（Resources/Art/V16/Ascension/，Gemini 卡26）。
+        // 手不属于任何装备栏，换了能和所有衣服搭。没有图就照旧用初始手。
+        [Serializable] private class AscensionParts { public float scale = 4; public PartEntry hand, hand_far, fins, fins_zero; public float[] fins_at; }
+        private const string AscensionFolder = "Art/V16/Ascension/";
+        private static Part mechHand, mechHandFar, mechFins, mechFinsZero; private static Vector2 finsAt; private static bool mechTried, mechOn; private static int mechStage;
+        private static void LoadMechHands()
+        {
+            if (mechTried) return; mechTried = true;
+            var ta = Resources.Load<TextAsset>(AscensionFolder + "ascension");
+            if (ta == null) return;
+            var set = JsonUtility.FromJson<AscensionParts>(ta.text);
+            if (set == null) return;
+            mechHand = Load(AscensionFolder, set.hand, set.scale); mechHandFar = Load(AscensionFolder, set.hand_far, set.scale);
+            mechFins = Load(AscensionFolder, set.fins, set.scale); mechFinsZero = Load(AscensionFolder, set.fins_zero, set.scale); finsAt = V(set.fins_at, new Vector2(4, -22));   // 第二阶段：背上的散热鳍，挂在背包骨骼上
+        }
+        private static Part NearHand { get { return mechOn && mechHand != null ? mechHand : hand; } }
+        private static Part FarHand { get { return mechOn && mechHandFar != null ? mechHandFar : handFar ?? hand; } }
+        private static bool FarHandMirrored { get { return !(mechOn && mechHandFar != null) && handFar == null; } }
+
         private const string Folder = "Art/V13/Starter/", PartsFolder = "Art/V13/Parts/";
         private static Look starter;
         private static readonly Dictionary<string, Look> looks = new Dictionary<string, Look>();
@@ -30,8 +61,6 @@ namespace ThreadZero
         public const float PixelsPerUnit = 1.5f;   // ~140 units tall -> ~210 logical px (v0.13 battle scale)
         private static bool loaded, failed;
         public static Vector2 Muzzle, MuzzleDir = Vector2.right;
-        /// 像素试验时小画布的尺寸（0 = 正常画到屏幕）。
-        public static Vector2 PixelTarget;
         /// 义体位置（Ui 逻辑坐标），装义体的提示特效对准这里：近侧肩膀、近侧眼睛。
         public static Vector2 ArmAnchor, EyeAnchor;
         private static readonly Vector2 DefaultEye = new Vector2(17, -27);   // 头部骨骼里近侧眼睛的位置（初始头部；头部 part.json 可用 "eye" 覆盖）
@@ -62,6 +91,7 @@ namespace ThreadZero
         private static Look LoadLook(string id)
         {
             if (string.IsNullOrEmpty(id)) return null;
+            id = Catalog.ArtOf(id);   // v0.18 美术未到的装备借旧装备的图
             Look l;
             if (looks.TryGetValue(id, out l)) return l;
             l = null;
@@ -89,7 +119,7 @@ namespace ThreadZero
             EquipmentBase w = model.Appearance(Slot.Weapon);
             Look l = LoadLook(w.id);
             if (l != null && !string.IsNullOrEmpty(l.cls)) return l.cls;
-            if (w.id == "w4") return "heavy";
+            if (Catalog.ArtOf(w.id) == "w4") return "heavy";
             return w.attackStyle == AttackStyle.Melee ? "dagger" : "gun";
         }
         /// 按当前穿着（含幻化）换上各部位的外观；缺图的部位用初始外观顶替。
@@ -146,7 +176,7 @@ namespace ThreadZero
         }
 
         // ---------- pose (identical numbers to rig.py) ----------
-        private struct Pose { public float dx, dy, sx, sy, tilt, lean, head, pack, A, Af, L, Lf, W, shx; public bool fx, ghost, glint; }
+        private struct Pose { public float dx, dy, sx, sy, tilt, lean, head, pack, A, Af, L, Lf, W, shx, spin, face, wx, wy, zoom, charge, shake, reach, hook; public bool fx, ghost, glint, hookOn; }
         private static float Sm(float x) { x = Mathf.Clamp01(x); return x * x * (3 - 2 * x); }
         private static float Kf(float t, float[] k)   // k = t0,v0,t1,v1,...
         {
@@ -158,7 +188,7 @@ namespace ThreadZero
         private static Pose Compute(Anim anim, float t)
         {
             float ph = 2 * Mathf.PI * t;
-            var p = new Pose { sx = 1, sy = 1, lean = 1, A = 8, Af = -8, W = float.NaN };
+            var p = new Pose { sx = 1, sy = 1, lean = 1, A = 8, Af = -8, W = float.NaN, face = 1, zoom = 1 };
             if (anim == Anim.Idle)
             {
                 p.dy = -5 * (.5f - .5f * Mathf.Cos(ph)); float sq = Mathf.Cos(ph);
@@ -177,6 +207,7 @@ namespace ThreadZero
                 p.L = 7 * Mathf.Sin(ph) - 3 * sv; p.Lf = -7 * Mathf.Sin(ph) - 3 * sv;
                 p.A = -6 * Mathf.Sin(ph - .6f) + 1; p.Af = 6 * Mathf.Sin(ph - .6f) - 1;
             }
+            else if (HasMove(anim)) Apply(MoveFor(anim), ref p, t);   // v0.20 技能连招：按拍子写的动作表（SkillMoves.cs）
             else if (anim == Anim.Shoot) ShootPose(ref p, t);   // 枪械：按枪种（霰弹 / 线圈 / 手炮）各有一套动作，开火都在 t≈.286
             else if (anim == Anim.Smash)   // 重武器：举过头顶 → 砸下（命中 t≈.41）
             {
@@ -219,6 +250,137 @@ namespace ThreadZero
                 p.Lf = Kf(t, new[] { 0f, 0, .2f, 8, .42f, -14, .7f, -10, 1, 0 });
                 p.sy = Kf(t, new[] { 0f, 1, .2f, .94f, .42f, 1.05f, .6f, .97f, 1, 1 });
                 p.sx = 2 - p.sy;
+            }
+            else if (anim == Anim.Quake)   // 震地：蹲下把锤抡到背后 → 高高跳起 → 整个人砸下来（命中 t≈.58）→ 落地压扁 → 收锤
+            {
+                p.dx = Kf(t, new[] { 0f, 0, .22f, -4, .40f, 10, .58f, 26, .72f, 24, 1, 0 });
+                p.dy = Kf(t, new[] { 0f, 0, .22f, 5, .40f, -58, .50f, -40, .58f, 0, .64f, 4, .76f, 0, 1, 0 });
+                p.lean = Kf(t, new[] { 0f, 1, .22f, -10, .40f, -16, .58f, 26, .74f, 18, 1, 1 });
+                p.tilt = Kf(t, new[] { 0f, 0, .22f, -3, .40f, -6, .58f, 6, .74f, 3, 1, 0 });
+                p.A = Kf(t, new[] { 0f, 1, .22f, 150, .40f, 178, .58f, 56, .74f, 60, 1, 1 });
+                p.W = Kf(t, new[] { 0f, 168, .22f, 232, .40f, 252, .58f, 38, .74f, 44, 1, 168 });
+                p.Af = Kf(t, new[] { 0f, -1, .22f, 140, .40f, 168, .58f, 52, .74f, 46, 1, -1 });
+                p.head = Kf(t, new[] { 0f, 0, .22f, 8, .40f, 10, .58f, -12, .74f, -6, 1, 0 });
+                p.pack = Kf(t, new[] { 0f, 0, .30f, 8, .50f, -10, .64f, 6, 1, 0 });
+                p.L = Kf(t, new[] { 0f, 0, .22f, -10, .40f, -24, .58f, 28, .74f, 26, 1, 0 });
+                p.Lf = Kf(t, new[] { 0f, 0, .22f, 12, .40f, 26, .58f, -24, .74f, -22, 1, 0 });
+                p.sy = Kf(t, new[] { 0f, 1, .22f, .86f, .32f, 1.1f, .52f, 1.04f, .60f, .82f, .70f, .98f, 1, 1 });
+                p.sx = 2 - p.sy;
+                p.ghost = t > .44f && t < .58f;   // 下砸时的残影
+                p.fx = t > .48f && t < .66f;      // 锤头轨迹
+            }
+            else if (anim == Anim.Thrust)  // 贯穿突刺：后撤蓄力（矛尖一闪）→ 整个人冲出去一大段、矛伸到底（命中 t≈.47）→ 停在对面 → 走回原位
+            {
+                p.dx = Kf(t, new[] { 0f, 0, .30f, -16, .47f, 86, .62f, 92, 1, 0 });
+                p.dy = Kf(t, new[] { 0f, 0, .30f, 3, .40f, -5, .47f, 0, 1, 0 });
+                p.lean = Kf(t, new[] { 0f, 1, .30f, -9, .47f, 17, .62f, 12, 1, 1 });
+                p.tilt = Kf(t, new[] { 0f, 0, .30f, -4, .47f, 7, .62f, 5, 1, 0 });
+                p.A = Kf(t, new[] { 0f, 1, .30f, -22, .47f, 97, .62f, 92, .85f, 30, 1, 1 });
+                p.W = Kf(t, new[] { 0f, 58, .30f, 86, .47f, 93, .62f, 92, .85f, 70, 1, 58 });
+                p.shx = Kf(t, new[] { 0f, 0, .30f, -5, .47f, 15, .62f, 13, 1, 0 });
+                p.Af = Kf(t, new[] { 0f, -1, .30f, 18, .47f, -24, .62f, -18, 1, -1 });
+                p.head = Kf(t, new[] { 0f, 0, .30f, 5, .47f, -6, 1, 0 });
+                p.pack = Kf(t, new[] { 0f, 0, .30f, 4, .50f, -7, .7f, 3, 1, 0 });
+                p.L = Kf(t, new[] { 0f, 0, .30f, -12, .47f, 32, .62f, 30, 1, 0 });
+                p.Lf = Kf(t, new[] { 0f, 0, .30f, 14, .47f, -30, .62f, -28, 1, 0 });
+                p.sy = Kf(t, new[] { 0f, 1, .30f, .9f, .40f, 1.0f, .47f, .94f, .62f, 1, 1, 1 });
+                p.sx = Kf(t, new[] { 0f, 1, .30f, 1.08f, .40f, .92f, .47f, 1.1f, .62f, 1, 1, 1 });   // 冲刺时拉长
+                p.ghost = t > .30f && t < .55f;
+                p.glint = t > .12f && t < .27f;   // 蓄力时矛尖一闪
+                p.fx = t > .36f && t < .58f;
+            }
+            else if (anim == Anim.Whirl)   // 回旋切割：把锯臂抡成风车，连转三圈，每次锯片转到正前方切一下（命中 t≈.24/.40/.56/.72）
+            {
+                p.A = Lin(t, new[] { 0f, 1, .08f, -60, .24f, 90, .40f, 450, .56f, 810, .72f, 1170, .86f, 1400, 1, 1441 });   // 匀速转，不用缓动
+                p.W = p.A + 18;
+                p.dx = Kf(t, new[] { 0f, 0, .08f, -6, .24f, 10, .72f, 22, 1, 0 });
+                p.dy = -3 * Mathf.Abs(Mathf.Sin(Mathf.PI * Mathf.Clamp01((t - .24f) / .16f)));   // 每切一下轻轻一蹬
+                p.lean = Kf(t, new[] { 0f, 1, .08f, -6, .24f, 12, .72f, 12, 1, 1 });
+                p.tilt = t > .2f && t < .8f ? 4 * Mathf.Sin(2 * Mathf.PI * (t - .24f) / .16f) : Kf(t, new[] { 0f, 0, .08f, -4, .2f, 0, 1, 0 });
+                p.Af = Kf(t, new[] { 0f, -1, .08f, 24, .24f, 30, .72f, 30, 1, -1 });
+                p.head = Kf(t, new[] { 0f, 0, .08f, 5, .24f, -4, .72f, -4, 1, 0 });
+                p.pack = 3 * Mathf.Sin(2 * Mathf.PI * t * 3);
+                p.L = Kf(t, new[] { 0f, 0, .08f, -8, .24f, 18, .72f, 18, 1, 0 });
+                p.Lf = Kf(t, new[] { 0f, 0, .08f, 8, .24f, -18, .72f, -18, 1, 0 });
+                p.sy = Kf(t, new[] { 0f, 1, .08f, .92f, .24f, 1.02f, .72f, 1.02f, .86f, .96f, 1, 1 });
+                p.sx = 2 - p.sy;
+                p.ghost = t > .2f && t < .8f;
+                p.fx = t > .18f && t < .8f;
+            }
+            else if (anim == Anim.PointBlank)   // 贴脸轰击：冲到怪脸前一枪（t≈.275）→ 推一下泵 → 再一枪（t≈.625）被后坐顶得跳回来
+            {
+                p.dx = Kf(t, new[] { 0f, 0, .2f, 40, .275f, 34, .45f, 44, .625f, 40, .7f, 22, .85f, 8, 1, 0 });
+                p.dy = Kf(t, new[] { 0f, 0, .2f, 3, .3f, 1, .6f, 2, .68f, -9, .8f, 0, 1, 0 });
+                p.A = Kf(t, new[] { 0f, 25, .2f, 82, .275f, 96, .38f, 72, .55f, 84, .625f, 100, .72f, 80, 1, 25 });
+                p.W = Kf(t, new[] { 0f, 98, .2f, 92, .275f, 114, .38f, 86, .55f, 92, .625f, 120, .72f, 100, 1, 98 });
+                p.Af = Kf(t, new[] { 0f, -1, .2f, 40, .3f, 30, .4f, 62, .5f, 40, .625f, 20, 1, -1 });
+                p.lean = Kf(t, new[] { 0f, 1, .2f, 8, .275f, -4, .45f, 6, .625f, -12, .75f, -4, 1, 1 });
+                p.tilt = Kf(t, new[] { 0f, 0, .2f, 3, .275f, -3, .45f, 2, .625f, -6, .8f, 0, 1, 0 });
+                p.head = Kf(t, new[] { 0f, 0, .2f, -3, .275f, 4, .45f, -2, .625f, 6, .8f, 0, 1, 0 });
+                p.L = Kf(t, new[] { 0f, 0, .2f, 22, .45f, 18, .625f, 10, .7f, -8, 1, 0 });
+                p.Lf = Kf(t, new[] { 0f, 0, .2f, -18, .45f, -14, .625f, -6, .7f, 10, 1, 0 });
+                p.sy = Kf(t, new[] { 0f, 1, .2f, .94f, .275f, 1.03f, .4f, .97f, .625f, 1.05f, .7f, .92f, .85f, 1, 1, 1 }); p.sx = 2 - p.sy;
+                p.ghost = t > .04f && t < .2f;
+            }
+            else if (anim == Anim.Overpressure) // 过压弹：单膝跪地、另一只手托住炮管蓄压（炮身发抖）→ 开炮（t≈.494）被后坐推出去一大段 → 站起来
+            {
+                p.dy = Kf(t, new[] { 0f, 0, .25f, 10, .494f, 10, .6f, 6, .85f, 0, 1, 0 });
+                p.dx = Kf(t, new[] { 0f, 0, .25f, 4, .494f, 4, .56f, -30, .7f, -34, .9f, -8, 1, 0 });
+                p.A = Kf(t, new[] { 0f, 25, .25f, 88, .494f, 90, .53f, 122, .7f, 98, .9f, 60, 1, 25 });
+                p.W = Kf(t, new[] { 0f, 98, .25f, 96, .494f, 96, .53f, 134, .7f, 104, .9f, 98, 1, 98 });
+                p.Af = Kf(t, new[] { 0f, -1, .25f, 78, .494f, 80, .53f, 96, .7f, 70, 1, -1 });
+                p.lean = Kf(t, new[] { 0f, 1, .25f, 8, .494f, 10, .53f, -16, .7f, -6, 1, 1 });
+                p.tilt = Kf(t, new[] { 0f, 0, .494f, 2, .53f, -9, .7f, -3, 1, 0 });
+                p.head = Kf(t, new[] { 0f, 0, .25f, -4, .53f, 9, .7f, 2, 1, 0 });
+                p.L = Kf(t, new[] { 0f, 0, .25f, 34, .7f, 30, .9f, 8, 1, 0 });
+                p.Lf = Kf(t, new[] { 0f, 0, .25f, -50, .7f, -46, .9f, -10, 1, 0 });
+                p.sy = Kf(t, new[] { 0f, 1, .25f, .88f, .494f, .86f, .53f, 1, .6f, .9f, .85f, 1, 1, 1 }); p.sx = 2 - p.sy;
+                if (t > .15f && t < .494f) { float k = (t - .15f) / .344f; p.W += Mathf.Sin(t * 210) * 1.8f * k; p.tilt += Mathf.Sin(t * 260) * .8f * k; }
+                p.ghost = t > .494f && t < .66f;
+            }
+            else if (anim == Anim.NailBurst)    // 钉射扫射：站稳，枪口从低往高一路扫，连打四钉（t≈.188/.376/.565/.753），每钉一下后坐
+            {
+                float kick = 0;
+                foreach (float h in NailHits) if (t >= h && t < h + .09f) kick = Mathf.Max(kick, 1 - (t - h) / .09f);
+                p.W = Kf(t, new[] { 0f, 98, .12f, 82, .8f, 114, 1, 98 }) + 9 * kick;
+                p.A = Kf(t, new[] { 0f, 25, .12f, 78, .8f, 104, 1, 25 }) + 5 * kick;
+                p.dx = Kf(t, new[] { 0f, 0, .12f, 4, .8f, 0, 1, 0 }) - 4 * kick;
+                p.lean = Kf(t, new[] { 0f, 1, .12f, 7, .8f, 4, 1, 1 }) - 3 * kick;
+                p.Af = Kf(t, new[] { 0f, -1, .12f, 60, .8f, 70, 1, -1 });
+                p.head = Kf(t, new[] { 0f, 0, .12f, 3, .8f, -4, 1, 0 });
+                p.L = Kf(t, new[] { 0f, 0, .12f, 16, .8f, 16, 1, 0 }); p.Lf = Kf(t, new[] { 0f, 0, .12f, -14, .8f, -14, 1, 0 });
+                p.sy = 1 - .03f * kick; p.sx = 2 - p.sy; p.tilt = -2 * kick;
+            }
+            else if (anim == Anim.FlareBolt)    // 信号爆矢：后仰把弩举高、爆矢点燃（矢头一闪）→ 抛射（t≈.5）→ 抬头看着它落下去
+            {
+                p.A = Kf(t, new[] { 0f, 25, .2f, 132, .45f, 138, .5f, 150, .65f, 120, 1, 25 });
+                p.W = Kf(t, new[] { 0f, 98, .2f, 138, .45f, 142, .5f, 158, .65f, 124, 1, 98 });
+                p.lean = Kf(t, new[] { 0f, 1, .2f, -10, .45f, -12, .5f, -16, .7f, -4, 1, 1 });
+                p.dy = Kf(t, new[] { 0f, 0, .2f, 3, .45f, 4, .55f, 0, 1, 0 });
+                p.dx = Kf(t, new[] { 0f, 0, .2f, -4, .45f, -4, .5f, -12, .75f, -4, 1, 0 });
+                p.Af = Kf(t, new[] { 0f, -1, .2f, 120, .45f, 126, .5f, 100, 1, -1 });
+                p.head = Kf(t, new[] { 0f, 0, .2f, -10, .5f, -12, .75f, 0, 1, 0 });
+                p.L = Kf(t, new[] { 0f, 0, .2f, 14, .7f, 12, 1, 0 }); p.Lf = Kf(t, new[] { 0f, 0, .2f, -16, .7f, -14, 1, 0 });
+                p.sy = Kf(t, new[] { 0f, 1, .2f, .95f, .45f, .94f, .5f, 1.03f, .65f, .98f, 1, 1 }); p.sx = 2 - p.sy;
+                p.glint = t > .22f && t < .44f;
+            }
+            else if (anim == Anim.ChainArc)     // v0.20 连锁放电：扎稳马步把线圈端平（.16）→ 蓄能，枪身越抖越厉害 → 开火（t≈.46）被后坐顶回去 → 看着电弧跳完 → 排气（.6）→ 收枪
+            {
+                const float F = .4615f;
+                p.L = Kf(t, new[] { 0f, 0, .16f, 20, F, 20, .56f, 24, .85f, 20, 1, 0 });
+                p.Lf = Kf(t, new[] { 0f, 0, .16f, -18, F, -18, .56f, -24, .85f, -18, 1, 0 });
+                p.sy = Kf(t, new[] { 0f, 1, .16f, .93f, F - .02f, .91f, F + .03f, 1.04f, .56f, .95f, .85f, .96f, 1, 1 }); p.sx = 2 - p.sy;
+                p.dx = Kf(t, new[] { 0f, 0, .16f, 4, F, 2, F + .06f, -24, .62f, -20, .85f, -14, 1, 0 });
+                p.dy = Kf(t, new[] { 0f, 0, .16f, 4, F, 5, F + .04f, -3, .56f, 3, .85f, 3, 1, 0 });
+                p.lean = Kf(t, new[] { 0f, 1, .16f, 8, F, 10, F + .04f, -9, .62f, 2, .85f, 4, 1, 1 });
+                p.tilt = Kf(t, new[] { 0f, 0, .16f, 2, F, 2, F + .04f, -6, .62f, -1, 1, 0 });
+                p.A = Kf(t, new[] { 0f, 25, .16f, 88, F, 90, F + .04f, 104, .62f, 92, .85f, 86, 1, 25 });
+                p.W = Kf(t, new[] { 0f, 98, .16f, 95, F, 95, F + .04f, 118, .62f, 100, .85f, 98, 1, 98 });
+                p.Af = Kf(t, new[] { 0f, -1, .16f, 72, F, 76, F + .04f, 58, .62f, 70, .85f, 66, 1, -1 });
+                p.head = Kf(t, new[] { 0f, 0, .16f, -4, F, -5, F + .04f, 7, .62f, 0, 1, 0 });
+                p.pack = Kf(t, new[] { 0f, 0, .16f, 3, F, 2, F + .06f, -8, .7f, 2, 1, 0 });
+                if (t > .16f && t < F) { float k = (t - .16f) / (F - .16f); p.W += Mathf.Sin(t * 260) * 2.4f * k; p.dx += Mathf.Sin(t * 310) * 1.2f * k; p.tilt += Mathf.Sin(t * 200) * .8f * k; }
+                p.ghost = t > F && t < F + .1f;
             }
             else if (anim == Anim.Combo)   // 迅切连击 = three thrusts, the last one a dash; hits at t=.338/.471/.75
             {
@@ -265,6 +427,7 @@ namespace ThreadZero
         }
 
         public const float FireT = .286f;   // = DollAnimation.Windup(远程) / 远程动作时长
+        private static readonly float[] NailHits = { .188f, .376f, .565f, .753f };   // 钉射扫射四钉（= SkillBook.NailBurst 的命中时间 ÷ 时长）
         public static bool IsGun(string c) { return c == "gun" || c == "shotgun" || c == "coil" || c == "cannon"; }
         private static void ShootPose(ref Pose p, float t)
         {
@@ -322,7 +485,9 @@ namespace ThreadZero
         private static Bones Build(Pose p)
         {
             var b = new Bones();
-            Matrix4x4 root = T(p.dx, p.dy) * Rm(-p.tilt) * S(p.sx, p.sy);
+            Vector2 pivot = new Vector2(hip.x, hip.y - 18);   // 空翻绕腰转，不是绕脚
+            Matrix4x4 flip = p.spin != 0 ? T(pivot) * Rm(-p.spin) * T(-pivot) : Matrix4x4.identity;
+            Matrix4x4 root = T(p.dx, p.dy) * flip * Rm(-p.tilt) * S(p.sx * (p.face == 0 ? .001f : p.face), p.sy);   // face = -1 转身朝左
             b.torso = root * T(hip) * Rm(-p.lean);
             b.head = b.torso * T(headOff) * Rm(-p.head) * S(1 / p.sx, 1 / p.sy);   // head keeps its shape
             b.pack = b.torso * T(packOff) * Rm(-p.pack);
@@ -331,6 +496,7 @@ namespace ThreadZero
             b.hand = b.armN * T(handPt);
             b.handF = b.armF * T(handPtF);
             b.wpn = b.hand * Rm(p.W - p.A);
+            if (p.wx != 0 || p.wy != 0) b.wpn = T(p.wx, p.wy) * b.wpn;   // 武器抛起来离手
             float aN = legNOff.x >= legFOff.x ? p.L : p.Lf, aF = legNOff.x >= legFOff.x ? p.Lf : p.L;
             b.legN = root * T(hip + legNOff) * Rm(aN);
             b.legF = root * T(hip + legFOff) * Rm(aF);
@@ -341,9 +507,9 @@ namespace ThreadZero
         // Drawn with GL quads in screen space (not GUI.matrix): IMGUI clips rotated/scaled rects incorrectly,
         // which tore the parts apart in the first Unity test.
         private static Material mat, flat;    // flat: texture alpha x vertex colour (solid afterimage)
-        private static Texture2D dot;
+        private static Texture2D dot, soft;   // soft：边缘慢慢淡掉的圆（光晕用）
         private static Matrix4x4 screenM;
-        private static readonly float[] ComboHits = { .338f, .471f, .75f };
+        private static readonly float[] ComboHits = { .22f, .36f, .55f, .74f };   // = DaggerSkill.Hits ÷ Duration
         private static readonly Color Orange = new Color(1, .29f, .07f);
         private static void Quad(Texture tex, Matrix4x4 M, float w, float h, bool mirror, Color color) { Quad(mat, tex, M, w, h, mirror, color); }
         private static void Quad(Material use, Texture tex, Matrix4x4 M, float w, float h, bool mirror, Color color)
@@ -368,10 +534,12 @@ namespace ThreadZero
         {
             Blit(g.pack, pack, false, c, flat); Blit(g.legF, legF, false, c, flat); Blit(g.legN, legN, false, c, flat);
             Blit(g.torso, torso, false, c, flat); Blit(g.head, head, false, c, flat); Blit(g.armN, arm, false, c, flat);
-            Blit(g.wpn, weapon, false, c, flat); Blit(g.hand, hand, false, c, flat);
+            Blit(g.wpn, weapon, false, c, flat); Blit(g.hand, NearHand, false, c, flat);
         }
         private static void Dot(Vector2 c, float r, Color color)
         { Quad(dot, screenM * T(c.x - r, c.y - r), 2 * r, 2 * r, false, color); }
+        private static void Glow(Vector2 c, float r, Color color)
+        { Quad(soft, screenM * T(c.x - r, c.y - r), 2 * r, 2 * r, false, color); }
         private static void Star(Vector2 c, float r, float w, Color color)
         {
             for (int j = 0; j < 4; j++)
@@ -405,6 +573,27 @@ namespace ThreadZero
                 Dot(j, 3.2f, new Color(.12f, .16f, .18f, 1));
                 Dot(j, 2f, new Color(.4f, 1, .9f, .6f + .4f * pulse));
             }
+        }
+        // 中继脊柱：沿后背（外套后沿）四节椎节，深色底板 + 青色芯，一个亮点从腰往脖子流；脖子根一个接口。
+        private static readonly Vector2 SpineLow = new Vector2(-16.5f, -13), SpineHigh = new Vector2(-12.5f, -31);
+        private static void SpineGlow(Bones b)
+        {
+            float now = Time.realtimeSinceStartup, flow = now * .9f % 1;
+            Vector2 prev = Vector2.zero;
+            for (int i = 0; i < 4; i++)
+            {
+                float k = i / 3f; Vector2 l = Vector2.Lerp(SpineLow, SpineHigh, k);
+                Vector3 c3 = b.torso.MultiplyPoint3x4(new Vector3(l.x, l.y, 0)); Vector2 c = new Vector2(c3.x, c3.y);
+                if (i > 0) Segment(prev, c, 1.1f, new Color(.3f, 1, .88f, .55f));
+                float lit = Mathf.Clamp01(1 - Mathf.Abs(flow - k) * 4);
+                Dot(c, 3.0f, new Color(.1f, .13f, .15f, 1));
+                Dot(c, 2.2f, new Color(.55f, .6f, .62f, 1));
+                Dot(c, 1.3f, new Color(.3f + .6f * lit, 1, .88f + .1f * lit, .65f + .35f * lit));
+                prev = c;
+            }
+            Vector3 n3 = b.torso.MultiplyPoint3x4(new Vector3(SpineHigh.x + 1.5f, SpineHigh.y - 3.5f, 0));
+            Dot(new Vector2(n3.x, n3.y), 2.4f, new Color(.1f, .13f, .15f, 1));
+            Dot(new Vector2(n3.x, n3.y), 1.3f, new Color(1, .42f, .12f, .9f));
         }
         // 调度义眼：近侧眼睛位置一枚橙色镜头（压在面罩 / 护目镜上），外圈刻度慢慢转，镜头一明一暗。
         private static void EyeGlow(Bones b)
@@ -464,6 +653,16 @@ namespace ThreadZero
                 dir = new Vector2(-Mathf.Sin(sw), Mathf.Cos(sw));
                 len = Kf(t, new[] { 0f, ChainIdle, .2f, ChainOut + 14, .6f, ChainOut + 14, .85f, ChainIdle, 1, ChainIdle });
             }
+            if (!idle)
+            {   // v0.20 动作表里写了 hook / reach 的（吊钩连招）：链子方向和长度按表走。reach < 0 = 放到目标那么远的几成
+                Pose cp = Compute(anim, t);
+                if (cp.hookOn)
+                {
+                    float hk = cp.hook * Mathf.Deg2Rad; dir = new Vector2(-Mathf.Sin(hk), Mathf.Cos(hk)); if (cp.face < 0) dir.x = -dir.x;
+                    float toTarget = Mathf.Max(ChainIdle + 6, ChainReachPx / (PixelsPerUnit * Mathf.Max(.1f, lastScale)));
+                    len = cp.reach > 0 ? cp.reach : cp.reach < 0 ? toTarget * -cp.reach : len;
+                }
+            }
             Vector2 end = hand + dir * len;
             // 链子微微下垂：中点往重力方向偏，绷得越平越不垂
             Vector2 sag = new Vector2(0, 3.5f * Mathf.Abs(dir.x));
@@ -483,6 +682,74 @@ namespace ThreadZero
             Blit(hm, hookPart, false, tint);
             Vector3 tip3 = hm.MultiplyPoint3x4(new Vector3(0, hookPart.size.y - hookPart.pivot.y, 0));
             return new Vector2(tip3.x, tip3.y);   // 吊钩尖端：当作「枪口 / 锤头」位置给特效用
+        }
+        // v0.20 机械飞升第三阶段（90%）：后脑接口拉出三根线缆垂到背包上沿。程序画，两头跟着头和背包的骨骼走，
+        //       动作里头一转线缆就跟着弯；外皮深色，里面一道青绿光纤，有一点光沿着线缆往下流。
+        private static void NeckCables(Bones b, Color tint)
+        {
+            Vector3 h3 = b.head.MultiplyPoint3x4(new Vector3(-20, -12, 0)), p3 = b.pack.MultiplyPoint3x4(new Vector3(-9, -28, 0));
+            Vector2 a = new Vector2(h3.x, h3.y), e = new Vector2(p3.x, p3.y);
+            Color dark = new Color(.07f * tint.r, .08f * tint.g, .09f * tint.b, tint.a), dim = new Color(.18f, .62f, .56f, tint.a), glow = new Color(.55f, 1f, .92f, tint.a);
+            float time = Time.unscaledTime;
+            for (int c = 0; c < 3; c++)
+            {
+                // 三根从后脑沿头发边缘往上排开、插到背包顶上往后排开；中间往背后垂下来（整个人约 150 单位高，垂度要够大才看得出是线缆）
+                Vector2 s0 = a + new Vector2(-c * 3.5f, -c * 5f), t0 = e + new Vector2(-c * 5f, c * 3f);
+                Vector2 ctrl = (s0 + t0) * .5f + new Vector2(-26 - c * 7f, 16 + c * 6f);
+                Vector2 prev = s0; const int n = 12;
+                float pulse = Mathf.Repeat(time * .7f + c * .37f, 1.4f);
+                for (int i = 1; i <= n; i++)
+                {
+                    float u = i / (float)n; Vector2 q = (1 - u) * (1 - u) * s0 + 2 * (1 - u) * u * ctrl + u * u * t0;
+                    Segment(prev, q, c == 0 ? 4.8f : 4f, dark);
+                    Segment(prev, q, 1.7f, Color.Lerp(dim, glow, Mathf.Clamp01(1 - Mathf.Abs(u - pulse) * 5)));
+                    prev = q;
+                }
+            }
+            for (int c = 0; c < 3; c++) { Vector2 t0 = e + new Vector2(-c * 5f, c * 3f); Dot(t0, 2.6f, dark); Dot(t0, 1.3f, glow); }   // 背包上的三个插口（后脑那头被头发盖住）
+        }
+        // v0.20 飞升完成（100%）：全身光纹。近侧腿、躯干上各一两道电路一样的细光线（直线 + 45° 拐角，末端一个节点），
+        // 一个亮点从脚往上依次流过腿 → 躯干，流到哪段哪段亮；身后一圈青光一明一暗、几粒光点往上飘；散热鳍从红色变成青色（fins_zero.png）。
+        // 坐标是各骨骼自己的局部坐标（部件单位）。
+        // 手臂不画：100% 时五个义体都满级，近侧手臂一定是机械臂，它自己有发光关节。
+        private static readonly Vector2[] TraceLeg = { new Vector2(1.5f, 4), new Vector2(1.5f, 11), new Vector2(3.5f, 13), new Vector2(3.5f, 20) };
+        private static readonly Vector2[] TraceTorso = { new Vector2(3, -2), new Vector2(3, -9), new Vector2(6, -12), new Vector2(6, -19) };
+        private static readonly Vector2[] TraceTorso2 = { new Vector2(-3, -3), new Vector2(-3, -11), new Vector2(-1, -13), new Vector2(-1, -17) };
+        private static float BodyFlow { get { return Mathf.Repeat(Time.unscaledTime * .45f, 1.25f); } }   // 0→1 流完全身，1→1.25 停一下
+        private static void Trace(Matrix4x4 bone, Vector2[] pts, float from, float to, Color tint)
+        {
+            float flow = BodyFlow, k = (flow - from) / (to - from);   // 亮点走到这条线的哪儿（0..1）
+            bool on = k > -.2f && k < 1.25f;
+            Color dim = new Color(.25f, .85f, .8f, .7f * tint.a), hot = new Color(.85f, 1, .98f, tint.a);
+            Vector2 prev = P(bone, pts[0]);
+            Dot(prev, .75f, dim);
+            for (int i = 1; i < pts.Length; i++)
+            {
+                Vector2 q = P(bone, pts[i]);
+                float u = (i - .5f) / (pts.Length - 1), lit = on ? Mathf.Clamp01(1 - Mathf.Abs(u - k) * 3.2f) : 0;
+                Segment(prev, q, 2.6f, new Color(.3f, 1, .9f, (.14f + .3f * lit) * tint.a));   // 光晕
+                Segment(prev, q, 1f, Color.Lerp(dim, hot, lit));
+                prev = q;
+            }
+            float endLit = on ? Mathf.Clamp01(1 - Mathf.Abs(1 - k) * 3.2f) : 0;
+            Glow(prev, 3.2f, new Color(.3f, 1, .9f, (.2f + .5f * endLit) * tint.a));
+            Dot(prev, 1.5f, new Color(.08f, .1f, .12f, tint.a));
+            Dot(prev, 1f, Color.Lerp(dim, hot, endLit));
+        }
+        private static Vector2 P(Matrix4x4 bone, Vector2 p) { Vector3 v = bone.MultiplyPoint3x4(new Vector3(p.x, p.y, 0)); return new Vector2(v.x, v.y); }
+        private static void Motes(Bones b, Color tint)
+        {   // 整个人大约 150 个部件单位高（Q 版大头：胯 26、脖子 65、头顶约 150），光晕和光点按这个尺寸摆
+            float now = Time.unscaledTime, breath = .5f + .5f * Mathf.Sin(now * 1.6f); Vector2 c = P(b.torso, new Vector2(-4, -48));
+            Glow(c, 105, new Color(.25f, 1, .88f, (.13f + .06f * breath) * tint.a));   // 身后一圈青色的光，慢慢一明一暗
+            Glow(c, 62, new Color(.5f, 1, .95f, (.09f + .05f * breath) * tint.a));
+            for (int i = 0; i < 10; i++)
+            {
+                float ph = Mathf.Repeat(now * .22f + i / 10f, 1);   // 往上飘的进度（脚边 → 头顶上方）
+                float x = (Mathf.Repeat(i * .618f, 1) - .5f) * 96 + Mathf.Sin(now * 1.3f + i * 2.1f) * 4;   // 左右各 50 单位以内，衣柜大图里也不出框
+                Vector2 q = c + new Vector2(x, 72 - ph * 170);
+                float a = Mathf.Sin(ph * Mathf.PI) * tint.a;
+                Glow(q, 7, new Color(.4f, 1, .9f, .55f * a)); Dot(q, 1.8f, new Color(.9f, 1, .98f, .95f * a));
+            }
         }
         private static void Segment(Vector2 a, Vector2 b, float width, Color color)
         {
@@ -511,10 +778,19 @@ namespace ThreadZero
                     dot.SetPixel(x, y, new Color(1, 1, 1, Mathf.Clamp01((1 - r) * 6)));
                 }
                 dot.Apply();
+                soft = new Texture2D(64, 64, TextureFormat.RGBA32, false) { hideFlags = HideFlags.HideAndDontSave, wrapMode = TextureWrapMode.Clamp };
+                for (int y = 0; y < 64; y++) for (int x = 0; x < 64; x++)
+                {
+                    float r = Mathf.Clamp01(new Vector2(x - 31.5f, y - 31.5f).magnitude / 32f);
+                    soft.SetPixel(x, y, new Color(1, 1, 1, (1 - r) * (1 - r)));
+                }
+                soft.Apply();
             }
             ApplyLook(model);
             t = anim == Anim.Idle || anim == Anim.Walk ? t - Mathf.Floor(t) : Mathf.Clamp01(t);
             Pose p = Compute(anim, t);
+            SkillZoom = p.zoom; SkillCharge = p.charge;
+            RootPos = new Vector2(feetX, feetY) + new Vector2(p.dx, p.dy) * PixelsPerUnit * heightScale;   // 脚底实际位置（落地扬尘用）
             Bones b = Build(p);
             // logical -> GUI point -> screen pixel (accounts for groups / GUI.matrix of the caller)
             Vector2 o = GUIUtility.GUIToScreenPoint(Ui.P(feetX, feetY));
@@ -524,23 +800,30 @@ namespace ThreadZero
             Color far = new Color(tint.r * .62f, tint.g * .62f, tint.b * .62f, tint.a);
             // v0.16b 义体装在持械的近侧手臂上（远侧手臂大多藏在身体后面，看不出来）：冷钢色 + 青绿发光关节 + 线缆。
             bool mech = model != null && model.state.implants.Contains("arm_l");
+            mechStage = model != null ? model.AscensionStage : 0; mechOn = mechStage >= 1; if (mechOn) LoadMechHands();
             Color armTint = mech ? new Color(tint.r * .62f, tint.g * .74f, tint.b * .86f, tint.a) : tint;
 
             GL.PushMatrix();
-            // 像素试验：画到小画布时，Screen.width 已经是画布尺寸；坐标仍按全屏算，所以投影按「画布 × 缩放倍数」= 全屏尺寸铺
-            if (PixelTarget.x > 0) GL.LoadPixelMatrix(0, PixelTarget.x, PixelTarget.y, 0);
-            else GL.LoadPixelMatrix(0, Screen.width, Screen.height, 0);   // y down, like GUI
-            if (p.ghost)                           // orange afterimages while dashing
+            GL.LoadPixelMatrix(0, Screen.width, Screen.height, 0);   // y down, like GUI
+            if (p.ghost)                           // afterimages while dashing: orange, electric skills cyan
             {
-                Ghost(Build(Compute(anim, Mathf.Max(0, t - .06f))), new Color(Orange.r, Orange.g, Orange.b, .12f * tint.a));
-                Ghost(Build(Compute(anim, Mathf.Max(0, t - .03f))), new Color(Orange.r, Orange.g, Orange.b, .22f * tint.a));
+                Color gc = anim == Anim.ChainArc ? new Color(.45f, 1, .92f) : Orange;
+                Ghost(Build(Compute(anim, Mathf.Max(0, t - .06f))), new Color(gc.r, gc.g, gc.b, .12f * tint.a));
+                Ghost(Build(Compute(anim, Mathf.Max(0, t - .03f))), new Color(gc.r, gc.g, gc.b, .22f * tint.a));
             }
+            if (mechStage >= 4) Motes(b, tint);   // v0.20 飞升完成：身体后面往上飘的光点
+            if (mechStage >= 2 && mechFins != null) Blit(b.pack * T(finsAt), mechStage >= 4 && mechFinsZero != null ? mechFinsZero : mechFins, false, tint);   // v0.20 飞升第二阶段：散热鳍画在背包后面，从背包左边露出来
             Blit(b.pack, pack, false, tint);
             Blit(b.legF, legF, false, tint);
+            if (mechStage >= 4) Trace(b.legF, TraceLeg, .06f, .44f, new Color(1, 1, 1, tint.a * .55f));   // 远侧腿也有一道（压暗，被近侧腿挡住一半）
             Blit(b.armF, armFar ?? arm, armFar == null, far);   // 远侧手臂：有单独的图就用（已经画成远侧，不镜像）；没有就近侧镜像压暗
-            Blit(b.handF, handFar ?? hand, handFar == null, far);
+            Blit(b.handF, FarHand, FarHandMirrored, far);
             Blit(b.legN, legN, false, tint);
+            if (mechStage >= 4) Trace(b.legN, TraceLeg, 0, .38f, tint);   // 腿上的光纹画在躯干前面，上端被外套盖住
             Blit(b.torso, torso, false, tint);
+            if (mechStage >= 4) { Trace(b.torso, TraceTorso, .34f, 1, tint); Trace(b.torso, TraceTorso2, .4f, 1, tint); }
+            if (model != null && model.state.implants.Contains("spine")) SpineGlow(b);   // 第三章义体：后背一列发光的中继椎节
+            if (mechStage >= 3) NeckCables(b, tint);   // v0.20 飞升第三阶段：后脑接出的线缆（画在身体上面、头下面，线缆根部被头盖住）
             Blit(b.head, head, false, tint);
             if (p.fx)                              // tip trail sits behind arm and blade
                 for (int i = 0; i < 9; i++)
@@ -554,7 +837,7 @@ namespace ThreadZero
             Vector2 chainEnd = Vector2.zero; bool chained = weaponClass == "chain" && hookPart != null;
             if (chained) chainEnd = DrawChain(b, anim, t, tint);
             else Blit(b.wpn, weapon, false, tint);
-            Blit(b.hand, hand, false, armTint);
+            Blit(b.hand, NearHand, false, armTint);
             if (mech) MechArmGlow(b);
             if (model != null && model.state.implants.Contains("eye_r")) EyeGlow(b);
             {
@@ -569,9 +852,10 @@ namespace ThreadZero
                 Muzzle = new Vector2(feetX, feetY) + tp * PixelsPerUnit * heightScale;
                 Vector2 d = tp - new Vector2(back.x, back.y); MuzzleDir = d.sqrMagnitude > .01f ? d.normalized : Vector2.right;
             }
-            if (anim == Anim.Shoot && weaponClass == "coil" && t > .08f && t < FireT + .02f)   // 线圈蓄能：电光向枪口收拢
+            bool coilCharge = anim == Anim.Shoot && weaponClass == "coil" && t > .08f && t < FireT + .02f, arcCharge = false;   // v0.20 连锁放电的蓄能改由 WeaponFx.DrawCharge 画
+            if (coilCharge || arcCharge)   // 线圈蓄能：电光向枪口收拢（连锁放电举过头顶时更久）
             {
-                float k = Mathf.Clamp01((t - .08f) / (FireT - .08f)); Vector2 tp = Tip(b);
+                float k = coilCharge ? Mathf.Clamp01((t - .08f) / (FireT - .08f)) : Mathf.Clamp01((t - .12f) / .34f); Vector2 tp = Tip(b);
                 Dot(tp, 4 + 9 * k, new Color(.55f, 1, .95f, .35f + .5f * k));
                 for (int i = 0; i < 4; i++)
                 {
@@ -587,11 +871,11 @@ namespace ThreadZero
                 Star(tp, 9 * ph, 2, Color.white); Star(tp, 5 * ph, 1, Orange);
             }
             if (anim == Anim.Combo)                // hit sparks: white core + radiating rays, bigger on the finisher
-                for (int i = 0; i < 3; i++)
+                for (int i = 0; i < ComboHits.Length; i++)
                 {
                     float k = (t - ComboHits[i]) / .08f;
                     if (k < 0 || k >= 1) continue;
-                    float big = i == 2 ? 1.7f : 1f, fade = 1 - k;
+                    float big = i == ComboHits.Length - 1 ? 1.7f : 1f, fade = 1 - k;
                     Vector2 hp = Tip(Build(Compute(anim, ComboHits[i])));
                     Dot(hp, 7 * (1 - k * .6f) * big, new Color(1, 1, 1, .94f * fade));
                     for (int j = 0; j < 8; j++)
@@ -601,7 +885,7 @@ namespace ThreadZero
                         Vector2 dir = new Vector2(Mathf.Cos(ang), Mathf.Sin(ang));
                         Segment(hp + dir * r0, hp + dir * r1, 3 * fade * big, new Color(Orange.r, Orange.g, Orange.b, fade));
                     }
-                    if (i == 2)
+                    if (i == ComboHits.Length - 1)
                     {
                         float rx = 10 + 34 * k, ry = rx * .55f;
                         for (int j = 0; j < 24; j++)
@@ -616,7 +900,7 @@ namespace ThreadZero
         }
 
         // ---------- game hookups ----------
-        public static bool Enabled { get { return true; } }   // 旧的「按住 F7 看 V12 旧形象」对比已去掉（F7 现在是像素试验开关，按下那一瞬会闪出旧形象）
+        public static bool Enabled { get { return true; } }   // 旧的「按住 F7 看 V12 旧形象」对比已去掉
         public static bool CanDraw(GameModel model) { return Enabled && Application.isPlaying && Ready(); }
         /// 普通攻击动作按武器类别：短刃前刺 / 枪械射击 / 重武器下砸。
         public static Anim ClassAttack(GameModel model)

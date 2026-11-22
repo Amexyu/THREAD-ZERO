@@ -43,8 +43,9 @@ namespace ThreadZero {
  static Texture2D PartIcon(EquipmentBase item){
  Texture2D t;if(iconCache.TryGetValue(item.id,out t))return t;
  string file=item.slot==Slot.Head?"head":item.slot==Slot.Coat?"torso":item.slot==Slot.Back?"pack":item.slot==Slot.Legs?"leg_near":"weapon";
- t=Resources.Load<Texture2D>("Art/V13/Parts/"+item.id+"/icon");   // 单品图（例如头部装备不带人头），有就优先用
- if(t==null)t=Resources.Load<Texture2D>("Art/V13/Parts/"+item.id+"/"+file);
+ string art=Catalog.ArtOf(item.id);   // v0.18 美术未到的装备借旧装备的图
+ t=Resources.Load<Texture2D>("Art/V13/Parts/"+art+"/icon");   // 单品图（例如头部装备不带人头），有就优先用
+ if(t==null)t=Resources.Load<Texture2D>("Art/V13/Parts/"+art+"/"+file);
  if(t==null)t=Resources.Load<Texture2D>("Art/V13/Starter/"+file);
  iconCache[item.id]=t;return t;
  }

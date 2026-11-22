@@ -73,10 +73,63 @@ namespace ThreadZero
 
         // v0.16 机械飞升：5 个义体槽竖排在角色左边。已装 = 橙色块；悬停显示名字和效果。
         private static readonly string[] ImplantParts = { "手臂", "义眼", "脊柱", "心脏", "接口" };
+        private int implantPick = -1;   // v0.20 点开的义体（升级卡片），-1 = 没点开
+        private static string ImplantStatsText(Stats s)
+        {
+            var parts = new List<string>();
+            if (s.attack > 0) parts.Add("攻击 +" + s.attack.ToString("0.#")); if (s.health > 0) parts.Add("生命 +" + s.health.ToString("0"));
+            if (s.defense > 0) parts.Add("防御 +" + s.defense.ToString("0.#")); if (s.haste > 0) parts.Add("攻速 +" + (s.haste * 100).ToString("0.#") + "%");
+            if (s.crit > 0) parts.Add("暴击 +" + (s.crit * 100).ToString("0.#") + "%"); if (s.luck > 0) parts.Add("幸运 +" + s.luck.ToString("0.#"));
+            if (s.critDamage > 0) parts.Add("暴击伤害 +" + (s.critDamage * 100).ToString("0") + "%");
+            return string.Join("，", parts);
+        }
+        private static Stats ImplantScaled(Stats a, int lv)
+        {
+            float k = 1 + Catalog.ImplantLevelGain * (lv - 1);
+            var c = new Stats(a.health * k, a.attack * k, a.defense * k, a.haste * k, a.crit * k, a.luck * k); c.critDamage = a.critDamage * k; return c;
+        }
+        /// v0.20 义体升级卡片：当前效果、下一级、5 / 10 级特性、花费、升级按钮。
+        private void ImplantCard(int i, float x, float y)
+        {
+            ImplantDef d = Catalog.Implants[i]; int lv = model.ImplantLevel(i); bool max = lv >= Catalog.ImplantMaxLevel;
+            float w = 340, h = 232;
+            Ui.Fill(x, y, w, h, Ui.Ink); Ui.Fill(x, y, 6, h, Ui.Orange);
+            Ui.Text(x + 18, y + 10, w - 30, 26, d.name, 18, Ui.Panel, TextAnchor.MiddleLeft, true);
+            Ui.Text(x + 18, y + 10, w - 34, 26, "Lv " + lv + " / " + Catalog.ImplantMaxLevel, 15, Ui.Orange, TextAnchor.MiddleRight, true, true);
+            Ui.Text(x + 18, y + 38, w - 30, 20, "现在：" + ImplantStatsText(ImplantScaled(d.stats, lv)), 12, Ui.MuteOnInk, TextAnchor.MiddleLeft);
+            Ui.Text(x + 18, y + 58, w - 30, 20, max ? "已经满级" : "下一级：" + ImplantStatsText(ImplantScaled(d.stats, lv + 1)), 12, max ? Ui.Orange : Ui.Panel, TextAnchor.MiddleLeft);
+            Ui.Text(x + 18, y + 86, w - 30, 20, (lv >= 5 ? "✓ " : "5 级 · ") + d.trait5Text, 12, lv >= 5 ? Ui.Orange : Ui.MuteOnInk, TextAnchor.MiddleLeft, lv >= 5);
+            Ui.Text(x + 18, y + 106, w - 30, 20, (lv >= 10 ? "✓ " : "10 级 · ") + d.trait10Text, 12, lv >= 10 ? Ui.Orange : Ui.MuteOnInk, TextAnchor.MiddleLeft, lv >= 10);
+            if (!max)
+            {
+                int sc = Catalog.ImplantShardCost(lv), pc = Catalog.ImplantScrapCost(lv);
+                bool okS = model.state.shards >= sc, okP = model.state.scrap >= pc;
+                Ui.Text(x + 18, y + 134, w - 30, 20, "织网碎片 " + sc + "（持有 " + model.state.shards + "）", 13, okS ? Ui.Panel : Ui.Orange, TextAnchor.MiddleLeft, true);
+                Ui.Text(x + 18, y + 154, w - 30, 20, "零件 " + pc + "（持有 " + model.state.scrap + "）", 13, okP ? Ui.Panel : Ui.Orange, TextAnchor.MiddleLeft, true);
+                if (Ui.Button(x + 18, y + 182, w - 36, 40, okS && okP ? "升级到 Lv " + (lv + 1) : !okS ? "织网碎片不足 · 去回声层刷" : "零件不足", 1, okS && okP, 15))
+                    UpgradeImplantClicked(i);
+            }
+            else Ui.Text(x + 18, y + 140, w - 30, 60, "这件义体已经满级。其余义体升满后机械飞升完成。", 13, Ui.Panel, TextAnchor.UpperLeft, false, false, true);
+        }
+        private void UpgradeImplantClicked(int i)
+        {
+            ImplantDef d = Catalog.Implants[i]; int stage = model.AscensionStage;
+            if (!model.UpgradeImplant(i)) return;
+            Save(); Play(equipSound); Notify(d.name + " 升到 Lv " + model.ImplantLevel(i) + " · 飞升度 " + (model.Ascension * 100).ToString("0") + "%");
+            if (model.AscensionStage > stage)   // v0.20 跨过飞升阶段：横幅只画在行动页上，等玩家回去再放（不然在整备页升级时看不到）
+            {
+                stageShown = model.AscensionStage; stagePending = true; Play(rareSound);
+                Notify("机械飞升进入「" + Catalog.AscensionStageNames[stageShown - 1] + "」· 回到行动页看看", 4);
+            }
+        }
+        /// 测试用（桥接 call TestUpgradeImplant 0）：等同在整备页点义体的「升级」按钮。
+        public void TestUpgradeImplant(int i) { UpgradeImplantClicked(i); }
         private void ImplantColumn(float x, float y)
         {
             int have = model.state.implants.Count;
-            Ui.Text(x, y, 120, 18, "机械飞升 " + have + "/" + Catalog.AscensionTotal, 13, have > 0 ? Ui.Orange : Ui.Mute, TextAnchor.MiddleLeft, true);
+            Ui.Text(x, y, 160, 18, "机械飞升 " + (model.Ascension * 100).ToString("0") + "%", 13, have > 0 ? Ui.Orange : Ui.Mute, TextAnchor.MiddleLeft, true);
+            if (model.AscensionStage > 0) Ui.Text(x + 100, y, 220, 18, Catalog.AscensionStageNames[model.AscensionStage - 1], 11, Ui.Alpha(Ui.Orange, .8f), TextAnchor.MiddleLeft, false);   // 和百分比同一行（放下一行会被第一个义体格子压住）
+            if (have > 0) Ui.Text(x, y + 280, 160, 18, "织网碎片 " + model.state.shards, 12, Ui.Mute, TextAnchor.MiddleLeft, true);
             string tipTitle = null, tipBody = null; float tipY = 0;
             for (int i = 0; i < Catalog.AscensionTotal; i++)
             {
@@ -85,15 +138,23 @@ namespace ThreadZero
                 float by = y + 26 + i * 50; bool on = slotDef != null && model.state.implants.Contains(slotDef.id); bool hover = Ui.Hover(x, by, 44, 44);
                 Ui.Fill(x, by, 44, 44, on ? Ui.Orange : Ui.Panel); Ui.Frame(x, by, 44, 44, 2, on ? Ui.Ink : Ui.Rule);
                 Ui.Text(x, by, 44, 44, ImplantParts[i].Substring(0, 1), 18, on ? Ui.OnAccent : Ui.Rule, TextAnchor.MiddleCenter, true);
+                if (on)
+                {   // v0.20 等级角标 + 点开升级卡片
+                    int lv = model.ImplantLevel(i);
+                    Ui.Fill(x + 26, by + 28, 18, 16, Ui.Ink); Ui.Text(x + 26, by + 28, 18, 16, lv.ToString(), 11, Ui.Orange, TextAnchor.MiddleCenter, true, true);
+                    if (model.CanUpgradeImplant(i)) Ui.Fill(x + 38, by - 2, 8, 8, Ui.Orange);
+                    if (Ui.Click(x, by, 44, 44)) implantPick = implantPick == i ? -1 : i;
+                }
                 if (on && slotDef.id == implantNew) { Ui.Fill(x + 30, by - 6, 30, 16, Ui.Ink); Ui.Text(x + 30, by - 6, 30, 16, "NEW", 10, Ui.Orange, TextAnchor.MiddleCenter, true, true); }
                 if (hover)
                 {
                     ImplantDef d = on ? slotDef : null;
                     tipTitle = d != null ? d.name : "未解锁 · " + ImplantParts[i];
-                    tipBody = d != null ? d.desc : "击败第 " + (i + 1) + " 章的首领后装上。";
+                    tipBody = d != null ? d.desc + "（点击升级）" : "击败第 " + (i + 1) + " 章的首领后装上。";
                     tipY = by;
                 }
             }
+            if (implantPick >= 0 && model.ImplantLevel(implantPick) > 0) { ImplantCard(implantPick, x + 52, Mathf.Min(y + 22 + implantPick * 50, 860 - 232)); return; }
             if (tipTitle != null)
             {
                 Ui.Fill(x + 52, tipY - 4, 260, 64, Ui.Ink);
@@ -172,32 +233,37 @@ namespace ThreadZero
             bool equippedNow = model.state.equipped.Contains(item.uid);
             Ui.Fill(1160, 20, 408, 148, Ui.Ink); Ui.Fill(1160, 20, 408, 8, quality);
             Ui.Fill(1176, 44, 108, 108, Ui.Tile2); PaperDollView.DrawEquipmentIcon(b, Ui.R(1183, 51, 94, 94));
-            Ui.Text(1300, 48, 256, 22, Catalog.QualityNames[(int)item.quality] + " · " + Catalog.SlotNames[(int)b.slot] + " · Lv." + item.level, 14, quality, TextAnchor.MiddleLeft, true);
+            Ui.Text(1300, 48, 256, 22, Catalog.QualityNames[(int)item.quality] + " · " + Catalog.SlotNames[(int)b.slot] + " · Lv." + item.level
+                + (b.slot == Slot.Weapon ? (Catalog.IsGroupWeapon(b.id) ? " · 群伤" : " · 单体") : ""), 14, quality, TextAnchor.MiddleLeft, true);   // v0.20 武器标群伤 / 单体，卡关提示里说的「换群伤武器」有地方看
             Ui.Text(1300, 74, 256, 40, b.name, 24, Ui.Panel, TextAnchor.MiddleLeft, true);
             Ui.Text(1300, 118, 256, 22, equippedNow ? "穿戴中" : item.locked ? "已锁定 · 不会被分解" : "背包中", 13, Ui.MuteOnInk, TextAnchor.MiddleLeft);
 
             Item worn = model.Equipped(b.slot);
-            float[] mine = Values(GameModel.ItemStats(item)), old = worn == null ? new float[6] : Values(GameModel.ItemStats(worn));
+            float[] mine = Values(GameModel.ItemStats(item)), old = worn == null ? new float[Balance.AffixStats] : Values(GameModel.ItemStats(worn));
             Ui.Text(1176, 180, 200, 20, "属性", 12, Ui.Mute, TextAnchor.MiddleLeft);
             Ui.Text(1352, 180, 200, 20, equippedNow ? "当前穿戴" : "对比当前穿戴", 12, Ui.Mute, TextAnchor.MiddleRight);
             Ui.Fill(1176, 202, 376, 2, Ui.Ink);
             float y = 204;
-            for (int i = 0; i < 6; i++)
+            // v0.20 特殊词条（暴击伤害等 4 项，橙色）也列出来：原来只列 6 项基础属性，洗出来的特殊词条在整备页看不到、也比不了。
+            // 行数多了（最多 10 行）就把行距从 42 压到 36，免得顶到下面的固定效果框和按钮。
+            int rows = 0; for (int i = 0; i < Balance.AffixStats; i++) if (Mathf.Abs(mine[i]) >= .0001f || Mathf.Abs(old[i]) >= .0001f) rows++;
+            float rowH = rows > 8 ? 36 : 42;   // 9 行 × 42 时下面那句「◆ 标记的属性…」会压到「穿戴装备」按钮
+            for (int i = 0; i < Balance.AffixStats; i++)
             {
                 if (Mathf.Abs(mine[i]) < .0001f && Mathf.Abs(old[i]) < .0001f) continue;
-                int stat = i; bool rolled = item.affixes.Any(affix => affix.stat == stat);
+                int stat = i; bool rolled = item.affixes.Any(affix => affix.stat == stat), special = i >= Balance.BasicStats;
                 float delta = mine[i] - old[i]; bool flat = equippedNow || Mathf.Abs(delta) < .0001f;
-                Ui.Text(1176, y, 70, 42, Catalog.StatNames[i], 15, Ui.Body, TextAnchor.MiddleLeft);
-                if (rolled) Ui.Text(1214, y, 30, 42, "◆", 11, qualityInk, TextAnchor.MiddleLeft);
-                Ui.Text(1272, y, 180, 42, Value(i, mine[i]), 26, Ui.Ink, TextAnchor.MiddleLeft, true, true);
-                if (flat) Ui.Text(1452, y, 100, 42, "—", 18, Ui.Mute, TextAnchor.MiddleRight, true, true);
+                Ui.Text(1176, y, 70, rowH, Catalog.StatNames[i], 15, special ? Ui.OrangeInk : Ui.Body, TextAnchor.MiddleLeft, special);
+                if (rolled) Ui.Text(1176 + Catalog.StatNames[i].Length * 16 + 6, y, 30, rowH, "◆", 11, qualityInk, TextAnchor.MiddleLeft);
+                Ui.Text(1272, y, 180, rowH, Value(i, mine[i]), rowH < 42 ? 22 : 26, Ui.Ink, TextAnchor.MiddleLeft, true, true);
+                if (flat) Ui.Text(1452, y, 100, rowH, "—", 18, Ui.Mute, TextAnchor.MiddleRight, true, true);
                 else
                 {
-                    Ui.Fill(1452, y + 7, 100, 28, delta > 0 ? Ui.Good : Ui.OrangeInk);
-                    Ui.Text(1452, y + 7, 92, 28, (delta > 0 ? "▲ +" : "▼ ") + Value(i, delta), 17, Color.white, TextAnchor.MiddleRight, true, true);
+                    Ui.Fill(1452, y + (rowH - 28) / 2, 100, 28, delta > 0 ? Ui.Good : Ui.OrangeInk);
+                    Ui.Text(1452, y + (rowH - 28) / 2, 92, 28, (delta > 0 ? "▲ +" : "▼ ") + Value(i, delta), 17, Color.white, TextAnchor.MiddleRight, true, true);
                 }
-                Ui.Fill(1176, y + 41, 376, 1, Ui.Hair);
-                y += 42;
+                Ui.Fill(1176, y + rowH - 1, 376, 1, Ui.Hair);
+                y += rowH;
             }
 
             string effectName, effectText; SplitEffect(b.effect, out effectName, out effectText);
@@ -210,14 +276,15 @@ namespace ThreadZero
 
             if (Ui.Button(1176, 706, 376, 60, equippedNow ? "已穿戴" : "穿戴装备", 1, !equippedNow, 20))
             { model.Equip(item.uid); combat.SyncLoadout(); animationState.Clear(); Save(); Play(equipSound); Notify("已穿戴 " + b.name); }
-            if (Ui.Button(1176, 774, 244, 46, "仅使用外观", 0, true, 15)) { model.SetAppearance(b.id); Save(); Play(equipSound); Notify("已切换外观：" + b.name); }
+            bool lookFits = model.LookFits(b);   // v0.20 近战 / 远程外观不能互换
+            if (Ui.Button(1176, 774, 244, 46, lookFits ? "仅使用外观" : "外观类别不同", 0, lookFits, 15)) { model.SetAppearance(b.id); Save(); Play(equipSound); Notify("已切换外观：" + b.name); }
             if (Ui.Button(1428, 774, 124, 46, item.locked ? "解锁" : "锁定", 0, true, 15)) { item.locked = !item.locked; Save(); }
             bool canSalvage = !item.locked && !equippedNow, over = canSalvage && Ui.Hover(1176, 828, 376, 40);
             Ui.Fill(1176, 828, 376, 40, over ? Ui.OrangeInk : Ui.Panel); Ui.Frame(1176, 828, 376, 40, 1, canSalvage ? Ui.OrangeInk : Ui.Grey);
             string salvage = equippedNow ? "穿戴中的装备不可分解" : item.locked ? "已锁定的装备不可分解" : "分解 · +" + GameModel.SalvageValue(item) + " 零件（外观保留）";
             Ui.Text(1176, 828, 376, 40, salvage, 14, over ? Color.white : canSalvage ? Ui.OrangeInk : Ui.Mute, TextAnchor.MiddleCenter, true);
             if (canSalvage && Ui.Click(1176, 828, 376, 40) && model.Salvage(item.uid))
-            { recentDrops.Remove(item.uid); unseen.Remove(item.uid); selectedItem = null; Save(); Notify("已分解，收藏的外观保留"); }
+            { recentDrops.Remove(item.uid); unseen.Remove(item.uid); selectedItem = null; Save(); Play(salvageSound); Notify("已分解，收藏的外观保留"); }
         }
     }
 }

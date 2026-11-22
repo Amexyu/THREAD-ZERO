@@ -7,9 +7,10 @@ namespace ThreadZero
         private void Modal()
         {
             Ui.FillScreen(Ui.Alpha(Ui.Ink, .62f));
-            bool map = navigation.Modal == GameModal.Map;
-            float x = map ? 390 : 450, y = map ? 40 : 130, w = map ? 820 : 700, h = map ? 800 : 640;
-            string title = map ? "选择街区" : navigation.Modal == GameModal.Help ? "行动指南" : navigation.Modal == GameModal.Salvage ? "一键分解" : "设置";
+            bool map = navigation.Modal == GameModal.Map, offline = navigation.Modal == GameModal.Offline;
+            // 选关弹窗 v0.20 加宽 820 → 1000：五章的分页按钮（5 × 152）放在标题栏右侧，原来的宽度下第一章按钮伸出弹窗左边、压住标题
+            float x = map ? 300 : offline ? 500 : 450, y = map ? 40 : offline ? 250 : 130, w = map ? 1000 : offline ? 600 : 700, h = map ? 800 : offline ? 380 : 640;
+            string title = map ? "选择街区" : offline ? "欢迎回来" : navigation.Modal == GameModal.Help ? "行动指南" : navigation.Modal == GameModal.Salvage ? "一键分解" : "设置";
             Ui.Fill(x, y, w, h, Ui.Panel); Ui.Fill(x, y, w, 72, Ui.Ink); Ui.Fill(x, y, 8, 72, Ui.Orange);
             Ui.Text(x + 32, y, w - 160, 72, title, 22, Ui.Panel, TextAnchor.MiddleLeft, true);
             Ui.Frame(x, y, w, h, 2, Ui.Ink);
@@ -20,8 +21,23 @@ namespace ThreadZero
                 case GameModal.Help: HelpModal(x, y, w); break;
                 case GameModal.Settings: SettingsModal(x, y, w); break;
                 case GameModal.Salvage: SalvageModal(x, y, w); break;
+                case GameModal.Offline: OfflineModal(x, y, w); break;
                 default: navigation.Close(); break;
             }
+        }
+
+        /// v0.20 离线收益：离开多久、带回多少零件、怎么算的。
+        private void OfflineModal(float x, float y, float w)
+        {
+            int minutes = (int)(offlineAway / 60), hours = minutes / 60;
+            string away = hours > 0 ? hours + " 小时 " + (minutes % 60) + " 分" : minutes + " 分钟";
+            Ui.Text(x + 40, y + 96, w - 80, 30, "你离开了 " + away, 18, Ui.Ink, TextAnchor.MiddleLeft, true);
+            Ui.Text(x + 40, y + 136, w - 80, 56, "回收无人机带回了 " + offlineGain + " 零件", 30, Ui.Orange, TextAnchor.MiddleLeft, true);
+            string rule = "离线按挂机收益的 " + Mathf.RoundToInt(Balance.OfflineEfficiency * 100) + "% 算，最多算 " + Mathf.RoundToInt(Balance.OfflineMaxSeconds / 3600) + " 小时"
+                + (offlineAway > Balance.OfflineMaxSeconds ? "（这次超出的部分没算）" : "") + "。挂着游戏收益是离线的 4 倍。";
+            Ui.Text(x + 40, y + 204, w - 80, 48, rule, 14, Ui.Alpha(Ui.Ink, .7f), TextAnchor.UpperLeft, false, false, true);
+            Ui.Text(x + 40, y + 252, w - 80, 24, "持有零件 " + model.state.scrap, 14, Ui.Alpha(Ui.Ink, .7f), TextAnchor.MiddleLeft, false);
+            if (Ui.Button(x + w - 220, y + 300, 180, 56, "收下", 1, true, 18)) navigation.Close();
         }
 
         private void MapModal(float x, float y, float w)
@@ -58,12 +74,12 @@ namespace ThreadZero
                 Color main = here ? Ui.Panel : open ? Ui.Ink : Ui.Grey, sub = here ? Ui.MuteOnInk : Ui.Mute;
                 Ui.Text(x + 48, top, 110, 76, "∞", 40, here || open ? Ui.Orange : main, TextAnchor.MiddleLeft, true);
                 Ui.Text(x + 160, top + 6, 420, 30, "回声层" + (here ? " · 第 " + model.state.echoFloor + " 层" : ""), 20, main, TextAnchor.MiddleLeft, true);
-                int resume = Mathf.Max(1, model.state.echoBest - 2);
+                int resume = model.EchoStartFloor();
                 string hint = !open ? "击败 1-7 闸门看守后开放" : "无尽楼层 · 最高 " + model.state.echoBest + " 层 · 从第 " + resume + " 层开始" + (model.state.anomalies.Count > 0 ? " · 异常 " + model.state.anomalies.Count : "");
                 Ui.Text(x + 160, top + 38, 440, 24, hint, 14, sub, TextAnchor.MiddleLeft);
                 if (open && model.state.anomalies.Count > 0 && Ui.Button(x + w - 336, top + 14, 120, 48, "清除异常", 0, true, 14)) { model.state.anomalies.Clear(); Save(); Notify("协议异常已清除", 2); }
                 if (Ui.Button(x + w - 208, top + 14, 160, 48, here ? "正在行动" : open ? "进入" : "未开放", here ? 3 : 1, open && !here, 16))
-                { navigation.Close(); Go(GameScreen.Action); BeginEchoTransition(resume); return; }
+                { navigation.Close(); Go(GameScreen.Action); EnterEcho(); return; }
             }
         }
 
@@ -78,6 +94,12 @@ namespace ThreadZero
             for (int i = 0; i < 3; i++)
                 if (Ui.Button(x + w - 292 + i * 88, row, 84, 48, glow[i], model.state.glowMode == i ? 2 : 0, true, 14)) { model.state.glowMode = i; Save(); }
             row += 68;
+            // v0.20 技能连招加了震屏，给怕晕的玩家一个开关（存的值 0 完整 / 1 减弱 / 2 关闭，老存档默认完整；顿帧不受影响）
+            Ui.Text(x + 32, row, 300, 48, "震屏", 17, Ui.Ink, TextAnchor.MiddleLeft, true);
+            string[] shake = { "关闭", "减弱", "完整" };
+            for (int i = 0; i < 3; i++)
+                if (Ui.Button(x + w - 292 + i * 88, row, 84, 48, shake[i], model.state.shakeMode == 2 - i ? 2 : 0, true, 14)) { model.state.shakeMode = 2 - i; Save(); }
+            row += 68;
             Ui.Text(x + 32, row, 300, 48, "自动分解", 17, Ui.Ink, TextAnchor.MiddleLeft, true);
             for (int i = 0; i < 3; i++)
                 if (Ui.Button(x + w - 372 + i * 115, row, 110, 48, AutoSalvageNames[i], model.state.autoSalvage == i ? 2 : 0, true, 14)) { model.state.autoSalvage = i; Save(); }
@@ -91,23 +113,25 @@ namespace ThreadZero
             if (Ui.Button(x + 32, row, (w - 76) / 2, 52, "立即保存", 0, true, 16))
             { Save(); Notify(lastSaveOk ? "进度已保存" : "保存暂不可用，原有存档会保留。", 4); }
             if (Ui.Button(x + 44 + (w - 76) / 2, row, (w - 76) / 2, 52, "行动指南", 0, true, 16)) navigation.Open(GameModal.Help);
-            Ui.Text(x + 32, y + 584, w - 64, 30, "THREAD ZERO · v0.7    空格 暂停 / 1 2 3 切换页面 / Esc 关闭弹窗", 12, Ui.Mute, TextAnchor.MiddleLeft);
+            Ui.Text(x + 32, y + 584, w - 64, 30, "THREAD ZERO · v0.20    空格 暂停 / 1 2 3 4 切换页面 / Esc 关闭弹窗", 12, Ui.Mute, TextAnchor.MiddleLeft);
         }
 
         private void HelpModal(float x, float y, float w)
         {
-            string[] titles = { "自动行动", "装备与外观", "有目标地回收", "设备联动" };
+            // v0.20 更新：原来写的“每个街区第 5 波是首领”早就不对了；加上回声层 / 机械飞升和离线收益。
+            string[] titles = { "自动行动", "装备与外观", "有目标地回收", "设备联动", "回声层与机械飞升" };
             string[] body = {
-                "角色会自动战斗。每个街区第 5 波是首领；倒下只需要维修几秒，不会损失装备。切换页面时战斗继续。",
-                "在整备里穿戴装备会改变属性；在衣柜里应用外观只改变样子。锁定或穿戴中的装备不能分解。",
-                "在衣柜里把想要的装备设为回收目标并查看产地。目标街区的首领最多 8 次必得；品质和随机属性另行抽取。",
-                "无人机自动射击；标记会强化无人机和电弧；推进器搭配近战武器冲击更强；护盾会为下一次攻击蓄能。" };
-            for (int i = 0; i < 4; i++)
+                "角色会自动战斗、自动推进。每章 7 关，x-3、x-6 是精英，x-7 是首领。倒下只要维修几秒：先回刷前面的关攒零件，变强后自动再挑战。关掉游戏也有离线收益（最多算 2 小时）。",
+                "在整备里穿戴装备改变属性；在衣柜里应用外观只改变样子（武器外观只能套在同类武器上）。锁定或穿戴中的装备不能分解。",
+                "在衣柜里把想要的装备设为回收目标并查看产地：在它那一章打精英和首领，最多 8 次必得；品质和随机属性另行抽取。",
+                "无人机自动射击；标记会强化无人机和电弧；推进器搭配近战武器冲击更强；护盾会为下一次攻击蓄能。成群的关用手炮、重锤这类群伤武器更轻松。",
+                "打过第一个首领后，选关最下面可以进回声层：一层层往上刷，每层都有掉落和织网碎片。织网碎片在整备页左边升级义体，义体越多越强，主角一步步机械飞升。" };
+            for (int i = 0; i < titles.Length; i++)
             {
-                float top = y + 96 + i * 132;
-                Ui.Text(x + 32, top, 60, 40, "0" + (i + 1), 30, Ui.Orange, TextAnchor.MiddleLeft, true, true);
-                Ui.Text(x + 92, top, w - 124, 40, titles[i], 19, Ui.Ink, TextAnchor.MiddleLeft, true);
-                Ui.Text(x + 92, top + 42, w - 124, 76, body[i], 15, Ui.Body, TextAnchor.UpperLeft, false, false, true);
+                float top = y + 90 + i * 108;
+                Ui.Text(x + 32, top, 60, 36, "0" + (i + 1), 28, Ui.Orange, TextAnchor.MiddleLeft, true, true);
+                Ui.Text(x + 92, top, w - 124, 36, titles[i], 18, Ui.Ink, TextAnchor.MiddleLeft, true);
+                Ui.Text(x + 92, top + 36, w - 124, 66, body[i], 14, Ui.Body, TextAnchor.UpperLeft, false, false, true);
             }
         }
     }

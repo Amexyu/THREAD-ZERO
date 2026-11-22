@@ -50,8 +50,8 @@ namespace ThreadZero
                 if (low != minimumLevel || high != maximumLevel) { minimumLevel = low; maximumLevel = high; inventoryScroll = 0; }
                 int parsed;
                 inventoryQuery.minLevel = int.TryParse(minimumLevel, out parsed) ? parsed : 1;
-                inventoryQuery.maxLevel = int.TryParse(maximumLevel, out parsed) ? parsed : 100;
-                Ui.Text(794, 190, 346, 30, inventoryQuery.minLevel > inventoryQuery.maxLevel ? "最低等级不能大于最高等级" : "留空不限 · 1–100", 13, inventoryQuery.minLevel > inventoryQuery.maxLevel ? Ui.OrangeInk : Ui.Mute);
+                inventoryQuery.maxLevel = int.TryParse(maximumLevel, out parsed) ? parsed : Balance.MaxItemLevel;
+                Ui.Text(794, 190, 346, 30, inventoryQuery.minLevel > inventoryQuery.maxLevel ? "最低等级不能大于最高等级" : "留空不限 · 1–" + Balance.MaxItemLevel, 13, inventoryQuery.minLevel > inventoryQuery.maxLevel ? Ui.OrangeInk : Ui.Mute);
                 for (int i = 0; i < 5; i++)
                     if (Ui.Button(548 + i * 120, 222, 112, 30, InventoryStatusNames[i], (int)inventoryQuery.status == i ? 2 : 0, true, 13))
                     { inventoryQuery.status = (InventoryStatus)i; inventoryScroll = 0; }

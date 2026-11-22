@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace ThreadZero
@@ -70,6 +70,16 @@ namespace ThreadZero
         private static Vector2 clipOffset;
         private static readonly Stack<Vector2> clipOffsets = new Stack<Vector2>();
         public static Vector2 P(float x, float y) { return new Vector2(origin.x + x * K, origin.y + y * K); }
+        /// v0.20 技能镜头推近：以 (px, py) 为中心把之后画的东西放大 z 倍，ZoomEnd 复原。只在舞台裁剪区里用。
+        private static float zoomSavedK = -1; private static Vector2 zoomSavedOrigin;
+        public static void ZoomBegin(float px, float py, float z)
+        {
+            zoomSavedK = K; zoomSavedOrigin = origin;
+            origin = new Vector2(origin.x + px * K * (1 - z), origin.y + py * K * (1 - z)); K *= z;
+        }
+        public static void ZoomEnd() { if (zoomSavedK > 0) { K = zoomSavedK; origin = zoomSavedOrigin; zoomSavedK = -1; } }
+        /// 在当前裁剪区域里把整块内容挪一下（震屏用；EndClip 时自动复原）。
+        public static void Nudge(float dx, float dy) { origin += new Vector2(Mathf.Round(dx * K), Mathf.Round(dy * K)); }
 
         // 裁剪区域：内部仍然使用页面逻辑坐标，scrollY 为向上滚动的逻辑距离。
         public static void BeginClip(float x, float y, float w, float h, float scrollY)
@@ -153,6 +163,18 @@ namespace ThreadZero
             GUIStyle style = Style(numeric, Pixels(size), bold, anchor, wrap);
             style.normal.textColor = UiTheme.Map(color, UiTheme.Role.Text);
             GUI.Label(R(x, y, w, h), value, style);
+        }
+        /// v0.20 直接压在战斗背景上的字（关卡号、波数、伤害数字、首领名）：先画一层深色投影再画字。
+        /// 第四章「镜面上城」背景很亮（象牙白、天空），浅色字原来几乎看不见。投影色不在配色映射表里，任何配色方案下都是深色。
+        public static void ShadowText(float x, float y, float w, float h, string value, float size, Color color,
+            TextAnchor anchor = TextAnchor.UpperLeft, bool bold = false, bool numeric = false, float strength = .6f)
+        {
+            if (string.IsNullOrEmpty(value)) return;
+            float d = Mathf.Max(1.1f, size * .045f);
+            Color shade = new Color(.02f, .02f, .03f, color.a * strength);
+            Text(x + d, y + d, w, h, value, size, shade, anchor, bold, numeric);
+            if (size >= 24) Text(x - d * .5f, y - d * .5f, w, h, value, size, Alpha(shade, shade.a * .45f), anchor, bold, numeric);   // 大字左上再补一圈淡的，读起来像描边
+            Text(x, y, w, h, value, size, color, anchor, bold, numeric);
         }
         public static float Width(string value, float size, bool bold = false, bool numeric = false)
         {

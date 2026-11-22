@@ -46,7 +46,7 @@ namespace ThreadZero
                 if (Ui.Button(x + w - 212, top + 28, 160, 52, "分解", 1, count > 0, 17))
                 {
                     SalvageTier(tier, true, out count, out gain);
-                    inventoryScroll = 0; Save(); navigation.Close();
+                    inventoryScroll = 0; Save(); navigation.Close(); Play(salvageSound);
                     Notify("已分解 " + count + " 件，获得 " + gain + " 个零件。", 4);
                     return;
                 }

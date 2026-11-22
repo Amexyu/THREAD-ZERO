@@ -1,0 +1,27 @@
+{
+ "lamps": [],
+ "water": [],
+ "drips": [],
+ "steam": [],
+ "props": [],
+ "flows": [],
+ "blinks": [
+  {
+   "layer": 1,
+   "u": 0.952,
+   "v": 0.432,
+   "r": 0.006,
+   "period": 1.4,
+   "duty": 0.5,
+   "phase": 0,
+   "color": {
+    "r": 1,
+    "g": 0.25,
+    "b": 0.18,
+    "a": 1
+   }
+  }
+ ],
+ "windows": [],
+ "rain": []
+}

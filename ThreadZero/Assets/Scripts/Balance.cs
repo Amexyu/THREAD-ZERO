@@ -18,6 +18,8 @@ namespace ThreadZero
         // v0.15 武器类型的攻击方式：霰弹 = 多颗弹丸（多段伤害，可分散到身后的怪），手炮 = 落点爆炸范围伤害，重锤 = 前方横扫范围伤害。
         public const int ShotgunPellets = 6; public const float ShotgunPellet = .2f, ShotgunSpread = 150;
         public const float CannonSplash = .6f, CannonRadius = 120;
+        /// v0.20 线圈（线圈发射器 / 协议发射器）：电流从目标跳到它身后最近的一只怪，吃一半。原来纯单体——协议发射器面板最高，模拟里拿着它的种子却全卡在第五章成群的波次。
+        public const float CoilJump = .5f, CoilJumpReach = 220;
         public const float HeavySplash = .7f, HeavyReach = 140;
         public const float BaseHealth=140, BaseAttack=16, BaseDefense=4, BaseCrit=.05f;
         public const float TrainingHealth=8, TrainingAttack=1.5f;
@@ -29,10 +31,18 @@ namespace ThreadZero
         public const double NormalDropChance=.65, FeaturedBossChance=.35, TargetBossChance=.4;
         public const int RarePity=12, EpicPity=45, LegendaryPity=120, TargetBossGuarantee=8;
         public const float DroneInterval=2.4f, DroneDamage=.3f, MarkedDroneMultiplier=1.5f;
-        public const float MarkInterval=3.5f, MarkDuration=4, ArcDamage=.35f, MarkedArcMultiplier=2;
+        public const float MarkInterval=3.5f, MarkDuration=4, ArcDamage=.45f, MarkedArcMultiplier=2;   // v0.19 电弧 35% → 45%
         public const float ThrusterInterval=4, ThrusterDamage=.45f, AssaultMultiplier=1.5f;
-        public const float GuardReduction=.12f, GuardChargeRatio=.8f, LeechRatio=.045f;
+        public const float GuardReduction=.12f, GuardChargeRatio=.8f, LeechRatio=.035f;   // v0.19 吸血 4.5% → 3.5%：后期吸血武器比别的强太多（第五章拿吸血 20 分钟过、拿电弧 2–3 小时）
         public const float ExecuteThreshold=.3f, ExecuteMultiplier=1.4f;
+        /// v0.19 变强后再挑战：在墙上倒下后回刷前一关，战力（输出 × 生存的几何平均）涨 4% 或者刷满 5 次，才自动回去再挑战。
+        public const float RetryGain = .04f; public const int RetryFarms = 5;
+        /// v0.20 离线收益（企划：最多 2 小时、25% 效率、只给零件）：按挂机时的零件收入（击杀 + 掉落的分解价）算，离开不到 1 分钟不算。
+        public const float OfflineMaxSeconds = 7200, OfflineEfficiency = .25f, OfflineMinSeconds = 60;
+        /// v0.19 节奏：分解给的零件 × 这个倍率（零件主要来自分解）。零件少一点，强化 / 训练就慢一点，整体节奏跟着慢下来。
+        public const float SalvageScale = .4f;
+        /// v0.20 机械飞升材料「织网碎片」：回声层每过一层 1 个、首领层 5 个、每 25 层里程碑再 20 个；重复打主线首领 2 个。
+        public const int ShardsEchoFloor = 1, ShardsEchoBoss = 5, ShardsMilestone = 20, ShardsBossRepeat = 2;
         public const float WaveRecovery=.04f, BossRecovery=1;
         // v0.9 路段制：每关 5 个路段。1、2、4 是怪群，3 是精英，5 是首领。
         public const int EliteWave=3, BossWave=5;
@@ -43,7 +53,14 @@ namespace ThreadZero
             if(wave==BossWave || wave==EliteWave) return 1;
             return (wave==1?2:3)+(region>=3?1:0);
         }
-        public static readonly float[] AffixBases={12,3,2,.04f,.025f,2};
+        // 词条：0 生命 1 攻击 2 防御 3 攻速 4 暴击 5 幸运；v0.18 特殊词条 6 暴击伤害 7 特效伤害 8 首领伤害 9 零件回收（百分比）。
+        // 特殊词条只出在「特装」及以上，随等级涨得很慢（每级 +1%），有总上限。
+        public static readonly float[] AffixBases={12,3,2,.04f,.025f,2, .08f,.07f,.06f,.06f};
+        public const int BasicStats=6, AffixStats=10;
+        public static bool SpecialStat(int stat) { return stat>=BasicStats; }
+        public const float CritDamageCap=1.5f, EffectDamageCap=2f, BossDamageCap=1.5f, ScrapBonusCap=1f;
+        /// 洗炼：没锁的词条全部重抽（换属性 + 重抽数值）。锁一条费用翻倍、锁两条三倍……次数越多越贵（和重校共用次数）。
+        public static int ReforgeCost(Quality quality,int rerolls,int locked) { return (14+6*(int)quality)*(1+Math.Max(0,Math.Min(9,rerolls)))*(1+Math.Max(0,locked)); }
         // v0.16 等级与稀有度分开（借鉴 Task Bar Hero）：等级决定强度，稀有度只给小倍率 + 词条条数（之后再加专属效果）。
         // 目标手感：差 1 档品质 ≈ 差 1.5 级，高等级蓝装能打过低等级金装。具体数值留到阶段 2 统一调。
         // 词条数值只看等级（affixMin/Max 各档相同），不再按品质放大。
@@ -69,8 +86,12 @@ namespace ThreadZero
         public static readonly int[] ChipSlots={0,0,1,1,2,3};
         private static float Soft(int level,float g) { int l=Math.Max(1,Math.Min(MaxItemLevel,level)); return 1+g*(Math.Min(l,SoftLevel)-1)+g*.5f*Math.Max(0,l-SoftLevel); }
         public static float AffixLevelFactor(int level) { return Soft(level,AffixLevelGrowth); }
+        public static float SpecialLevelFactor(int level) { return 1+.01f*(Math.Max(1,Math.Min(MaxItemLevel,level))-1); }
+        public static float AffixFactor(int stat,int level) { return SpecialStat(stat) ? SpecialLevelFactor(level) : AffixLevelFactor(level); }
         // v0.16：30 级以后（回声层阶段）升级费用 ×6，靠长期攒零件慢慢升。
-        public static int UpgradeCost(int level,Quality quality) { return (int)Math.Round((6+Math.Max(1,level)*2)*(1+.4f*(int)quality)*(level>=30?6:1)); }
+        /// v0.19：原来 30 级起价格直接 ×6，正好卡在第二章进第三章，刷零件升级一下子没用了，运气差的种子在第三章卡几个小时。
+        /// 改成随等级平滑变贵：10 级以下 ×1，30 级 ×2.25，50 级 ×3.5，90 级 ×6（和原来后期差不多）。
+        public static int UpgradeCost(int level,Quality quality) { int l=Math.Max(1,level); return (int)Math.Round((6+l*2)*(1+.4f*(int)quality)*(1+Math.Max(0,l-10)/16f)); }
         public static int RerollCost(Quality quality,int rerolls) { return (8+4*(int)quality)*(1+Math.Max(0,Math.Min(9,rerolls))); }
         public static float LevelFactor(int level) { return Soft(level,ItemLevelGrowth); }
         public static float AffixValue(int stat,Quality quality,int level,float roll)
@@ -78,7 +99,7 @@ namespace ThreadZero
             if(stat<0 || stat>=AffixBases.Length) throw new ArgumentOutOfRangeException(nameof(stat));
             QualityTier q=Tier(quality);
             return AffixBases[stat]*(q.affixMin+(q.affixMax-q.affixMin)*Math.Max(0,Math.Min(1,roll)))
-                *Soft(level,AffixLevelGrowth);
+                *(SpecialStat(stat) ? SpecialLevelFactor(level) : Soft(level,AffixLevelGrowth));
         }
         public static int TrainingCost(int level) { return 20+level*15; }
         public static float EnemyHealth(int region,int wave) { return (48+wave*12+region*65)*(wave==5?2.3f:1); }
