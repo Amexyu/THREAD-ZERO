@@ -299,6 +299,7 @@ namespace ThreadZero.EditorTools
                 m.state.equipped[s] = best;
             }
             foreach (Item it in m.state.items.ToList()) if (!m.state.equipped.Contains(it.uid)) m.Salvage(it.uid);
+            V021Systems(m);
             // v0.20 机械飞升：织网碎片只有义体能用，够了就升（先升等级最低的那件；也要花零件，但比装备升级便宜得多）
             for (bool any = true; any;)
             {
@@ -327,8 +328,73 @@ namespace ThreadZero.EditorTools
             }
         }
 
+        /// v0.21 新系统，按「认真玩的真人」的做法：
+        ///   图鉴：集齐的套装领核心和碎片（游戏里每帧自动领）；
+        ///   改造板节点：核心够就按顺序买（机体 → 火力 → 回收，每条从第一个开始；模拟不突破，核心没别的用处）；
+        ///   机库：开放就领回收无人机；碎片集满就组装；上场前排 + 后排里最强的（编号越大越强）；上场的两台升到「章节 × 6」级；
+        ///   芯片（第五章）：库存里的芯片按「过载 > 装甲 > 聚焦 > 缓冲 > 汲取 > 调度」塞进身上装备的空槽。改装件不做（要核心，模拟拿不准选哪种）。
+        private static readonly int[] ChipPreference = { 0, 1, 5, 4, 3, 2 };
+        // 对照实验用：关掉某个新系统，看它让主线快了多少（菜单「数值测试 / 对照」）
+        private static bool UseSets = true, UsePerks = true, UseRobots = true, UseChips = true;
+        private static void V021Systems(GameModel m)
+        {
+            if (UseSets) m.ClaimSets();
+            if (UsePerks)
+                foreach (int bi in new[] { 1, 0, 2 })
+                    for (int t = 0; t < 4; t++) if (m.CanBuyPerk(bi, t)) m.BuyPerk(bi, t);
+            if (!UseRobots) { m.state.deployed[0] = m.state.deployed[1] = -1; m.state.hangarGift = true; }
+            else V021Robots(m);
+            if (UseChips) V021Chips(m);
+        }
+        [MenuItem("Thread Zero/数值测试/对照：不用机库")] public static void NoRobots() { Variant("不用机库", () => UseRobots = false); }
+        [MenuItem("Thread Zero/数值测试/对照：不买改造板节点")] public static void NoPerks() { Variant("不买改造板节点", () => UsePerks = false); }
+        [MenuItem("Thread Zero/数值测试/对照：不领套装奖励")] public static void NoSets() { Variant("不领套装奖励", () => UseSets = false); }
+        [MenuItem("Thread Zero/数值测试/对照：全部新系统都不用")] public static void NoNew() { Variant("全部新系统都不用", () => { UseRobots = UsePerks = UseSets = UseChips = false; }); }
+        private static void Variant(string name, Action off)
+        {
+            off();
+            try { RunAndReport("对照：" + name, Path.Combine(LogDir, "对照_" + name + ".md")); }
+            finally { UseSets = UsePerks = UseRobots = UseChips = true; }
+        }
+        private static void V021Robots(GameModel m)
+        {
+            m.GiftHangar();
+            for (int i = 0; i < Catalog.RobotCount; i++) if (m.CanAssemble(i)) m.Assemble(i);
+            for (int role = 0; role < 2; role++)
+            {
+                int best = -1;
+                for (int i = 0; i < Catalog.RobotCount; i++) if (m.RobotBuilt(i) && Catalog.Robots[i].role == role) best = i;
+                if (best >= 0 && !m.IsDeployed(best)) m.Deploy(best, role);
+            }
+            if (m.DeployedOfRole(0) < 0 && m.DeployedOfRole(1) < 0 && m.RobotBuilt(0) && !m.IsDeployed(0)) m.Deploy(0);
+            int cap = Math.Min(Catalog.RobotMaxLevel, 6 * Chapters.ChapterOf(m.state.unlockedRegion));
+            for (int k = 0; k < 2; k++)
+            {
+                int r = m.state.deployed[k]; if (r < 0) continue;
+                while (m.state.robotLevels[r] < cap && m.CanUpgradeRobot(r) && m.state.scrap > Catalog.RobotUpgradeScrap(m.state.robotLevels[r]) * 3) m.UpgradeRobot(r);
+            }
+        }
+        private static void V021Chips(GameModel m)
+        {
+            if (m.ChipsUnlocked && m.state.chipBag.Count > 0)
+                for (int s = 0; s < Catalog.SlotCount; s++)
+                {
+                    Item it = m.Equipped((Slot)s); if (it == null) continue;
+                    int have = it.chips == null ? 0 : it.chips.Count;
+                    for (int slot = have; slot < m.ChipSlotsOf(it) && m.state.chipBag.Count > 0; slot++)
+                    {
+                        int pick = 0;
+                        for (int b = 1; b < m.state.chipBag.Count; b++)
+                            if (Array.IndexOf(ChipPreference, m.state.chipBag[b].kind) < Array.IndexOf(ChipPreference, m.state.chipBag[pick].kind)
+                                || (m.state.chipBag[b].kind == m.state.chipBag[pick].kind && m.state.chipBag[b].tier > m.state.chipBag[pick].tier)) pick = b;
+                        m.InsertChip(it, slot, pick);
+                    }
+                }
+        }
+
         // ---------- 报告 ----------
-        public static void RunAndReport(string why)
+        public static void RunAndReport(string why) { RunAndReport(why, null); }
+        public static void RunAndReport(string why, string variantPath)
         {
             var watch = System.Diagnostics.Stopwatch.StartNew();
             var runs = new List<RunLog>();
@@ -343,6 +409,13 @@ namespace ThreadZero.EditorTools
             finally { EditorUtility.ClearProgressBar(); }
             string hash = SourceHash();
             string report = Report(runs, why, hash, watch.Elapsed.TotalSeconds);
+            if (variantPath != null)
+            {   // 对照实验：报告另存，不动正式报告和历史
+                Directory.CreateDirectory(Path.GetDirectoryName(variantPath));
+                File.WriteAllText(variantPath, report, new UTF8Encoding(false));
+                Debug.Log("[数值测试] 对照完成：" + variantPath);
+                return;
+            }
             Directory.CreateDirectory(Path.GetDirectoryName(ReportPath));
             File.WriteAllText(ReportPath, report, new UTF8Encoding(false));
             Directory.CreateDirectory(LogDir);
@@ -436,7 +509,7 @@ namespace ThreadZero.EditorTools
             sb.AppendLine("- 结论：**" + Verdict + "**");
             sb.AppendLine("- 生成时间：" + DateTime.Now.ToString("yyyy-MM-dd HH:mm") + "（" + why + "，耗时 " + took.ToString("F0") + " 秒，脚本指纹 " + hash + "）");
             sb.AppendLine("- 方法：用游戏里真实的模型和战斗代码，从新存档开始，" + Seeds + " 个随机种子各模拟最多 " + MaxHours + " 小时（1× 速度）。开着自动推进；被打倒就按游戏规则撤回上一关，变强后自动再挑战。");
-            sb.AppendLine("- 模拟玩家的做法：每次过关 / 被打倒后，立刻给每个部位换上评分最高的装备（评分 = 攻击×攻速×暴击期望 × 生命×防御减伤），没穿的全部分解，零件每次买“每个零件涨分最多”的一项（升级已穿装备或训练）。**不重校、不突破、不看词条特效；只在卡关（最前面那一关连着倒 6 次）时去零号深网刷 20 分钟再回来**。换装和花零件比真人勤快，零号深网和特效又没用上，两头抵消，大致相当于“认真管装备、只打主线”的玩家。");
+            sb.AppendLine("- 模拟玩家的做法：每次过关 / 被打倒后，立刻给每个部位换上评分最高的装备（评分 = 攻击×攻速×暴击期望 × 生命×防御减伤），没穿的全部分解，零件每次买“每个零件涨分最多”的一项（升级已穿装备或训练）。**不重校、不突破、不看词条特效；只在卡关（最前面那一关连着倒 6 次）时去零号深网刷 20 分钟再回来**。v0.21 起也会：领套装奖励、按章买改造板节点、机库组装并上场前排 + 后排（升到章节 × 6 级）、第五章塞芯片（不做改装件）。换装和花零件比真人勤快，零号深网和特效又没用上，两头抵消，大致相当于“认真管装备、只打主线”的玩家。");
             sb.AppendLine("- 时间都是 1× 速度的游戏时间；2× / 4× 按比例缩短。");
             sb.AppendLine();
             sb.AppendLine("## 检查");

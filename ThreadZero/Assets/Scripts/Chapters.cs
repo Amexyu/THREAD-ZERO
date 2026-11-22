@@ -124,7 +124,9 @@ namespace ThreadZero
         // v0.18 每章的整体倍率（第三章首版，由自动数值测试 Editor/Balance/BalanceSim.cs 校过，见 Docs/数值测试报告.md）。
         // 第三章起，30 级以上升级贵 6 倍，角色变强变慢：章节入口的跳变要比第二章小，再在章内逐关加码（Ramp：每往后一关多乘多少）。
         // 第三章起：入口只比上一章末尾强一点（约 1.2 倍），章内每关血量 +4~5%、攻击 +2% 慢慢加码（再多后期装备的成长跟不上，章末会撞墙）；进新章那一下跳得多一点，靠刷前两关的新一档装备跟上——角色在章内成长很快，这样难度跟得上，又不会在章节入口撞墙。
-        public static readonly float[] ChapterHealth = { 1, Chapter2Health, 2.6f, 3.6f, 5f }, ChapterAttack = { 1, Chapter2Attack, 1.6f, 2.55f, 3.6f };   // v0.20 第五章原来 3.6 / 2.65：带着第四章 4-6 墙练出来的装备进第五章，整章 18 分钟就穿了（目标 2:15）   // 后期少堆血、多给攻击：一关别打超过两分半，难度来自“会不会倒”而不是“磨多久”   // 第五章：装备档次只比第四章高 11%，怪的本章倍率也只能比第四章高一点（关卡序号本身已经让怪涨了 25%）
+        // v0.21 数值重测：改造板节点、套装奖励、机库、芯片加进模拟后主线只要 2:20（目标 7:00），第二章起加码。
+        // 第一次全加 12–25%：第三～五章还是几乎不倒、每关却要磨 2–5 分钟——新系统主要加的是生存（前排机器人、护盾回路、复合装甲、义体），所以后几章主要加攻击、血少加。
+        public static readonly float[] ChapterHealth = { 1, Chapter2Health * 1.3f, 2.6f * 1.2f, 3.6f * 1.15f, 5f * 1.2f }, ChapterAttack = { 1, Chapter2Attack * 1.3f, 1.6f * 2f, 2.55f * 2.5f, 3.6f * 3.8f };   // v0.20 第五章原来 3.6 / 2.65：带着第四章 4-6 墙练出来的装备进第五章，整章 18 分钟就穿了（目标 2:15）   // 后期少堆血、多给攻击：一关别打超过两分半，难度来自“会不会倒”而不是“磨多久”   // 第五章：装备档次只比第四章高 11%，怪的本章倍率也只能比第四章高一点（关卡序号本身已经让怪涨了 25%）
         public static readonly float[] ChapterHealthRamp = { 0, 0, .05f, .04f, .04f }, ChapterAttackRamp = { 0, 0, .02f, .02f, .02f };
         private static int ChapterIndex(int region) { return Math.Max(0, Math.Min(ChapterHealth.Length - 1, ChapterOf(region) - 1)); }
         private static float Ramp(float[] ramp, int region) { return 1 + ramp[ChapterIndex(region)] * (Math.Max(0, region) % StagesPerChapter); }
