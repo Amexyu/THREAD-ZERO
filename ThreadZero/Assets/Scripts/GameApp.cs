@@ -67,7 +67,7 @@ namespace ThreadZero
             combat.OnChainPull = e => EnemyFx.Burst(clock, e.x, GroundY - e.canvas * .4f, new Color(1, .62f, .25f), 1.1f);   // 钩拉：被拽的怪身上闪一下
             combat.OnCoilJump = CoilJumpFx;   // 线圈普攻：电流跳到第二只怪
             combat.OnImplant = d => { implantShown = d; implantAt = clock; implantNew = d.id; implantNewSeenAt = -1; Play(rareSound); Save(); };
-            combat.OnDamage = (value, critical, x) => AddFloater(value, critical, true, x);
+            combat.OnDamage = (value, critical, x) => { AddFloater(value, critical, true, x); GearHit(critical, x); };
             combat.OnCheckpoint = Save;
             combat.OnMessage = message => Notify(message, 4);
             combat.OnDrop = (item, fresh) =>
@@ -293,6 +293,15 @@ namespace ThreadZero
         /// 测试（桥接脚本用）：往背包里放一件指定等级的装备（不穿）。
         private void TestAddItem(string id, int level) { Item item = model.Create(id, Quality.Rare, level); model.state.items.Add(item); model.Unlock(id); }
         private void TestEquip(string id) { Item item = model.Create(id, Quality.Rare, 30); model.state.items.Add(item); model.Unlock(id); model.Equip(item.uid); }
+        /// 测试用：五个部位都换成同款、指定品质和等级的装备（看装备光效）。没穿的部位用初始装备那一款。
+        private void TestGearQuality(int q, int level)
+        {
+            for (int s = 0; s < 5; s++)
+            {
+                Item cur = model.Equipped((Slot)s); string id = cur != null ? cur.baseId : Catalog.StarterIds[s];
+                Item item = model.Create(id, (Quality)Mathf.Clamp(q, 0, 5), level); model.state.items.Add(item); model.Unlock(id); model.Equip(item.uid);
+            }
+        }
 
         /// v0.20 开发用：F7 把飞升度跳到下一个阶段（10% → 30% → 60% → 90% → 100% → 回到 10%），看各阶段的外观。
         /// 五个义体都装上，等级从第一个开始往上填；只在测试存档里能用（按 F8 切换），正式进度不动。

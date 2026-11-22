@@ -19,6 +19,7 @@ namespace ThreadZero
         private void ActionPage()
         {
             Stats stats = model.Total();
+            WeaponFx.SetGear(model.Equipped(Slot.Weapon));   // v0.20 装备光效：开火、命中的光按武器品质 / 等级
             // 鼠标停在上 / 下边缘或左侧导航栏 → 呼出终端；离开 1.5 秒后收回。暂停、维修、弹窗时常驻。
             bool wantHud = Ui.Hover(0, 0, 1600, 104) || Ui.Hover(0, 724, 1600, 176) || Ui.Hover(0, 0, 104, 900)
                 || paused || combat.recovery > 0 || navigation.HasModal;
@@ -673,6 +674,18 @@ namespace ThreadZero
             }
             // v0.16 旧的直线特效（无人机激光线、折线电弧、护盾折线）已删除，改由 OnAbility 事件放正式特效（见 OnAbilityFx）。
         }
+        private float gearKickAt = -10;
+        /// v0.20 装备光效：每打中一只怪，特装起在怪身上多一下品质色的火花（暴击大一圈）；
+        /// 原型武器暴击再加一点顿帧（0.03 秒）和震屏（0.5 秒内最多一次，群怪时不会一直抖，也不会明显拖慢战斗）。只在行动页、没有弹窗时。
+        private void GearHit(bool critical, float x)
+        {
+            if (navigation.Screen != GameScreen.Action || navigation.HasModal) return;
+            Enemy near = null; float best = float.MaxValue;
+            foreach (Enemy e in combat.enemies) { float d = Mathf.Abs(e.x - x); if (d < best) { best = d; near = e; } }
+            float y = near != null ? GroundY + 2 - near.canvas * .45f : GroundY - 70;
+            WeaponFx.HitAccent(clock, new Vector2(x - worldX, y), critical);
+            if (critical && WeaponFx.GearQuality >= 5 && clock - gearKickAt > .5f) { gearKickAt = clock; Impact.Stop(.03f); Impact.Shake(clock, 3, .14f); }
+        }
         private void OnAbilityFx(AbilityEvent a)
         {
             Enemy t = combat.Target; float hx = combat.Movement.HeroScreenX;
@@ -682,13 +695,13 @@ namespace ThreadZero
                 case Ability.Drone:   // 无人机：从机身打一发曳光弹
                 {
                     Vector2 m = new Vector2(hx + 120, GroundY - 257);
-                    WeaponFx.Fire("gun", clock, m, (aim - m).normalized, aim);
+                    WeaponFx.Plain = true; WeaponFx.Fire("gun", clock, m, (aim - m).normalized, aim); WeaponFx.Plain = false;   // 无人机不带武器的品质色
                     break;
                 }
                 case Ability.Arc:     // 电弧模块：从角色胸口拉一道电弧光束
                 {
                     Vector2 c = new Vector2(hx + 40, GroundY - 120);
-                    WeaponFx.Fire("coil", clock, c, (aim - c).normalized, aim);
+                    WeaponFx.Plain = true; WeaponFx.Fire("coil", clock, c, (aim - c).normalized, aim); WeaponFx.Plain = false;
                     break;
                 }
                 case Ability.Dash:

@@ -679,7 +679,8 @@ namespace ThreadZero
             Vector2 tan = end - ((1 - .9f) * (1 - .9f) * hand + 2 * .1f * .9f * ctrl + .81f * end); if (tan.sqrMagnitude < .0001f) tan = dir;
             float ang = Mathf.Atan2(-tan.x, tan.y) * Mathf.Rad2Deg;
             Matrix4x4 hm = T(end) * Matrix4x4.Rotate(Quaternion.Euler(0, 0, ang)) * Matrix4x4.Scale(new Vector3(HookScale, HookScale, 1));
-            Blit(hm, hookPart, false, tint);
+            GearEdge(hm, hookPart, tint); Blit(hm, hookPart, false, tint); GearSweep(hm, hookPart, tint);
+            hookM = hm; hookTip = new Vector2(0, hookPart.size.y - hookPart.pivot.y);
             Vector3 tip3 = hm.MultiplyPoint3x4(new Vector3(0, hookPart.size.y - hookPart.pivot.y, 0));
             return new Vector2(tip3.x, tip3.y);   // 吊钩尖端：当作「枪口 / 锤头」位置给特效用
         }
@@ -786,7 +787,7 @@ namespace ThreadZero
                 }
                 soft.Apply();
             }
-            ApplyLook(model);
+            ApplyLook(model); ReadGear(model);
             t = anim == Anim.Idle || anim == Anim.Walk ? t - Mathf.Floor(t) : Mathf.Clamp01(t);
             Pose p = Compute(anim, t);
             SkillZoom = p.zoom; SkillCharge = p.charge;
@@ -807,37 +808,40 @@ namespace ThreadZero
             GL.LoadPixelMatrix(0, Screen.width, Screen.height, 0);   // y down, like GUI
             if (p.ghost)                           // afterimages while dashing: orange, electric skills cyan
             {
-                Color gc = anim == Anim.ChainArc ? new Color(.45f, 1, .92f) : Orange;
+                Color gc = anim == Anim.ChainArc ? new Color(.45f, 1, .92f) : qWeapon >= 4 ? QualityVisual.Colors[qWeapon] : Orange;   // v0.20 机密起冲刺残影换成武器品质色
                 Ghost(Build(Compute(anim, Mathf.Max(0, t - .06f))), new Color(gc.r, gc.g, gc.b, .12f * tint.a));
                 Ghost(Build(Compute(anim, Mathf.Max(0, t - .03f))), new Color(gc.r, gc.g, gc.b, .22f * tint.a));
             }
             if (mechStage >= 4) Motes(b, tint);   // v0.20 飞升完成：身体后面往上飘的光点
             if (mechStage >= 2 && mechFins != null) Blit(b.pack * T(finsAt), mechStage >= 4 && mechFinsZero != null ? mechFinsZero : mechFins, false, tint);   // v0.20 飞升第二阶段：散热鳍画在背包后面，从背包左边露出来
-            Blit(b.pack, pack, false, tint);
-            Blit(b.legF, legF, false, tint);
+            Blit(b.pack, pack, false, tint); GearScan(b.pack, pack, false, qBack, tint);
+            Blit(b.legF, legF, false, tint); GearScan(b.legF, legF, false, qLegs, tint);
             if (mechStage >= 4) Trace(b.legF, TraceLeg, .06f, .44f, new Color(1, 1, 1, tint.a * .55f));   // 远侧腿也有一道（压暗，被近侧腿挡住一半）
             Blit(b.armF, armFar ?? arm, armFar == null, far);   // 远侧手臂：有单独的图就用（已经画成远侧，不镜像）；没有就近侧镜像压暗
+            GearScan(b.armF, armFar ?? arm, armFar == null, qCoat, far);
             Blit(b.handF, FarHand, FarHandMirrored, far);
-            Blit(b.legN, legN, false, tint);
+            Blit(b.legN, legN, false, tint); GearScan(b.legN, legN, false, qLegs, tint);
             if (mechStage >= 4) Trace(b.legN, TraceLeg, 0, .38f, tint);   // 腿上的光纹画在躯干前面，上端被外套盖住
-            Blit(b.torso, torso, false, tint);
+            Blit(b.torso, torso, false, tint); GearScan(b.torso, torso, false, qCoat, tint);
             if (mechStage >= 4) { Trace(b.torso, TraceTorso, .34f, 1, tint); Trace(b.torso, TraceTorso2, .4f, 1, tint); }
             if (model != null && model.state.implants.Contains("spine")) SpineGlow(b);   // 第三章义体：后背一列发光的中继椎节
             if (mechStage >= 3) NeckCables(b, tint);   // v0.20 飞升第三阶段：后脑接出的线缆（画在身体上面、头下面，线缆根部被头盖住）
-            Blit(b.head, head, false, tint);
+            Blit(b.head, head, false, tint); GearScan(b.head, head, false, qHead, tint);
             if (p.fx)                              // tip trail sits behind arm and blade
                 for (int i = 0; i < 9; i++)
                 {
                     Vector2 a0 = TipAt(anim, Mathf.Max(0, t - i * .009f)), a1 = TipAt(anim, Mathf.Max(0, t - (i + 1) * .009f));
                     float al = .9f * (1 - i / 9f), w = (5 - i * .4f) * .9f;
-                    Segment(a0, a1, w, new Color(1, .47f, .16f, al));
+                    Color tc = GearColor(new Color(1, .47f, .16f));   // v0.20 特装起刀光换成武器品质色
+                    Segment(a0, a1, w, new Color(tc.r, tc.g, tc.b, al));
                     Segment(a0, a1, w / 3, new Color(1, 1, 1, al * .8f));
                 }
-            Blit(b.armN, arm, false, armTint);
+            Blit(b.armN, arm, false, armTint); GearScan(b.armN, arm, false, qCoat, armTint);
             Vector2 chainEnd = Vector2.zero; bool chained = weaponClass == "chain" && hookPart != null;
             if (chained) chainEnd = DrawChain(b, anim, t, tint);
-            else Blit(b.wpn, weapon, false, tint);
+            else { GearTrail(anim, t, tint); GearEdge(b.wpn, weapon, tint); Blit(b.wpn, weapon, false, tint); GearSweep(b.wpn, weapon, tint); }   // v0.20 装备光效
             Blit(b.hand, NearHand, false, armTint);
+            if (chained) GearMotes(hookM, hookTip, tint); else GearMotes(b.wpn, tipPt, tint);
             if (mech) MechArmGlow(b);
             if (model != null && model.state.implants.Contains("eye_r")) EyeGlow(b);
             {
@@ -868,7 +872,7 @@ namespace ThreadZero
             {
                 float ph = Mathf.Sin(Mathf.PI * Mathf.Clamp01(t < .3f ? (t - .08f) / .12f : (t - .54f) / .08f));
                 Vector2 tp = Tip(b);
-                Star(tp, 9 * ph, 2, Color.white); Star(tp, 5 * ph, 1, Orange);
+                Star(tp, 9 * ph, 2, Color.white); Star(tp, 5 * ph, 1, GearColor(Orange));
             }
             if (anim == Anim.Combo)                // hit sparks: white core + radiating rays, bigger on the finisher
                 for (int i = 0; i < ComboHits.Length; i++)
@@ -883,7 +887,7 @@ namespace ThreadZero
                         float ang = (j * 45 + 22 * i + (j % 2 == 1 ? 0 : 10)) * Mathf.Deg2Rad;
                         float r0 = (6 + 14 * k) * big, r1 = r0 + (j % 2 == 0 ? 16 : 9) * big * fade;
                         Vector2 dir = new Vector2(Mathf.Cos(ang), Mathf.Sin(ang));
-                        Segment(hp + dir * r0, hp + dir * r1, 3 * fade * big, new Color(Orange.r, Orange.g, Orange.b, fade));
+                        Color rc = GearColor(Orange); Segment(hp + dir * r0, hp + dir * r1, 3 * fade * big, new Color(rc.r, rc.g, rc.b, fade));
                     }
                     if (i == ComboHits.Length - 1)
                     {

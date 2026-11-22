@@ -8,10 +8,10 @@ namespace ThreadZero
     /// 只负责画面，伤害仍由 CombatSession 结算（远程命中在开火后约 0.12 秒，弹道时间与之对齐）。
     public static class WeaponFx
     {
-        private enum K { Flash, Pellet, Beam, Shell, Blast, Spark, Smoke, Shock, Bolt, Arc, Puff, Rock, Crack, Dust, Ring, Glow, Lob, Streak }
+        private enum K { Flash, Pellet, Beam, Shell, Blast, Spark, Smoke, Shock, Bolt, Arc, Puff, Rock, Crack, Dust, Ring, Glow, Lob, Streak, Halo }
         private sealed class Fx
         {
-            public K kind; public float born, life, seed, size; public Vector2 a, b, dir; public Color color; public bool spawned;
+            public K kind; public float born, life, seed, size; public Vector2 a, b, dir; public Color color, trail; public bool spawned, plain;
         }
         private static readonly List<Fx> list = new List<Fx>();
         private static readonly Color Hot = new Color(1, .93f, .7f), Ember = new Color(1, .45f, .12f);
@@ -19,11 +19,44 @@ namespace ThreadZero
         private const float Travel = .12f;   // 与 CombatSession 远程 strikeDelay - 开火时刻 对齐
 
         public static void Clear() { list.Clear(); }
+
+        // v0.20 装备光效：武器的品质 / 等级（行动页每帧写入）。
+        //   特装起：子弹拖尾、开火处、命中处多一层品质色的光（军规起开火处再加一圈环）；
+        //   等级越高，开火 / 命中 / 爆炸的光越大：Lv.1 原样，按对数涨，Lv.30 约 +22%，Lv.100 起封顶 +30%。
+        public static int GearQuality = -1;
+        public static float GearPower = 1;
+        /// 不是武器打出去的（无人机、电弧模块）：不带武器品质色、不放大。调用前设 true，调完设回 false。
+        public static bool Plain;
+        public static void SetGear(Item weapon)
+        {
+            GearQuality = weapon != null ? (int)weapon.quality : -1;
+            GearPower = weapon != null ? 1 + .3f * Mathf.Clamp01(Mathf.Log(Mathf.Max(1, weapon.level)) / Mathf.Log(100)) : 1;
+        }
+        private static bool Geared { get { return !Plain && GearQuality >= 2; } }
+        private static Color GearCol { get { return QualityVisual.Colors[Mathf.Clamp(GearQuality, 0, 5)]; } }
+        /// 开火处一团品质色的柔光（不带白芯，不闪）；军规起再加一圈沿枪管方向的环。
+        private static void Accent(float now, Vector2 at, Vector2 dir, float size)
+        {
+            if (!Geared) return;
+            float tier = GearQuality - 1;   // 特装 1 … 原型 4
+            Add(K.Halo, now, .26f, at, at + dir, GearCol, (.5f + .12f * tier) * size);
+            if (GearQuality >= 3) Add(K.Ring, now + .02f, .26f, at, at + dir, GearCol, (.42f + .08f * tier) * size);
+        }
+        /// 每打中一只怪（任何招式、任何武器）：特装起在怪身上多一下品质色的火花，暴击大一圈。行动页才调，列表太长就不加。
+        public static void HitAccent(float now, Vector2 at, bool critical)
+        {
+            if (!Geared || list.Count > 220) return;
+            float tier = GearQuality - 1, sz = (.42f + .1f * tier) * (critical ? 1.45f : 1);
+            Add(K.Halo, now, .22f, at, at, GearCol, sz * .75f);
+            Add(K.Spark, now, .2f, at, at + Vector2.right, GearCol, sz);
+        }
         private static readonly Color Stone = new Color(.4f, .38f, .37f), DustCol = new Color(.74f, .7f, .64f), Steam = new Color(.93f, .96f, .98f);
 
         private static Fx Add(K kind, float now, float life, Vector2 a, Vector2 b, Color c, float size = 1)
         {
-            var f = new Fx { kind = kind, born = now, life = life, a = a, b = b, color = c, size = size, seed = Random.value * 100 };
+            if (!Plain && (kind == K.Flash || kind == K.Spark || kind == K.Glow || kind == K.Blast || kind == K.Shock || kind == K.Ring || kind == K.Halo)) size *= GearPower;   // v0.20 等级越高光越大
+            var f = new Fx { kind = kind, born = now, life = life, a = a, b = b, color = c, size = size, seed = Random.value * 100, plain = Plain,
+                             trail = kind == K.Pellet && Geared ? GearCol : Ember };   // v0.20 特装起子弹拖尾是品质色
             Vector2 d = b - a; f.dir = d.sqrMagnitude > .01f ? d.normalized : Vector2.right;
             list.Add(f); return f;
         }
@@ -63,12 +96,14 @@ namespace ThreadZero
                 Add(K.Flash, now, .08f, muzzle, muzzle + aim, Hot, 1);
                 Add(K.Pellet, now, Travel, muzzle, target, Hot, 1.3f);
             }
+            Accent(now, muzzle, aim, kind == "cannon" ? 1.3f : 1);
         }
 
         /// 重武器落地：在锤头着地点出冲击波。
         public static void Slam(float now, Vector2 ground)
         {
             Add(K.Shock, now, .5f, ground, ground, new Color(1, .72f, .35f));
+            if (Geared) Add(K.Halo, now, .32f, ground + new Vector2(0, -12), ground, GearCol, .5f + .14f * (GearQuality - 1));   // v0.20 品质色的一团光
             Add(K.Flash, now, .1f, ground + new Vector2(0, -10), ground + new Vector2(0, -20), Hot, 1.6f);
             for (int i = 0; i < 4; i++) Add(K.Smoke, now + i * .02f, .6f, ground + new Vector2(Random.Range(-60f, 60f), -6), ground, new Color(.66f, .64f, .6f), 1.2f);
         }
@@ -244,6 +279,12 @@ namespace ThreadZero
 
         private static void OnEnd(Fx f, float now)
         {
+            bool was = Plain; Plain = f.plain;   // 落点的火花 / 爆炸跟开火的那一下同一个来源
+            OnEndInner(f, now);
+            Plain = was;
+        }
+        private static void OnEndInner(Fx f, float now)
+        {
             if (f.kind == K.Pellet) Add(K.Spark, now, .16f, f.b, f.b + f.dir, f.color, .7f);
             else if (f.kind == K.Shell)
             {
@@ -273,7 +314,7 @@ namespace ThreadZero
                 case K.Pellet:
                 {
                     Vector2 p = Vector2.Lerp(f.a, f.b, k), q = p - f.dir * 30 * f.size;
-                    Ui.Stroke(q.x, q.y, p.x, p.y, 3 * f.size, A(Ember, .7f));
+                    Ui.Stroke(q.x, q.y, p.x, p.y, 3 * f.size, A(f.trail, .7f));
                     Ui.Stroke(Vector2.Lerp(q, p, .5f).x, Vector2.Lerp(q, p, .5f).y, p.x, p.y, 2 * f.size, A(f.color, 1));
                     break;
                 }
@@ -366,6 +407,12 @@ namespace ThreadZero
                     Ui.Stroke(f.a.x, f.a.y, e.x, e.y, 18 * w, A(f.color, .22f * w));
                     Ui.Stroke(f.a.x, f.a.y, e.x, e.y, 7 * w, A(f.color, .85f * w));
                     Ui.Stroke(f.a.x, f.a.y, e.x, e.y, 2.5f * w, A(Color.white, w));
+                    break;
+                }
+                case K.Halo:   // v0.20 品质色的一团柔光：不带白芯、不闪，慢慢散开淡掉
+                {
+                    float r = (30 + 20 * k) * f.size;
+                    Glow(f.a, r * 1.4f, f.color, .65f * fade);
                     break;
                 }
                 case K.Glow:

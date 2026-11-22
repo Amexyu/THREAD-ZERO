@@ -215,7 +215,7 @@ namespace ThreadZero
                 if (selected) Ui.Frame(tx - 4, ty - 4, tileW + 8, tileH + 8, 3, Ui.Orange);
                 Ui.Fill(tx, ty, tileW, tileH, hover ? Ui.Tile2 : Ui.Tile);
                 PaperDollView.DrawEquipmentIcon(b, Ui.R(tx + (tileW - 74) / 2, ty + 18, 74, 74));
-                Ui.Text(tx + 7, ty + 3, 60, 18, "Lv." + item.level, 13, Ui.MuteOnInk, TextAnchor.MiddleLeft, true, true);
+                LevelTag(item, tx, ty);   // v0.20 到当前等级上限的显示「MAX」
                 if (equipped) { Ui.Fill(tx + tileW - 50, ty, 50, 20, Ui.Panel); Ui.Text(tx + tileW - 50, ty, 50, 20, "穿戴中", 11, Ui.Ink, TextAnchor.MiddleCenter, true); }
                 else if (unseen.Contains(item.uid)) { Ui.Fill(tx + tileW - 26, ty, 26, 20, Ui.Orange); Ui.Text(tx + tileW - 26, ty, 26, 20, "新", 11, Ui.OnAccent, TextAnchor.MiddleCenter, true); }
                 if (item.locked) Ui.IconLock(tx + 8, ty + 26, Ui.MuteOnInk);

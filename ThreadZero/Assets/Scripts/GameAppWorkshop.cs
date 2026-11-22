@@ -65,7 +65,7 @@ namespace ThreadZero
                 if (selected) Ui.Frame(x - 4, y - 4, tileW + 8, tileH + 8, 3, Ui.Orange);
                 Ui.Fill(x, y, tileW, tileH, hover ? Ui.Tile2 : Ui.Tile);
                 PaperDollView.DrawEquipmentIcon(b, Ui.R(x + (tileW - 74) / 2, y + 18, 74, 74));
-                Ui.Text(x + 7, y + 3, 60, 18, "Lv." + item.level, 13, Ui.MuteOnInk, TextAnchor.MiddleLeft, true, true);
+                LevelTag(item, x, y);
                 if (model.state.equipped.Contains(item.uid)) { Ui.Fill(x + tileW - 50, y, 50, 20, Ui.Panel); Ui.Text(x + tileW - 50, y, 50, 20, "穿戴中", 11, Ui.Ink, TextAnchor.MiddleCenter, true); }
                 Ui.Text(x, y + 96, tileW, 22, b.name, 12, quality, TextAnchor.MiddleCenter, true);
                 Ui.Fill(x, y + tileH - 5, tileW, 5, quality);
@@ -80,6 +80,79 @@ namespace ThreadZero
             }
         }
 
+        // ---------- v0.20 装备光效：升级 / 升到上限 / 突破的那一下 ----------
+        // 只在装备台的大图标上演，不全屏、不闪白：品质色淡出、方框往外扩、数字往上飘。动画按不受暂停影响的时间走。
+        private string benchFxUid; private float benchFxAt = -10; private int benchFxKind;   // 1 升级 2 升到当前上限 3 突破成原型
+        private void UpgradeClicked(Item item)
+        {
+            if (!model.Upgrade(item.uid)) return;
+            combat.ClampHealth(); Save(); Play(equipSound);
+            benchFxUid = item.uid; benchFxAt = Time.unscaledTime; benchFxKind = item.level >= model.License ? 2 : 1;
+        }
+        private void AscendClicked(Item item, EquipmentBase b)
+        {
+            if (!model.Ascend(item.uid)) return;
+            combat.ClampHealth(); Save(); Play(rareSound); Notify("突破完成：" + b.name + " 现在是「" + Catalog.QualityNames[5] + "」", 5);
+            benchFxUid = item.uid; benchFxAt = Time.unscaledTime; benchFxKind = 3;
+        }
+        public void TestBenchUpgrade(int slot) { Item it = model.Equipped((Slot)slot); if (it == null) return; selectedItem = it.uid; model.state.scrap = Mathf.Max(model.state.scrap, 999999999); UpgradeClicked(it); }
+        public void TestBenchAscend(int slot) { Item it = model.Equipped((Slot)slot); if (it == null) return; selectedItem = it.uid; model.state.cores = Mathf.Max(model.state.cores, 99); AscendClicked(it, Catalog.Find(it.baseId)); }
+
+        /// 格子左上角：到当前等级上限的装备显示橙色「MAX」小标签（上限 = 工坊顶上的「等级上限」，打过下一个首领会提高），没到就照旧显示等级。
+        private void LevelTag(Item item, float x, float y)
+        {
+            if (item.level >= model.License) MaxBadge(x + 5, y + 4);
+            else Ui.Text(x + 7, y + 3, 60, 18, "Lv." + item.level, 13, Ui.MuteOnInk, TextAnchor.MiddleLeft, true, true);
+        }
+        private static void MaxBadge(float x, float y)
+        {
+            Ui.Fill(x, y, 38, 17, Ui.Orange);
+            Ui.Text(x, y, 38, 17, "MAX", 12, Ui.OnAccent, TextAnchor.MiddleCenter, true, true);
+        }
+        private void BenchFxDraw(Item item, Color quality)
+        {
+            float age = Time.unscaledTime - benchFxAt;
+            const float tx = 764, ty = 180, ts = 92; Vector2 c = new Vector2(tx + ts / 2, ty + ts / 2);
+            if (age < .55f)
+            {   // 升级（三种都有）：图标格子上一层品质色淡出，方框往外扩，新等级从升级按钮往上飘
+                float u = age / .55f, e = 1 - (1 - u) * (1 - u);
+                Ui.Fill(tx, ty, ts, ts, Ui.Alpha(quality, .38f * (1 - u)));
+                float g = 4 + 22 * e; Ui.Frame(tx - g, ty - g, ts + 2 * g, ts + 2 * g, 3 * (1 - u) + 1, Ui.Alpha(quality, .85f * (1 - u)));
+                if (benchFxKind != 3) Ui.Text(1348, 300 - 26 * e, 196, 34, "Lv." + item.level, 24, Ui.Alpha(Ui.Orange, 1 - u * u), TextAnchor.MiddleCenter, true, true);
+            }
+            if (benchFxKind == 2 && age < 1.2f)
+            {   // 升到上限：金色的两层方框再扩一次，「MAX」从大缩到图标角上的小标签那么大，金光慢慢淡掉
+                Color gold = QualityVisual.Colors[4];
+                for (int i = 0; i < 2; i++)
+                {
+                    float u = Mathf.Clamp01((age - .08f - i * .14f) / .7f); if (u <= 0 || u >= 1) continue;
+                    float g = 6 + 40 * (1 - (1 - u) * (1 - u)); Ui.Frame(tx - g, ty - g, ts + 2 * g, ts + 2 * g, 3 * (1 - u) + .5f, Ui.Alpha(gold, .9f * (1 - u)));
+                }
+                QualityVisual.Halo(Ui.P(c.x, c.y), 90 * Ui.K, gold, .45f * (1 - age / 1.2f));
+                float k = Mathf.Clamp01(age / .22f), fade = age < .8f ? 1 : 1 - (age - .8f) / .4f;
+                Ui.Text(c.x - 80, c.y - 30, 160, 60, "MAX", Mathf.Lerp(52, 34, k), Ui.Alpha(gold, k * fade), TextAnchor.MiddleCenter, true, true);
+            }
+            if (benchFxKind == 3 && age < 1.6f)
+            {   // 突破：一道品质色的光柱从图标往上冲出标题栏，两圈方框扩散，光点往上飘，最后一团光慢慢散
+                Color red = QualityVisual.Colors[5];
+                float rise = Mathf.Clamp01(age / .25f), fade = age < .5f ? 1 : 1 - (age - .5f) / 1.1f, w = 34 * rise * fade;
+                Ui.Fill(c.x - w / 2, 156, w, ty + ts - 156, Ui.Alpha(red, .45f * fade));
+                Ui.Fill(c.x - w / 6, 156, w / 3, ty + ts - 156, Ui.Alpha(Color.Lerp(red, Color.white, .5f), .6f * fade));
+                QualityVisual.Halo(Ui.P(c.x, c.y), 120 * Ui.K, red, .5f * fade);
+                for (int i = 0; i < 2; i++)
+                {
+                    float u = Mathf.Clamp01((age - .1f - i * .18f) / .8f); if (u <= 0 || u >= 1) continue;
+                    float g = 6 + 54 * (1 - (1 - u) * (1 - u)); Ui.Frame(tx - g, ty - g, ts + 2 * g, ts + 2 * g, 3 * (1 - u) + .5f, Ui.Alpha(red, .9f * (1 - u)));
+                }
+                for (int i = 0; i < 12; i++)
+                {
+                    float u = Mathf.Clamp01((age - i * .05f) / 1f); if (u <= 0 || u >= 1) continue;
+                    float px = c.x + (Mathf.Repeat(i * .618f, 1) - .5f) * 110, py = ty + ts - 100 * u - 10;
+                    Ui.Fill(px - 2, py - 2, 4, 4, Ui.Alpha(i % 3 == 0 ? Color.white : red, (1 - u) * .9f));
+                }
+            }
+        }
+
         private void Bench(Item item)
         {
             EquipmentBase b = Catalog.Find(item.baseId); int slot = (int)b.slot;
@@ -91,6 +164,8 @@ namespace ThreadZero
             Ui.Text(876, 182, 500, 22, Catalog.QualityNames[(int)item.quality] + " · " + Catalog.SlotNames[slot], 14, quality, TextAnchor.MiddleLeft, true);
             Ui.Text(876, 206, 500, 40, b.name, 24, Ui.Panel, TextAnchor.MiddleLeft, true);
             Ui.Text(876, 248, 500, 22, "Lv." + item.level + "  /  许可上限 Lv." + license, 14, Ui.MuteOnInk, TextAnchor.MiddleLeft);
+            if (item.level >= license) MaxBadge(766, 182);
+            if (benchFxUid == item.uid) BenchFxDraw(item, quality);
 
             // 升级
             Ui.Text(772, 304, 400, 20, "UPGRADE / 升级", 12, Ui.Mute, TextAnchor.MiddleLeft, true, true);
@@ -109,8 +184,7 @@ namespace ThreadZero
             int cost = model.UpgradeCost(item);
             if (capped) Ui.Text(772, line + 2, 540, 26, "已到许可上限。击败下一关的首领后可以继续升级。", 13, Ui.OrangeInk, TextAnchor.MiddleLeft, true);
             else Ui.Text(772, line + 2, 540, 26, "消耗 零件 " + cost + "（持有 " + model.state.scrap + "）· 随机词条的数值会同步提高", 13, Ui.Mute, TextAnchor.MiddleLeft);
-            if (Ui.Button(1348, 340, 196, 60, capped ? "已到上限" : "升级到 Lv." + (item.level + 1), 1, model.CanUpgrade(item), 17))
-            { if (model.Upgrade(item.uid)) { combat.ClampHealth(); Save(); Play(equipSound); } }
+            if (Ui.Button(1348, 340, 196, 60, capped ? "已到上限" : "升级到 Lv." + (item.level + 1), 1, model.CanUpgrade(item), 17)) UpgradeClicked(item);
 
             // 重校 / 洗炼
             Ui.Text(772, 470, 400, 20, "RECALIBRATE / 重校 · 洗炼", 12, Ui.Mute, TextAnchor.MiddleLeft, true, true);
@@ -145,8 +219,7 @@ namespace ThreadZero
                 Ui.Fill(772, 756, 772, 60, Ui.Ink); Ui.Fill(772, 756, 8, 60, QualityVisual.Colors[5]);
                 string need = !model.AscendUnlocked ? "进入第四章后开放：用核心把「" + Catalog.QualityNames[4] + "」突破为「" + Catalog.QualityNames[5] + "」" : item.level < model.AscendLevel ? "先把等级升到 Lv." + model.AscendLevel + "，再用核心突破" : "突破为「" + Catalog.QualityNames[5] + "」· 多一条词条，属性更高";
                 Ui.Text(796, 756, 540, 60, need, 15, !model.AscendUnlocked || item.level < model.AscendLevel ? Ui.MuteOnInk : Ui.Panel, TextAnchor.MiddleLeft, true);
-                if (Ui.Button(1348, 762, 188, 48, "核心 " + Balance.AscendCores + "（持有 " + model.state.cores + "）", 1, model.CanAscend(item), 14))
-                { if (model.Ascend(item.uid)) { combat.ClampHealth(); Save(); Play(rareSound); Notify("突破完成：" + b.name + " 现在是「" + Catalog.QualityNames[5] + "」", 5); } }
+                if (Ui.Button(1348, 762, 188, 48, "核心 " + Balance.AscendCores + "（持有 " + model.state.cores + "）", 1, model.CanAscend(item), 14)) AscendClicked(item, b);
             }
             int chipSlots = Balance.ChipSlots[(int)item.quality];
             Ui.Text(772, 832, 772, 24, "芯片槽 " + chipSlots + " 个 · 改装位 1 个（芯片与改装件在下一步开放）", 13, Ui.Mute, TextAnchor.MiddleLeft);
