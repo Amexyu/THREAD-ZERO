@@ -186,10 +186,15 @@ namespace ThreadZero
             float blocked = raw * Balance.GuardReduction * model.EffectCount(Effect.Guard);
             float damage = raw - blocked;
             if (GameModel.TestPower) damage = 0;
+            if (shield > 0 && damage > 0) { float soak = Math.Min(shield, damage); shield -= soak; damage -= soak; }   // v0.21 护盾回路
             if (blocked > 0)
             { guardCharge = Math.Min(s.attack, guardCharge + blocked * Balance.GuardChargeRatio); guardFlash = .35f; Emit(Ability.GuardCharge, blocked); }
             health = Math.Max(0, health - damage); lastEnemyDamage = damage; hurtFlash = .25f; lastHurtX = fromX;
             OnHit?.Invoke();
+            if (health > 0 && health < s.health * .3f && !emergencyUsed && model.HasPerk(1, 0))   // v0.21 改造板「应急维修」
+            { emergencyUsed = true; health = Math.Min(s.health, health + s.health * .25f); OnMessage?.Invoke("应急维修：回复 25% 生命"); }
+            if (health <= 0 && !lastStandUsed && model.HasPerk(1, 3))   // v0.21 改造板「不屈」：每关一次，一半概率留 20% 生命
+            { lastStandUsed = true; if (rng.NextDouble() < .5) { health = s.health * .2f; OnMessage?.Invoke("不屈：留下 20% 生命继续战斗"); } }
             if (health > 0) return false;
             recovery = 3; ResetModules(); Movement.Stop(); shots.Clear();
             OnMessage?.Invoke(model.state.region % Chapters.StagesPerChapter > 0 ? "失去战斗能力，修好后撤回上一关补给；变强后自动再挑战。" : "失去战斗能力，3 秒后维修重试；无装备损失。");

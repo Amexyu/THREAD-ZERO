@@ -37,8 +37,8 @@ namespace ThreadZero
             string away = hours > 0 ? hours + " 小时 " + (minutes % 60) + " 分" : minutes + " 分钟";
             Ui.Text(x + 40, y + 96, w - 80, 30, "你离开了 " + away, 18, Ui.Ink, TextAnchor.MiddleLeft, true);
             Ui.Text(x + 40, y + 136, w - 80, 56, "回收无人机带回了 " + offlineGain + " 零件", 30, Ui.Orange, TextAnchor.MiddleLeft, true);
-            string rule = "离线按挂机收益的 " + Mathf.RoundToInt(Balance.OfflineEfficiency * 100) + "% 算，最多算 " + Mathf.RoundToInt(Balance.OfflineMaxSeconds / 3600) + " 小时"
-                + (offlineAway > Balance.OfflineMaxSeconds ? "（这次超出的部分没算）" : "") + "。挂着游戏收益是离线的 4 倍。";
+            string rule = "离线按挂机收益的 " + Mathf.RoundToInt(Balance.OfflineEfficiency * 100) + "% 算，最多算 " + Mathf.RoundToInt(model.OfflineMax / 3600) + " 小时"
+                + (offlineAway > model.OfflineMax ? "（这次超出的部分没算）" : "") + "。挂着游戏收益是离线的 4 倍。";
             Ui.Text(x + 40, y + 204, w - 80, 48, rule, 14, Ui.Alpha(Ui.Ink, .7f), TextAnchor.UpperLeft, false, false, true);
             Ui.Text(x + 40, y + 252, w - 80, 24, "持有零件 " + model.state.scrap, 14, Ui.Alpha(Ui.Ink, .7f), TextAnchor.MiddleLeft, false);
             if (Ui.Button(x + w - 220, y + 300, 180, 56, "收下", 1, true, 18)) navigation.Close();

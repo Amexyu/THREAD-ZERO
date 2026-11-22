@@ -162,7 +162,7 @@ namespace ThreadZero
                 SkillDef skill = combat.EquippedSkill;
                 int chargeMax = skill != null && skill.trigger == SkillTrigger.EveryNAttacks ? skill.attacks : 0;
                 HudBars.Hero(heroFeetX, GroundY + rise - 224, hp01, HudBars.Ghost(-1, hp01, clock), combat.SkillCharge, chargeMax,
-                    skill != null ? combat.SkillReadiness : 0, combat.health, stats.health, clock);
+                    skill != null ? combat.SkillReadiness : 0, combat.health, stats.health, clock, combat.shield / Mathf.Max(1, stats.health));
                 SkillCallout(heroFeetX, GroundY + rise - 262);
                 if (combat.JamLeft > 0)
                 {   // 第三章首领的断讯脉冲：头顶挂一个闪烁的标签，提醒现在出手变慢了

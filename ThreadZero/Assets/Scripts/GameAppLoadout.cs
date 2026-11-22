@@ -64,11 +64,16 @@ namespace ThreadZero
                 Ui.Text(x, y + 20, 133.3f, 46, value, i < 3 ? 38 : 30, Ui.Panel, TextAnchor.MiddleCenter, true, true);
             }
 
-            bool capped = model.state.training >= Balance.TrainingCap, affordable = !capped && model.state.scrap >= model.TrainingCost;
-            string label = capped ? "训练已满级 · Lv." + model.state.training : "训练 Lv." + model.state.training + " → " + (model.state.training + 1) + " · " + model.TrainingCost + " 零件";
-            if (Ui.Button(128, 780, 400, 52, label, 0, affordable, 16))
-            { if (model.Train()) { Save(); Play(equipSound); Notify("训练完成：攻击 +" + Balance.TrainingAttack.ToString("F1") + " / 生命 +" + Balance.TrainingHealth.ToString("F0")); } }
-            Ui.Text(128, 840, 400, 30, capped ? "基础训练已经到达上限。" : affordable ? "每级训练：攻击 +1.5，生命 +8" : "零件不足。击败敌人和分解装备可以获得零件。", 13, Ui.Mute, TextAnchor.MiddleLeft);
+            // v0.21 改造板取代训练：这里显示三条分支的等级，点按钮去工坊的改造板
+            Ui.Fill(128, 780, 400, 52, Ui.Panel); Ui.Frame(128, 780, 400, 52, 1, Ui.Rule);
+            for (int bi = 0; bi < 3; bi++)
+            {
+                float bx = 140 + bi * 92;
+                Ui.Text(bx, 784, 88, 20, Catalog.BoardBranches[bi], 12, Ui.Mute, TextAnchor.MiddleLeft);
+                Ui.Text(bx, 802, 88, 26, "Lv." + model.state.board[bi], 18, Ui.Ink, TextAnchor.MiddleLeft, true, true);
+            }
+            if (Ui.Button(420, 788, 100, 36, "改造板 ›", 1, true, 14)) { workshopTab = 1; Go(GameScreen.Workshop); }
+            Ui.Text(128, 840, 400, 30, "改造板：火力加攻击、机体加生命、回收加零件和幸运；后面的章节还能解锁改变打法的节点。", 12, Ui.Mute, TextAnchor.MiddleLeft, false, false, true);
         }
 
         // v0.16 机械飞升：5 个义体槽竖排在角色左边。已装 = 橙色块；悬停显示名字和效果。
@@ -292,7 +297,7 @@ namespace ThreadZero
             if (Ui.Button(1428, 774, 124, 46, item.locked ? "解锁" : "锁定", 0, true, 15)) { item.locked = !item.locked; Save(); }
             bool canSalvage = !item.locked && !equippedNow, over = canSalvage && Ui.Hover(1176, 828, 376, 40);
             Ui.Fill(1176, 828, 376, 40, over ? Ui.OrangeInk : Ui.Panel); Ui.Frame(1176, 828, 376, 40, 1, canSalvage ? Ui.OrangeInk : Ui.Grey);
-            string salvage = equippedNow ? "穿戴中的装备不可分解" : item.locked ? "已锁定的装备不可分解" : "分解 · +" + GameModel.SalvageValue(item) + " 零件（外观保留）";
+            string salvage = equippedNow ? "穿戴中的装备不可分解" : item.locked ? "已锁定的装备不可分解" : "分解 · +" + model.SalvageGain(item) + " 零件（外观保留）";
             Ui.Text(1176, 828, 376, 40, salvage, 14, over ? Color.white : canSalvage ? Ui.OrangeInk : Ui.Mute, TextAnchor.MiddleCenter, true);
             if (canSalvage && Ui.Click(1176, 828, 376, 40) && model.Salvage(item.uid))
             { recentDrops.Remove(item.uid); unseen.Remove(item.uid); selectedItem = null; Save(); Play(salvageSound); Notify("已分解，收藏的外观保留"); }

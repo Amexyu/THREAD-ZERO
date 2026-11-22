@@ -18,6 +18,8 @@ namespace ThreadZero
         public readonly GameModel model;
         public float health, attackTimer, recovery;
         public int wave = 1, attackNumber;
+        public float shield;                       // v0.21 改造板「护盾回路」：每一波开始的护盾，先替生命挨打
+        private bool emergencyUsed, lastStandUsed; // v0.21 改造板「应急维修」「不屈」：每关各一次
         public float lastPlayerDamage, lastEnemyDamage, hitFlash, hurtFlash;
         public float droneFlash, arcFlash, dashFlash, guardFlash, markTime, guardCharge;
         public float lastDroneDamage, lastArcDamage, lastDashDamage;
@@ -146,7 +148,7 @@ namespace ThreadZero
         public void ResetRegion()
         {
             wave = 1; recovery = 0; StageCleared = false; RetreatRequested = false; stageTime = 0;
-            health = model.Total().health; ResetModules();
+            health = model.Total().health; ResetModules(); shield = 0; emergencyUsed = lastStandUsed = false;
             enemies.Clear(); queue.Clear(); shots.Clear();
             Movement.ResetAtCamera(Movement.CameraX);
             StartWave();
@@ -207,6 +209,7 @@ namespace ThreadZero
         private void StartWave()
         {
             queue.Clear(); spawnTimer = .2f; waveDelay = 0;
+            if (model.HasPerk(1, 2)) shield = Math.Max(shield, model.Total().health * .15f);   // v0.21 护盾回路
             WaveDef w = Stage.waves[Math.Max(0, Math.Min(WaveCount - 1, wave - 1))];
             if (Boss) { queue.Add(MakeBoss()); summonTimer = Chapters.BossSummonInterval; }
             for (int i = 0; i < w.elites; i++) queue.Add(Make(i % 2 == 0 ? EnemyRole.Brute : EnemyRole.Ranged, true));
@@ -376,7 +379,7 @@ namespace ThreadZero
 
         private void BasicHit(Enemy target, Stats s)
         {
-            lastCritical = model.Chance(s.crit);
+            lastCritical = model.Chance(s.crit) || (model.HasPerk(0, 0) && attackNumber % 5 == 0);   // v0.21 改造板「连击校准」：每第 5 次普攻必暴击
             float damage = Mitigate(s.attack);
             if (lastCritical) damage *= Balance.CritMultiplier + s.critDamage;   // v0.18 暴击伤害词条
             if (target.health < target.maxHealth * Balance.ExecuteThreshold && model.Has(Effect.Execute)) damage *= Balance.ExecuteMultiplier;
@@ -466,6 +469,7 @@ namespace ThreadZero
             if (!e.Alive) return false;
             if (e.boss || e.elite) damage *= 1 + s.bossDamage;   // v0.18 首领伤害词条（对精英也生效）
             if (s.focus > 0 && e == Target) damage *= 1 + s.focus;   // v0.21 芯片「聚焦」：只有主目标吃到，范围 / 连锁波及的不算
+            if (model.HasPerk(0, 3) && health < s.health * .5f) damage *= 1.25f;   // v0.21 改造板「红线」
             float actual = Math.Min(e.health, damage);
             health = Math.Min(s.health, health + actual * (Balance.LeechRatio * model.EffectCount(Effect.Leech) + s.leech));   // v0.21 加上芯片「汲取」
             e.health -= damage; e.hitFlash = .3f;
@@ -550,14 +554,15 @@ namespace ThreadZero
             }
             else if (e.elite)
             {
-                drops.Add(model.Drop(false, true, true, Quality.Rare));
+                bool scan = model.HasPerk(2, 0) && rng.NextDouble() < .1;   // v0.21 改造板「精英扫描」：10% 概率第一件高一档（特装 → 军规）
+                drops.Add(model.Drop(false, true, true, scan ? Quality.Epic : Quality.Rare));
                 for (int i = 1; i < Chapters.EliteDrops; i++) drops.Add(model.Drop(false, true, true));
             }
             else if (!e.summoned && rng.NextDouble() < Chapters.Roles[(int)e.role].dropChance * (model.Anomaly("armor") ? 1.4f : 1)) drops.Add(model.Drop(false, true));
             foreach (Item item in drops)
             {
                 if (item == null) continue;
-                incomeSince += GameModel.SalvageValue(item);
+                incomeSince += model.SalvageGain(item);
                 bool fresh = model.state.collection.Count > before; before = model.state.collection.Count;
                 OnDrop?.Invoke(item, fresh);
             }

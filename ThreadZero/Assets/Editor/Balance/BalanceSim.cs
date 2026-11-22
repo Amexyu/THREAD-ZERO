@@ -210,7 +210,7 @@ namespace ThreadZero.EditorTools
 
         private static void Snapshot(GameModel m, StageLog st)
         {
-            Stats s = m.Total(); st.atk = s.attack; st.hp = s.health; st.def = s.defense; st.haste = s.haste; st.crit = s.crit; st.training = m.state.training;
+            Stats s = m.Total(); st.atk = s.attack; st.hp = s.health; st.def = s.defense; st.haste = s.haste; st.crit = s.crit; st.training = m.state.board[0] + m.state.board[1];
             float lv = 0; int n = 0;
             for (int i = 0; i < Catalog.SlotCount; i++) { Item it = m.Equipped((Slot)i); if (it != null) { lv += it.level; n++; } }
             st.gearLevel = n > 0 ? lv / n : 0;
@@ -297,12 +297,14 @@ namespace ThreadZero.EditorTools
                     int cost = m.UpgradeCost(it); it.level++; double g = (Score(m) - now) / cost; it.level--;
                     if (g > bestGain) { bestGain = g; pick = it; train = false; }
                 }
-                if (m.state.training < Balance.TrainingCap && m.state.scrap >= m.TrainingCost)
+                int branch = -1;   // v0.21 改造板取代训练：火力（攻击）、机体（生命）各算一次收益，选划算的
+                for (int bi = 0; bi < 2; bi++)
                 {
-                    int cost = m.TrainingCost; m.state.training++; double g = (Score(m) - now) / cost; m.state.training--;
-                    if (g > bestGain) { bestGain = g; pick = null; train = true; }
+                    if (!m.CanUpgradeBoard(bi)) continue;
+                    int cost = m.BoardCost(bi); m.state.board[bi]++; double g = (Score(m) - now) / cost; m.state.board[bi]--;
+                    if (g > bestGain) { bestGain = g; pick = null; train = true; branch = bi; }
                 }
-                if (train) m.Train(); else if (pick != null) m.Upgrade(pick.uid); else break;
+                if (train) m.UpgradeBoard(branch); else if (pick != null) m.Upgrade(pick.uid); else break;
             }
         }
 

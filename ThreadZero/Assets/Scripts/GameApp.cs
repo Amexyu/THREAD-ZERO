@@ -97,7 +97,7 @@ namespace ThreadZero
             long now = System.DateTime.UtcNow.Ticks, then = model.state.savedAt; model.state.savedAt = now;
             if (then <= 0 || now <= then) return;
             double away = (now - then) / 1e7; if (away < Balance.OfflineMinSeconds) return;
-            float counted = (float)System.Math.Min(away, Balance.OfflineMaxSeconds);
+            float counted = (float)System.Math.Min(away, model.OfflineMax);   // v0.21 改造板「拾荒」：上限 4 小时
             int gain = Mathf.RoundToInt(model.state.scrapRate * counted * Balance.OfflineEfficiency);
             if (gain <= 0) return;
             model.state.scrap += gain; offlineAway = away; offlineCounted = counted; offlineGain = gain;

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -8,16 +9,61 @@ namespace ThreadZero
     public sealed partial class GameApp
     {
         private float workshopScroll;
+        private int workshopTab;   // v0.21 0 装备台 · 1 改造板 · 2 机库
+
+        // ---------- v0.21 改造板（取代训练）：三条分支 + 每条 4 个改变打法的节点 ----------
+        private void BoardPage()
+        {
+            for (int bi = 0; bi < 3; bi++)
+            {
+                float x = 128 + bi * 484, w = 468;
+                int lv = model.state.board[bi], cost = model.BoardCost(bi);
+                Ui.Fill(x, 156, w, 148, Ui.Ink); Ui.Fill(x, 156, w, 6, Ui.Orange);
+                Ui.Text(x + 20, 168, 200, 34, Catalog.BoardBranches[bi], 24, Ui.Panel, TextAnchor.MiddleLeft, true);
+                Ui.Text(x + w - 220, 164, 200, 42, "Lv." + lv, 32, Ui.Orange, TextAnchor.MiddleRight, true, true);
+                string total = bi == 0 ? "攻击 +" + (lv * Balance.TrainingAttack).ToString("0.#") : bi == 1 ? "生命 +" + (lv * Balance.TrainingHealth).ToString("0")
+                             : "零件回收 +" + (lv * Balance.BoardScrap * 100).ToString("0.#") + "%、幸运 +" + (lv * Balance.BoardLuck).ToString("0.##");
+                Ui.Text(x + 20, 204, w - 40, 22, Catalog.BoardPerLevel[bi] + " · 现在 " + total, 13, Ui.MuteOnInk, TextAnchor.MiddleLeft);
+                int ten = 0; for (int k = 0; k < 10; k++) ten += Math.Max(10, (20 + 15 * (lv + k)) / 2);
+                if (Ui.Button(x + 20, 238, 232, 52, "升级 · 零件 " + cost, 1, model.CanUpgradeBoard(bi), 15) && model.UpgradeBoard(bi))
+                { combat.ClampHealth(); Save(); Play(equipSound); }
+                if (Ui.Button(x + 262, 238, w - 282, 52, "连升 10 级 · " + ten, 3, model.state.scrap >= ten, 13))
+                { for (int k = 0; k < 10; k++) model.UpgradeBoard(bi); combat.ClampHealth(); Save(); Play(equipSound); Notify(Catalog.BoardBranches[bi] + " 升到 Lv." + model.state.board[bi]); }
+                for (int t = 0; t < 4; t++)
+                {
+                    float y = 316 + t * 140;
+                    bool has = model.HasPerk(bi, t), open = model.PerkOpen(bi, t), can = model.CanBuyPerk(bi, t);
+                    Ui.Fill(x, y, w, 130, has ? Ui.Ink : Ui.Panel); Ui.Frame(x, y, w, 130, has ? 0 : 1, has ? Ui.Ink : Ui.Rule);
+                    if (has) Ui.Fill(x, y, 6, 130, Ui.Orange);
+                    Ui.Text(x + 20, y + 10, w - 40, 18, "第" + Catalog.ChapterNumber(Catalog.PerkChapter[t]) + "章开放 · 核心 " + Catalog.PerkCores[t], 12, has ? Ui.MuteOnInk : Ui.Mute, TextAnchor.MiddleLeft);
+                    Ui.Text(x + 20, y + 30, w - 40, 30, Catalog.PerkNames[bi, t], 19, has ? Ui.Orange : open ? Ui.Ink : Ui.Grey, TextAnchor.MiddleLeft, true);
+                    Ui.Text(x + 20, y + 60, w - 40, 22, Catalog.PerkTexts[bi, t], 13, has ? Ui.Panel : open ? Ui.Body : Ui.Grey, TextAnchor.MiddleLeft);
+                    string state = has ? "已激活" : !open ? (state0(bi, t)) : can ? "激活 · 核心 " + Catalog.PerkCores[t] : "核心不足（持有 " + model.state.cores + "）";
+                    if (has) Ui.Text(x + 20, y + 90, w - 40, 30, "✓ 已激活", 14, Ui.Orange, TextAnchor.MiddleLeft, true);
+                    else if (Ui.Button(x + 20, y + 88, w - 40, 34, state, can ? 1 : 0, can, 14) && model.BuyPerk(bi, t))
+                    { combat.ClampHealth(); Save(); Play(rareSound); Notify("改造板节点激活：" + Catalog.PerkNames[bi, t] + " · " + Catalog.PerkTexts[bi, t], 5); }
+                }
+            }
+        }
+        private string state0(int bi, int t)
+        {
+            if (model.state.unlockedRegion < Chapters.FirstRegion(Catalog.PerkChapter[t])) return "第" + Catalog.ChapterNumber(Catalog.PerkChapter[t]) + "章开放";
+            return "先激活「" + Catalog.PerkNames[bi, t - 1] + "」";
+        }
+        public void TestWorkshopTab(int tab) { workshopTab = tab; Go(GameScreen.Workshop); }
+        public void TestBoard(int branch, int levels) { for (int k = 0; k < levels; k++) { model.state.scrap += model.BoardCost(branch); model.UpgradeBoard(branch); } }
+        public void TestPerk(int branch, int tier) { model.state.cores += Catalog.PerkCores[tier]; model.BuyPerk(branch, tier); }
 
         private void WorkshopPage()
         {
             Ui.Text(128, 16, 120, 52, "工坊", 30, Ui.Ink, TextAnchor.MiddleLeft, true);
-            string[] tabs = { "装备台", "改造板 · 制作中", "机库 · 制作中" };
+            // v0.21 三个页签都能用：装备台、改造板（取代训练）、机库（机器人）
+            string[] tabs = { "装备台", "改造板", "机库 · 制作中" };
             float tabX = 250;
             for (int i = 0; i < 3; i++)
             {
-                float width = i == 0 ? 120 : 190;
-                Ui.Button(tabX, 22, width, 40, tabs[i], i == 0 ? 2 : 0, i == 0, 14);
+                float width = i == 2 ? 190 : 120; bool open = i < 2;
+                if (Ui.Button(tabX, 22, width, 40, tabs[i], workshopTab == i ? 2 : 0, open, 14) && open) workshopTab = i;
                 tabX += width + 8;
             }
 
@@ -34,6 +80,7 @@ namespace ThreadZero
                 Ui.Text(x + 16, 102, chipW - 24, 34, (i == 0 ? "Lv." : "") + values[i], 24, i == 0 ? Ui.Orange : Ui.Panel, TextAnchor.MiddleLeft, true, true);
             }
 
+            if (workshopTab == 1) { BoardPage(); return; }
             WorkshopList();
             Item chosen = FindItem(selectedItem);
             Ui.Fill(748, 156, 820, 720, Ui.Panel);

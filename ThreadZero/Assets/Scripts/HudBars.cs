@@ -52,7 +52,7 @@ namespace ThreadZero
 
         // ---------- 主角：头顶，血条 + 技能条 + 左端菱形技能图标 ----------
         /// cx/top：条框中心 x、上沿 y（逻辑坐标）。charge/chargeMax：技能充能格；ready=技能就绪。
-        public static void Hero(float cx, float top, float hp01, float ghost01, int charge, int chargeMax, float readiness, float hpNow, float hpMax, float now)
+        public static void Hero(float cx, float top, float hp01, float ghost01, int charge, int chargeMax, float readiness, float hpNow, float hpMax, float now, float shield01 = 0)
         {
             const float W = 196, s = .22f;
             float x = cx - W / 2;
@@ -63,6 +63,8 @@ namespace ThreadZero
                 Rect hpR = Slot(hero, hero.hp, x, top, W, s), spR = Slot(hero, hero.sp, x, top, W, s);
                 Fill(fillGhost, hpR, ghost01, Color.white);
                 Fill(fillHp, hpR, hp01, Color.white);
+                if (shield01 > 0)   // v0.21 改造板「护盾回路」：血条正上方一条亮蓝细条，长短 = 护盾占最大生命的比例
+                { float w = hpR.width * Mathf.Clamp01(shield01); GUI.DrawTexture(new Rect(hpR.x, hpR.y - 4 * Ui.K, w, 3 * Ui.K), Texture2D.whiteTexture, ScaleMode.StretchToFill, true, 0, new Color(.6f, .9f, 1, .95f), 0, 0); }
                 bool ready = readiness >= .999f;
                 if (ready)
                 {

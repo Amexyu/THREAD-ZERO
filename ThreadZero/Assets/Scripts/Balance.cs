@@ -62,6 +62,8 @@ namespace ThreadZero
         // v0.21 芯片与改装件：精英 / 首领 / 深网首领层掉芯片的概率，首领掉改装件的概率，制作一件改装件要的核心；受到伤害减免的总上限（芯片 + 改造板）
         public const float ChipEliteChance=.04f, ChipBossChance=.25f, ChipEchoBossChance=.30f, ModBossChance=.2f, ReductionCap=.45f;
         public const int ModCraftCores=3;
+        // v0.21 改造板「回收」分支每级：零件回收 +0.4%、幸运 +0.05
+        public const float BoardScrap=.004f, BoardLuck=.05f;
         /// 洗炼：没锁的词条全部重抽（换属性 + 重抽数值）。锁一条费用翻倍、锁两条三倍……次数越多越贵（和重校共用次数）。
         public static int ReforgeCost(Quality quality,int rerolls,int locked) { return (14+6*(int)quality)*(1+Math.Max(0,Math.Min(9,rerolls)))*(1+Math.Max(0,locked)); }
         // v0.16 等级与稀有度分开（借鉴 Task Bar Hero）：等级决定强度，稀有度只给小倍率 + 词条条数（之后再加专属效果）。

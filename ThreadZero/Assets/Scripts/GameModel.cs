@@ -100,6 +100,10 @@ namespace ThreadZero
         public List<Chip> chipBag = new List<Chip>();   // v0.21 还没植入的芯片
         public int[] modBag = new int[8];               // v0.21 改装件库存，按 (int)Effect 记数量（0 号不用）
         public bool chipGift;                           // v0.21 芯片 / 改装件开放时送的那一块和那一件领过了
+        // v0.21 改造板（取代训练）：三条分支的等级（0 火力 1 机体 2 回收）、买过的改变打法节点（按位：分支 × 4 + 第几个）、
+        // boardVersion 1 = 老存档的训练等级已经换算过来（训练 T 级 → 火力 T 级 + 机体 T 级）
+        public int[] board = new int[3];
+        public int boardPerks, boardVersion;
     }
 
     public sealed class ImplantDef
@@ -383,6 +387,15 @@ namespace ThreadZero
         public static float ChipValue(Chip c, int level) { return ChipValues[Math.Max(0, Math.Min(ChipKinds - 1, c.kind)), Math.Max(1, Math.Min(3, c.tier)) - 1] * Balance.SpecialLevelFactor(level); }
         public static string ChipLabel(Chip c) { return ChipNames[Math.Max(0, Math.Min(ChipKinds - 1, c.kind))] + " Mk" + Math.Max(1, Math.Min(3, c.tier)); }
         /// 「攻击 +7.4%」「技能冷却 −8.0%」「受到伤害 −5.0%」
+        // ---------- v0.21 改造板 ----------
+        public static readonly string[] BoardBranches = { "火力", "机体", "回收" };
+        public static readonly string[] BoardPerLevel = { "每级攻击 +1.5", "每级生命 +8", "每级零件回收 +0.4%、幸运 +0.05" };
+        public static readonly string[,] PerkNames = { { "连击校准", "首领克星", "过载释放", "红线" }, { "应急维修", "复合装甲", "护盾回路", "不屈" }, { "精英扫描", "拾荒", "拆解专家", "芯片嗅探" } };
+        public static readonly string[,] PerkTexts = {
+            { "每第 5 次普攻必定暴击", "打精英和首领伤害 +10%", "技能伤害 +20%", "生命低于一半时伤害 +25%" },
+            { "每关一次：生命低于 30% 时回复 25%", "受到伤害 −8%", "每一波开始得到 15% 生命的护盾", "每关一次：被打倒时一半概率留 20% 生命继续" },
+            { "精英掉落 10% 概率高一档品质", "离线收益上限 2 小时 → 4 小时", "分解得到的零件 +25%", "芯片掉率 ×1.5" } };
+        public static readonly int[] PerkCores = { 1, 2, 3, 5 }, PerkChapter = { 2, 3, 4, 5 };
         public static string ChipEffectText(Chip c, int level)
         {
             float v = ChipValue(c, level) * 100; bool minus = c.kind == 2 || c.kind == 4;
@@ -462,6 +475,10 @@ namespace ThreadZero
             // v0.16 统一货币：四种部位零件并入「零件」（scrap）。老存档里攒的部位零件全部折进来。
             for (int i = 0; i < 4; i++) { state.scrap += Math.Max(0, state.parts[i]); state.parts[i] = 0; }
             state.cores = Math.Max(0, state.cores);
+            // v0.21 改造板：老存档的训练换算过来（训练 T 级 → 火力 T 级 + 机体 T 级，花费和数值都对得上）
+            if (state.board == null || state.board.Length != 3) { var bd = new int[3]; if (state.board != null) Array.Copy(state.board, bd, Math.Min(3, state.board.Length)); state.board = bd; }
+            for (int i = 0; i < 3; i++) state.board[i] = Math.Max(0, Math.Min(Balance.TrainingCap, state.board[i]));
+            if (state.boardVersion < 1) { state.board[0] = Math.Max(state.board[0], state.training); state.board[1] = Math.Max(state.board[1], state.training); state.boardVersion = 1; }
             // v0.21 芯片与改装件
             if (state.chipBag == null) state.chipBag = new List<Chip>();
             state.chipBag = state.chipBag.Where(c => c != null && c.kind >= 0 && c.kind < Catalog.ChipKinds && c.tier >= 1 && c.tier <= 3).ToList();
@@ -615,7 +632,12 @@ namespace ThreadZero
         public float Ascension { get { int sum = 0; for (int i = 0; i < Catalog.Implants.Length; i++) sum += ImplantLevel(i); return sum / (float)(Catalog.Implants.Length * Catalog.ImplantMaxLevel); } }
         public Stats Total()
         {
-            Stats s = new Stats(Balance.BaseHealth + state.training * Balance.TrainingHealth, Balance.BaseAttack + state.training * Balance.TrainingAttack, Balance.BaseDefense, 0, Balance.BaseCrit);
+            // v0.21 改造板取代训练：火力每级攻击 +1.5、机体每级生命 +8（和原来训练一级一样），回收每级零件回收 +0.4%、幸运 +0.05
+            Stats s = new Stats(Balance.BaseHealth + state.board[1] * Balance.TrainingHealth, Balance.BaseAttack + state.board[0] * Balance.TrainingAttack, Balance.BaseDefense, 0, Balance.BaseCrit);
+            s.scrapBonus += state.board[2] * Balance.BoardScrap; s.luck += state.board[2] * Balance.BoardLuck;
+            if (HasPerk(0, 1)) s.bossDamage += .1f;
+            if (HasPerk(0, 2)) s.skillDamage += .2f;
+            if (HasPerk(1, 1)) s.reduction += .08f;
             for(int i = 0; i < Catalog.SlotCount; i++) { Item item = Equipped((Slot)i); if (item != null) { s.Add(ItemStats(item)); AddChips(s, item); } }
             foreach (string id in state.implants)
             {   // v0.20 义体按等级放大；5 / 10 级的特性另加
@@ -677,7 +699,7 @@ namespace ThreadZero
             return true;
         }
         /// 芯片掉率倍率（改造板「芯片嗅探」×1.5，做改造板时接上）。
-        public float ChipFindBonus { get { return 1; } }
+        public float ChipFindBonus { get { return HasPerk(2, 3) ? 1.5f : 1; } }
         public bool CanCraftMod { get { return ChipsUnlocked && state.cores >= Balance.ModCraftCores; } }
         public bool CraftMod(Effect kind)
         {
@@ -750,7 +772,7 @@ namespace ThreadZero
         {
             Item item = state.items.FirstOrDefault(x => x.uid == uid);
             if (item == null || item.locked || state.equipped.Contains(uid)) return false;
-            state.scrap += SalvageValue(item);
+            state.scrap += SalvageGain(item);
             if ((int)item.quality >= (int)Quality.Legendary) state.cores++;
             if (item.mod > 0 && item.mod < state.modBag.Length) state.modBag[item.mod]++;   // v0.21 改装件退回库存（芯片随装备销毁）
             state.items.Remove(item); return true;
@@ -908,12 +930,26 @@ namespace ThreadZero
             item.rerolls++;
             return true;
         }
-        public int TrainingCost { get { return Balance.TrainingCost(state.training); } }
-        public bool Train()
+        // ---------- v0.21 改造板（取代训练，企划 9A 第三步） ----------
+        /// 每级价格 = 原来训练的一半：火力、机体各升一级 = 原来训练一级（数值和花费都一样，已经调好的节奏不变）。
+        public int BoardCost(int branch) { return Math.Max(10, (20 + 15 * state.board[branch]) / 2); }
+        public bool CanUpgradeBoard(int branch) { return branch >= 0 && branch < 3 && state.board[branch] < Balance.TrainingCap && state.scrap >= BoardCost(branch); }
+        public bool UpgradeBoard(int branch)
         {
-            if (state.training >= Balance.TrainingCap || state.scrap < TrainingCost) return false;
-            state.scrap -= TrainingCost; state.training++; return true;
+            if (!CanUpgradeBoard(branch)) return false;
+            state.scrap -= BoardCost(branch); state.board[branch]++; return true;
         }
+        public bool HasPerk(int branch, int tier) { return (state.boardPerks & (1 << (branch * 4 + tier))) != 0; }
+        /// 节点按章解锁（第二 / 三 / 四 / 五章），同一条分支要按顺序买。
+        public bool PerkOpen(int branch, int tier) { return state.unlockedRegion >= Chapters.FirstRegion(Catalog.PerkChapter[tier]) && (tier == 0 || HasPerk(branch, tier - 1)); }
+        public bool CanBuyPerk(int branch, int tier) { return !HasPerk(branch, tier) && PerkOpen(branch, tier) && state.cores >= Catalog.PerkCores[tier]; }
+        public bool BuyPerk(int branch, int tier)
+        {
+            if (!CanBuyPerk(branch, tier)) return false;
+            state.cores -= Catalog.PerkCores[tier]; state.boardPerks |= 1 << (branch * 4 + tier); return true;
+        }
+        public float OfflineMax { get { return HasPerk(2, 1) ? Balance.OfflineMaxSeconds * 2 : Balance.OfflineMaxSeconds; } }
+        public int SalvageGain(Item item) { int v = SalvageValue(item); return HasPerk(2, 2) ? (int)Math.Round(v * 1.25f) : v; }
         public bool ChangeRegion(int region)
         {
             if (region < 0 || region > state.unlockedRegion) return false;

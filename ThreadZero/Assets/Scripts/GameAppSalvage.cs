@@ -20,7 +20,7 @@ namespace ThreadZero
             foreach (Item item in new List<Item>(model.state.items))
             {
                 if ((int)item.quality > maxQuality || !CanSalvage(item)) continue;
-                int value = GameModel.SalvageValue(item);
+                int value = model.SalvageGain(item);
                 if (execute)
                 {
                     if (!model.Salvage(item.uid)) continue;
@@ -59,7 +59,7 @@ namespace ThreadZero
         private bool TryAutoSalvage(Item item, bool fresh)
         {
             if (item == null || fresh || (int)item.quality >= model.state.autoSalvage || item.baseId == model.state.recoveryTarget) return false;
-            int value = GameModel.SalvageValue(item);
+            int value = model.SalvageGain(item);
             if (!model.Salvage(item.uid)) return false;
             autoSalvagedCount++; autoSalvagedScrap += value;
             return true;

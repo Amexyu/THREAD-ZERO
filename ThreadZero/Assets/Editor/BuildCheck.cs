@@ -44,6 +44,8 @@ namespace ThreadZero.Editor
             st.training = 57; st.shards = 33; st.cores = 9; st.shakeMode = 1; st.glowMode = 1; st.scrapRate = 12.5f; st.savedAt = 638000000000000000L;
             st.bosses = 2; st.bossMask = 3; if (!st.implants.Contains("eye_r")) st.implants.Add("eye_r"); st.implantLevels[1] = 7; st.echoBest = 44; st.echoFloor = 40;
             st.sinceEpic = 30; st.sinceLegendary = 100;
+            // v0.21：改造板（老存档训练 57 级要换算成火力 57 + 机体 57）、芯片与改装件
+            st.boardVersion = 0; st.board = new int[3]; st.boardPerks = 5; st.chipBag.Add(new Chip { kind = 4, tier = 2 }); st.modBag[3] = 2;
             var back = new GameModel(JsonUtility.FromJson<GameState>(JsonUtility.ToJson(st)), 11).state;
             var bad = new System.Collections.Generic.List<string>();
             if (back.training != 57) bad.Add("训练 " + back.training);
@@ -56,8 +58,11 @@ namespace ThreadZero.Editor
             if (back.implantLevels == null || back.implantLevels.Length < 2 || back.implantLevels[1] != 7) bad.Add("义体等级");
             if (back.echoBest != 44 || back.echoFloor != 40) bad.Add("回声层 " + back.echoFloor + "/" + back.echoBest);
             if (back.sinceEpic != 30 || back.sinceLegendary != 100) bad.Add("保底计数 " + back.sinceEpic + "/" + back.sinceLegendary);
+            if (back.board == null || back.board[0] != 57 || back.board[1] != 57 || back.boardVersion != 1 || back.boardPerks != 5) bad.Add("改造板 " + (back.board == null ? "null" : back.board[0] + "/" + back.board[1]) + " 节点 " + back.boardPerks);
+            if (back.chipBag == null || back.chipBag.Count != 1 || back.chipBag[0].kind != 4 || back.chipBag[0].tier != 2) bad.Add("芯片库存");
+            if (back.modBag == null || back.modBag.Length != 8 || back.modBag[3] != 2) bad.Add("改装件库存");
             if (bad.Count > 0) throw new Exception("存档字段往返不对：" + string.Join("，", bad.ToArray()));
-            sb.AppendLine("存档字段往返：训练 57 级、织网碎片、核心、震屏、辉光、离线收入、存档时间、义体等级、回声层、保底计数都对。");
+            sb.AppendLine("存档字段往返：训练 57 级（换算成改造板火力 57 + 机体 57）、改造板节点、芯片 / 改装件库存、织网碎片、核心、震屏、辉光、离线收入、存档时间、义体等级、回声层、保底计数都对。");
         }
 
         [MenuItem("Thread Zero/检查/打包检查（当前平台，不切换）")]
