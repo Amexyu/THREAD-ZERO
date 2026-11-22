@@ -48,6 +48,7 @@ namespace ThreadZero.Editor
             st.boardVersion = 0; st.board = new int[3]; st.boardPerks = 5; st.chipBag.Add(new Chip { kind = 4, tier = 2 }); st.modBag[3] = 2;
             // v0.21 机库：碎片、等级、上场（第二个位故意放同分工的，读档时要被清掉）
             st.blueprints[3] = 6; st.robotLevels[1] = 9; st.robotLevels[3] = 4; st.deployed = new[] { 1, 3 }; st.hangarGift = true;
+            st.setsDone = (1 << 6) | 1; st.title = 2;   // v0.21 图鉴奖励
             var back = new GameModel(JsonUtility.FromJson<GameState>(JsonUtility.ToJson(st)), 11).state;
             var bad = new System.Collections.Generic.List<string>();
             if (back.training != 57) bad.Add("训练 " + back.training);
@@ -66,8 +67,9 @@ namespace ThreadZero.Editor
             if (back.blueprints == null || back.blueprints.Length != Catalog.RobotCount || back.blueprints[3] != 6) bad.Add("图纸碎片");
             if (back.robotLevels == null || back.robotLevels[1] != 9 || back.robotLevels[3] != 4 || !back.hangarGift) bad.Add("机器人等级");
             if (back.deployed == null || back.deployed[0] != 1 || back.deployed[1] != -1) bad.Add("上场 " + (back.deployed == null ? "null" : back.deployed[0] + "/" + back.deployed[1]));
+            if (back.setsDone != ((1 << 6) | 1) || back.title != 2) bad.Add("套装 / 称号 " + back.setsDone + "/" + back.title);
             if (bad.Count > 0) throw new Exception("存档字段往返不对：" + string.Join("，", bad.ToArray()));
-            sb.AppendLine("存档字段往返：训练 57 级（换算成改造板火力 57 + 机体 57）、改造板节点、芯片 / 改装件库存、机库（碎片、等级、上场，同分工两台读档时清掉一台）、织网碎片、核心、震屏、辉光、离线收入、存档时间、义体等级、零号深网、保底计数都对。");
+            sb.AppendLine("存档字段往返：训练 57 级（换算成改造板火力 57 + 机体 57）、改造板节点、芯片 / 改装件库存、机库（碎片、等级、上场，同分工两台读档时清掉一台）、套装奖励与称号、织网碎片、核心、震屏、辉光、离线收入、存档时间、义体等级、零号深网、保底计数都对。");
         }
 
         [MenuItem("Thread Zero/检查/打包检查（当前平台，不切换）")]

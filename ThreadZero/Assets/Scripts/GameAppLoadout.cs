@@ -30,6 +30,13 @@ namespace ThreadZero
             string summary = model.LoadoutSummary; float chip = Ui.Width(summary, 13, true) + 20;
             Ui.Fill(516 - chip, 32, chip, 28, Ui.Ink); Ui.Text(516 - chip, 32, chip, 28, summary, 13, Ui.Panel, TextAnchor.MiddleCenter, true);
             PreviewHero(328, 384, 350, 158, 86, 340, 306);
+            string title = model.TitleName;   // v0.21 称号：集齐一章 5 套解锁，衣柜 · 套装里换
+            if (title != null)
+            {
+                float tw = Ui.Width("「" + title + "」", 15, true) + 28;
+                Ui.Fill(328 - tw / 2, 386, tw, 32, Ui.Ink); Ui.Fill(328 - tw / 2, 386, 4, 32, Ui.Orange);
+                Ui.Text(328 - tw / 2, 386, tw, 32, "「" + title + "」", 15, Ui.Orange, TextAnchor.MiddleCenter, true);
+            }
             ImplantColumn(146, 104);
             Ui.Frame(128, 20, 400, 404, 2, Ui.Ink);
 

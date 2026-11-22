@@ -39,7 +39,7 @@ namespace ThreadZero
                 float labelWidth = Ui.Width(Catalog.SlotNames[i], 17, true), countWidth = Ui.Width(count, 18, true, true), start = x + (tabW - labelWidth - countWidth - 12) / 2;
                 Ui.Text(start, 20, labelWidth + 4, 52, Catalog.SlotNames[i], 17, on ? Ui.Panel : Ui.Ink, TextAnchor.MiddleLeft, true);
                 Ui.Text(start + labelWidth + 12, 20, countWidth + 4, 52, count, 18, on ? Ui.MuteOnInk : Ui.Mute, TextAnchor.MiddleLeft, true, true);
-                if (Ui.Click(x, 20, tabW, 52)) { wardrobeSlot = i; selectedLook = Catalog.All.First(b => (int)b.slot == slot).id; }
+                if (Ui.Click(x, 20, tabW, 52)) { wardrobeSlot = i; selectedLook = Catalog.All.First(b => (int)b.slot == slot).id; wardrobeSets = false; }
             }
 
             // 右中：五款外观
@@ -48,8 +48,12 @@ namespace ThreadZero
             for (int c = 1; c <= Catalog.DeepNetPage; c++)
             {
                 int ch = c; string label = c == Catalog.DeepNetPage ? "零号深网" : "第" + "一二三四五"[Mathf.Min(4, c - 1)] + "章";
-                if (Ui.Button(588 + (c - 1) * 128, 80, 120, 30, label, wardrobeChapter == c ? 2 : 0, true, 13)) { wardrobeChapter = ch; selectedLook = null; }
+                if (Ui.Button(588 + (c - 1) * 128, 80, 120, 30, label, wardrobeChapter == c ? 2 : 0, true, 13)) { wardrobeChapter = ch; selectedLook = null; if (ch == Catalog.DeepNetPage) wardrobeSets = false; }
             }
+            // v0.21 图鉴奖励：「套装」视图（每章 5 套，集齐给核心和织网碎片；一章 5 套全齐给称号）
+            if (Ui.Button(1356, 80, 212, 30, "套装 · " + model.SetsComplete + " / " + Catalog.SetCount, wardrobeSets ? 2 : 1, true, 13))
+            { wardrobeSets = !wardrobeSets; if (wardrobeChapter == Catalog.DeepNetPage) wardrobeChapter = 1; }
+            if (wardrobeSets) { WardrobeSets(); return; }
             EquipmentBase[] looks = Catalog.All.Where(b => (int)b.slot == wardrobeSlot && Catalog.LookPage(b.id) == wardrobeChapter).ToArray();
             if (looks.Length == 0)
             {
@@ -119,11 +123,56 @@ namespace ThreadZero
             Ui.Frame(588, 380, 980, 496, 2, Ui.Ink);
         }
 
+        private void WardrobeSets()
+        {
+            int ch = Mathf.Clamp(wardrobeChapter, 1, 5);
+            for (int k = 0; k < 5; k++)
+            {
+                int set = (ch - 1) * 5 + k; float y = 118 + k * 102;
+                int owned = model.SetOwned(set); bool done = owned == 5;
+                Ui.Fill(588, y, 980, 94, done ? Ui.Ink : Ui.Tile);
+                if (done) Ui.Fill(588, y, 6, 94, Ui.Orange);
+                Ui.Text(612, y + 10, 330, 32, Catalog.SetNames[set], 20, done ? Ui.Orange : Ui.Panel, TextAnchor.MiddleLeft, true);
+                Ui.Text(612, y + 44, 330, 40, done ? "已集齐 · 核心 +" + Balance.SetCores + "、织网碎片 +" + Balance.SetShards + " 已领取"
+                    : "已收藏 " + owned + " / 5 · 集齐给核心 +" + Balance.SetCores + "、织网碎片 +" + Balance.SetShards, 13, Ui.MuteOnInk, TextAnchor.UpperLeft, false, false, true);
+                string[] ids = Catalog.SetPieces(set);
+                for (int j = 0; j < 5; j++)
+                {
+                    EquipmentBase b = Catalog.Find(ids[j]); if (b == null) continue;
+                    bool has = model.state.collection.Contains(b.id); float x = 958 + j * 122, hy = y + 5;
+                    bool hover = Ui.Hover(x, hy, 114, 84);
+                    Ui.Fill(x, hy, 114, 84, hover ? Ui.Tile2 : done ? Ui.Steel : Ui.Tile2);
+                    PaperDollView.DrawEquipmentIcon(b, Ui.R(x + 29, hy + 4, 56, 56), !has);
+                    Ui.Text(x + 2, hy + 62, 110, 20, b.name, 11, has ? Ui.Panel : Ui.Grey, TextAnchor.MiddleCenter);
+                    if (Ui.Click(x, hy, 114, 84)) { wardrobeSlot = (int)b.slot; selectedLook = b.id; wardrobeSets = false; }   // 点一件：跳到这件的外观详情
+                }
+            }
+            // 称号：集齐一章的 5 套解锁，显示在整备页角色脚下
+            float ty = 632;
+            Ui.Fill(588, ty, 980, 244, Ui.Panel); Ui.Frame(588, ty, 980, 244, 2, Ui.Ink);
+            Ui.Text(612, ty + 14, 600, 22, "TITLE / 称号", 13, Ui.Mute, TextAnchor.MiddleLeft, true, true);
+            Ui.Text(612, ty + 38, 900, 22, "集齐一章的全部 5 套就解锁那一章的称号，显示在整备页的角色脚下。", 13, Ui.Body, TextAnchor.MiddleLeft);
+            for (int c = 1; c <= 5; c++)
+            {
+                float x = 612 + (c - 1) * 188, y = ty + 72, w = 178, h = 150;
+                bool open = model.TitleUnlocked(c), using_ = model.state.title == c && open;
+                int sets = 0; for (int k = 0; k < 5; k++) if (model.SetComplete((c - 1) * 5 + k)) sets++;
+                Ui.Fill(x, y, w, h, using_ ? Ui.Ink : open ? Ui.Stage : Ui.Rule);
+                Ui.Text(x + 12, y + 8, w - 24, 18, "第" + Catalog.ChapterNumber(c) + "章 · " + sets + " / 5 套", 12, using_ ? Ui.MuteOnInk : Ui.Mute, TextAnchor.MiddleLeft);
+                Ui.Text(x + 12, y + 30, w - 24, 58, open ? Catalog.TitleNames[c - 1] : "？？？", 17, using_ ? Ui.Orange : open ? Ui.Ink : Ui.Grey, TextAnchor.UpperLeft, true, false, true);
+                if (using_) { if (Ui.Button(x + 12, y + h - 48, w - 24, 36, "取下", 0, true, 13)) { model.state.title = 0; Save(); } }
+                else if (Ui.Button(x + 12, y + h - 48, w - 24, 36, open ? "使用" : "未解锁", open ? 1 : 0, open, 13)) { model.state.title = c; Save(); Play(equipSound); }
+            }
+        }
+
         // ---------- 测试 ----------
         /// 零号深网打到第 best 层（发这之前的限定外观），可选穿上 look 的外观。
         public void TestDeepNet(int best) { model.state.bosses = System.Math.Max(1, model.state.bosses); for (int f = 1; f <= best; f++) model.GrantDeepNetLook(f); model.state.echoBest = System.Math.Max(model.state.echoBest, best); }
         public void TestWardrobe(int slot, int page) { wardrobeSlot = slot; wardrobeChapter = page; selectedLook = null; Go(GameScreen.Wardrobe); }
         public void TestLook(string id) { model.SetAppearance(id); }
         public void TestOpenMap() { navigation.Open(GameModal.Map); }
+        /// 收藏某一章的前 n 套（每套 5 件外观），看套装奖励和称号。
+        public void TestSets(int chapter, int n) { for (int k = 0; k < n; k++) foreach (string id in Catalog.SetPieces((chapter - 1) * 5 + k)) model.Unlock(id); }
+        public void TestWardrobeSets(int chapter) { wardrobeChapter = chapter; wardrobeSets = true; Go(GameScreen.Wardrobe); }
     }
 }

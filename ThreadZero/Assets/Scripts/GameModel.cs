@@ -109,6 +109,8 @@ namespace ThreadZero
         public int[] robotLevels = new int[Catalog.RobotCount];
         public int[] deployed = { -1, -1 };
         public bool hangarGift;
+        // v0.21 图鉴奖励：领过奖励的套装（25 位）、正在用的称号（第几章，0 = 不显示）
+        public int setsDone, title;
     }
 
     /// v0.21 机库的机器人：被改造过来的敌人（用那种敌人的图，翻过来朝右）。role 0 前排 · 1 后排 · 2 支援。
@@ -355,6 +357,16 @@ namespace ThreadZero
             new EquipmentBase("c90", "深网 · 织网长衣", Slot.Coat, 2, new Stats(44f, 2f, 5.8f, .03f), Effect.Guard, AttackStyle.Ranged, "c9", null),
             new EquipmentBase("b90", "深网 · 母线之翼", Slot.Back, 2, new Stats(30f, 2f, 2.9f, .04f, .02f, 2), Effect.Drone, AttackStyle.Ranged, "b9", null)
         };
+        /// v0.21 图鉴奖励：每章 5 套（同一编号的武器 / 头 / 外套 / 背包 / 下装），共 25 套；集齐一章的 5 套给称号。
+        public const int SetCount = 25;
+        public static readonly string[] SetNames = {
+            "回收员", "夜行侦察", "线圈信号", "逆流护卫", "白噪研究",
+            "反光雨衣", "装卸工", "吊臂潜工", "轨道检修", "雨幕信号员",
+            "屋顶维修", "屏蔽干扰", "机房雷达", "屏蔽天线兵", "断讯中继",
+            "镜面卫兵", "审计员", "冷光折翼", "白金审计", "上城玻璃",
+            "织网者", "协议守卫", "线缆编织", "零号战装", "回收员终装" };
+        public static readonly string[] TitleNames = { "沉降区回收员", "物流高架装卸长", "信号禁区断讯者", "镜面上城的访客", "零号的织工" };
+        public static string[] SetPieces(int set) { return new[] { "w" + set, "h" + set, "c" + set, "b" + set, "l" + set }; }
         /// v0.21 零号深网限定外观：在第几层拿（50 / 100 / 150），以及判断某件是不是。
         public static readonly int[] DeepNetFloors = { 50, 100, 150 };
         public static readonly string[] DeepNetLooks = { "h90", "c90", "b90" };
@@ -526,6 +538,9 @@ namespace ThreadZero
             if (state.board == null || state.board.Length != 3) { var bd = new int[3]; if (state.board != null) Array.Copy(state.board, bd, Math.Min(3, state.board.Length)); state.board = bd; }
             for (int i = 0; i < 3; i++) state.board[i] = Math.Max(0, Math.Min(Balance.TrainingCap, state.board[i]));
             if (state.boardVersion < 1) { state.board[0] = Math.Max(state.board[0], state.training); state.board[1] = Math.Max(state.board[1], state.training); state.boardVersion = 1; }
+            // v0.21 图鉴奖励：称号只能用已经解锁的
+            state.setsDone &= (1 << Catalog.SetCount) - 1;
+            if (state.title < 0 || state.title > 5) state.title = 0;
             // v0.21 机库
             int[] Fit(int[] arr, int n) { var o = new int[n]; if (arr != null) Array.Copy(arr, o, Math.Min(n, arr.Length)); return o; }
             if (state.blueprints == null || state.blueprints.Length != Catalog.RobotCount) state.blueprints = Fit(state.blueprints, Catalog.RobotCount);
@@ -803,6 +818,26 @@ namespace ThreadZero
         }
         public bool TargetActive
         { get { return !string.IsNullOrEmpty(state.recoveryTarget) && Catalog.DropsIn(state.recoveryTarget, InEcho, DropChapter); } }
+        // ---------- v0.21 图鉴奖励（方案 B + C） ----------
+        public int SetOwned(int set) { int n = 0; foreach (string id in Catalog.SetPieces(set)) if (state.collection.Contains(id)) n++; return n; }
+        public bool SetComplete(int set) { return SetOwned(set) == 5; }
+        public int SetsComplete { get { int n = 0; for (int i = 0; i < Catalog.SetCount; i++) if (SetComplete(i)) n++; return n; } }
+        public bool TitleUnlocked(int chapter) { if (chapter < 1 || chapter > 5) return false; for (int k = 0; k < 5; k++) if (!SetComplete((chapter - 1) * 5 + k)) return false; return true; }
+        /// 正在用的称号（没有 / 还没解锁 = null）。
+        public string TitleName { get { return TitleUnlocked(state.title) ? Catalog.TitleNames[state.title - 1] : null; } }
+        /// 新集齐的套装发一次性奖励（核心 + 织网碎片）；返回这次新集齐的套装。集齐一章的 5 套时，还没用称号就自动用上。
+        public List<int> ClaimSets()
+        {
+            var got = new List<int>();
+            for (int i = 0; i < Catalog.SetCount; i++)
+            {
+                if ((state.setsDone & (1 << i)) != 0 || !SetComplete(i)) continue;
+                state.setsDone |= 1 << i; state.cores += Balance.SetCores; state.shards += Balance.SetShards; got.Add(i);
+                if (state.title == 0 && TitleUnlocked(i / 5 + 1)) state.title = i / 5 + 1;
+            }
+            return got;
+        }
+
         /// v0.21 零号深网第 50 / 100 / 150 层第一次打过：给那一层的限定外观（原型品质，等级按这一层的掉落等级），收进衣柜。没有就返回 null。
         public Item GrantDeepNetLook(int floor)
         {

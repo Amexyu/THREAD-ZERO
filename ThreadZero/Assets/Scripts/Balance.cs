@@ -66,6 +66,8 @@ namespace ThreadZero
         public const float BoardScrap=.004f, BoardLuck=.05f;
         // v0.21 机库：图纸碎片掉率（普通怪 / 精英），前排替主角挡的比例，前排被打坏后多久重新上场
         public const float BlueprintNormal=.015f, BlueprintElite=.15f, TankShare=.35f, TankRespawn=10;
+        // v0.21 图鉴奖励：集齐一套（5 个部位的外观）一次性给的核心、织网碎片
+        public const int SetCores = 3, SetShards = 10;
         /// 洗炼：没锁的词条全部重抽（换属性 + 重抽数值）。锁一条费用翻倍、锁两条三倍……次数越多越贵（和重校共用次数）。
         public static int ReforgeCost(Quality quality,int rerolls,int locked) { return (14+6*(int)quality)*(1+Math.Max(0,Math.Min(9,rerolls)))*(1+Math.Max(0,locked)); }
         // v0.16 等级与稀有度分开（借鉴 Task Bar Hero）：等级决定强度，稀有度只给小倍率 + 词条条数（之后再加专属效果）。

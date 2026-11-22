@@ -24,7 +24,8 @@ namespace ThreadZero
         private bool bossWas;
         private bool paused, sound = true, lastSaveOk = true;
         private float slowMo = 1;   // 测试用慢放（桥接脚本 set slowMo 0.2 录技能动作）
-        private int speed = 1, slotFilter = -1, wardrobeSlot, wardrobeChapter = 1, mapChapter;
+        private int speed = 1, slotFilter = -1, wardrobeSlot, wardrobeChapter = 1, mapChapter, setCheckCount = -1;
+        private bool wardrobeSets;   // v0.21 衣柜的「套装」视图
         private string selectedItem, selectedLook = "w0", toast = "", toastItem;
         private float clock, saveTimer, toastUntil, toastFrom, dropEffectUntil, dropEffectFrom;
         private float healthShown = 1, enemyShown = 1, previousHit, previousHurt, inventoryScroll;
@@ -127,6 +128,16 @@ namespace ThreadZero
             clock += delta * slowMo;   // 慢放录像时画面特效也一起慢下来
             if (!model.state.chipGift && model.GiftChips())   // v0.21 第一次到第五章：送一块芯片、一件改装件，让玩家知道有这个系统
             { Save(); Notify("芯片与改装件开放了：送你一块「过载 Mk1」和一件「标记」改装件，去工坊的装备台装上。", 7); }
+            if (model.state.collection.Count != setCheckCount)   // v0.21 图鉴奖励：收藏数变了才检查套装（读档后第一帧也会补发以前集齐的）
+            {
+                setCheckCount = model.state.collection.Count;
+                List<int> sets = model.ClaimSets();
+                if (sets.Count == 1) Notify("集齐套装「" + Catalog.SetNames[sets[0]] + "」：核心 +" + Balance.SetCores + "、织网碎片 +" + Balance.SetShards, 6);
+                else if (sets.Count > 1) Notify("集齐 " + sets.Count + " 套套装：核心 +" + Balance.SetCores * sets.Count + "、织网碎片 +" + Balance.SetShards * sets.Count, 6);
+                foreach (int ch in sets.Select(k => k / 5 + 1).Distinct())
+                    if (model.TitleUnlocked(ch)) Notify("集齐第" + Catalog.ChapterNumber(ch) + "章全部 5 套：解锁称号「" + Catalog.TitleNames[ch - 1] + "」（衣柜 · 套装里可以换）", 7);
+                if (sets.Count > 0) { Save(); Play(rareSound); }
+            }
             if (!model.state.hangarGift && model.GiftHangar())   // v0.21 打完第一章首领：机库开放，回收无人机成为第一台支援机
             { combat.RobotsChanged(); Save(); Notify("机库开放了：回收无人机成了第一台支援机，每 8 秒给你回血。打怪会掉机器人的图纸碎片，集满 10 片去工坊的机库组装。", 7); }
             bool bossNow = combat != null && combat.BossEnemy != null;   // v0.20 首领出场：低沉的两短一长提示音
