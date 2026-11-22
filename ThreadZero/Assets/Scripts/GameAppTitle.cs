@@ -54,7 +54,7 @@ namespace ThreadZero
             else TitleThreads(t);
             for (int i = 0; i < 32; i++) Ui.Fill(i * 24, 0, 24, 900, new Color(.06f, .07f, .09f, .9f * Mathf.Pow(1 - i / 32f, 1.5f)));   // 左边压暗，放标题和菜单
             Ui.FillScreen(new Color(0, 0, 0, 1 - fade));
-            bool sub = titleConfirmNew || creditsOpen || navigation.HasModal;
+            bool sub = titleConfirmNew || creditsOpen || navigation.HasModal || exhibitPanel || exhibitExitPanel;
             Ui.Blocked = sub;
 
             Ui.Text(92, 128, 900, 130, "零织协议", 104, Ui.Panel, TextAnchor.MiddleLeft, true);
@@ -63,11 +63,18 @@ namespace ThreadZero
             Ui.Text(100, 324, 600, 26, "回收、改造、穿上它——直到第零号接上整张网。", 15, Ui.MuteOnInk, TextAnchor.MiddleLeft);
 
             float y = 384;
-            if (hasSave && TitleButton(ref y, "继续", 1)) CloseTitle();
-            if (TitleButton(ref y, hasSave ? "新游戏" : "开始", hasSave ? 0 : 1)) { if (hasSave) titleConfirmNew = true; else StartOpening(); }
+            if (ExhibitMode)
+            {   // v0.21 展览模式：只留开始、设置、制作人员
+                if (TitleButton(ref y, "开始体验", 1)) { if (hasSave) CloseTitle(); else StartOpening(); }
+            }
+            else
+            {
+                if (hasSave && TitleButton(ref y, "继续", 1)) CloseTitle();
+                if (TitleButton(ref y, hasSave ? "新游戏" : "开始", hasSave ? 0 : 1)) { if (hasSave) titleConfirmNew = true; else StartOpening(); }
+            }
             if (TitleButton(ref y, "设置", 0)) navigation.Open(GameModal.Settings);
             if (TitleButton(ref y, "制作人员", 0)) { creditsOpen = true; creditsScroll = Vector2.zero; }
-            if (TitleButton(ref y, "退出游戏", 0)) Application.Quit();
+            if (!ExhibitMode && TitleButton(ref y, "退出游戏", 0)) Application.Quit();
             y += 12;
             for (int i = 0; i < Loc.Names.Length; i++)   // 语言（名字本身不翻译）
                 if (Ui.Button(100 + i * 92, y, 86, 40, Loc.Names[i], (int)Loc.Get() == i ? 2 : 0, true, 13)) Loc.Set((Loc.Lang)i);
@@ -81,11 +88,12 @@ namespace ThreadZero
                 Ui.Text(1568 - rw + 24, 778, rw - 36, 34, where, 18, Ui.Panel, TextAnchor.MiddleLeft, true);
                 Ui.Text(1568 - rw + 24, 812, rw - 36, 30, record, 14, Ui.MuteOnInk, TextAnchor.MiddleLeft);
             }
-            Ui.Text(100, 852, 600, 24, "v0.21 · 毕业制作", 12, Ui.Alpha(Ui.MuteOnInk, .8f), TextAnchor.MiddleLeft);
-            Ui.Blocked = false;
+            Ui.Text(100, 852, 600, 24, ExhibitMode ? "v0.21 · 毕业制作 · 展览模式" : "v0.21 · 毕业制作", 12, Ui.Alpha(Ui.MuteOnInk, .8f), TextAnchor.MiddleLeft);
+            Ui.Blocked = exhibitPanel || exhibitExitPanel;
             if (titleConfirmNew) NewGamePanel();
             else if (creditsOpen) CreditsPanel();
             else if (navigation.HasModal) Modal();
+            Ui.Blocked = false;
         }
         private bool TitleButton(ref float y, string label, int style)
         {

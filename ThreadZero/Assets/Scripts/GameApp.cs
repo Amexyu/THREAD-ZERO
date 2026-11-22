@@ -51,9 +51,10 @@ namespace ThreadZero
             }
             Camera.main.backgroundColor = Ui.Ground;
             // F8 切换正式存档 / 测试存档（测试进度存在另一个文件，不碰正式存档）；F9 清空测试存档重开。
-            testSave = PlayerPrefs.GetInt(TestSaveKey, 0) == 1;
+            DetectExhibit();   // v0.21 展览模式：单独的展览存档，每次启动从起点开始
+            testSave = !ExhibitMode && PlayerPrefs.GetInt(TestSaveKey, 0) == 1;
             saves = new SaveService(Application.persistentDataPath, JsonUtility.FromJson<GameState>, data => JsonUtility.ToJson(data, true), message => Debug.LogWarning(message),
-                testSave ? "thread-zero-save-test.json" : "thread-zero-save.json");
+                ExhibitMode ? ExhibitSaveName : testSave ? "thread-zero-save-test.json" : "thread-zero-save.json");
             daggerReview = DaggerReviewRequested();
             GameState loaded = daggerReview ? null : saves.Load();
             model = new GameModel(loaded);
@@ -98,6 +99,7 @@ namespace ThreadZero
         public void ApplyOffline()
         {
             long now = System.DateTime.UtcNow.Ticks, then = model.state.savedAt; model.state.savedAt = now;
+            if (ExhibitMode) return;   // v0.21 展览模式不算离线收益
             if (then <= 0 || now <= then) return;
             double away = (now - then) / 1e7; if (away < Balance.OfflineMinSeconds) return;
             float counted = (float)System.Math.Min(away, model.OfflineMax);   // v0.21 改造板「拾荒」：上限 4 小时
@@ -145,6 +147,7 @@ namespace ThreadZero
             if (bossNow && !bossWas) Play(bossSound);
             bossWas = bossNow;
             // 战斗按不超过 0.05 秒的小步推进；一旦击败敌人就切到行进，下一只敌人不会在行进途中挨打。
+            ExhibitTick();
             float budget = paused || TitleBlocking ? 0 : Mathf.Min(.15f, delta) * speed * slowMo;   // v0.21 标题和开场期间战斗暂停
             for (int guard = 0; guard < 64 && budget > .0001f; guard++)
             {
@@ -410,13 +413,17 @@ namespace ThreadZero
             if (model == null) return;
             Ui.Begin();
             Event current = Event.current;
+            ExhibitKey(current);   // v0.21 展览模式：Ctrl+Shift+E 退出
             if (titleOpen)
             {   // v0.21 标题画面：Esc 关掉上面的弹层
-                if (current.type == EventType.KeyDown && current.keyCode == KeyCode.Escape) { if (titleConfirmNew) titleConfirmNew = false; else if (creditsOpen) creditsOpen = false; else navigation.Close(); current.Use(); }
-                TitleScreen(); return;
+                if (current.type == EventType.KeyDown && current.keyCode == KeyCode.Escape) { if (exhibitPanel || exhibitExitPanel) exhibitPanel = exhibitExitPanel = false; else if (titleConfirmNew) titleConfirmNew = false; else if (creditsOpen) creditsOpen = false; else navigation.Close(); current.Use(); }
+                TitleScreen(); ExhibitPanels(); return;
             }
             if (openingAt >= 0) { OpeningScreen(); return; }
-            if (current.type == EventType.KeyDown)
+            if (current.type == EventType.KeyDown && (exhibitPanel || exhibitExitPanel))
+            { if (current.keyCode == KeyCode.Escape) { exhibitPanel = exhibitExitPanel = false; current.Use(); } }
+            else if (current.type == EventType.KeyDown && ExhibitMode && current.keyCode >= KeyCode.F1 && current.keyCode <= KeyCode.F12) current.Use();   // v0.21 展览模式：开发键全关
+            else if (current.type == EventType.KeyDown)
             {
                 if (current.keyCode == KeyCode.Escape && navigation.HasModal) { navigation.Close(); current.Use(); }
                 else if (!navigation.HasModal && current.keyCode == KeyCode.Space) { paused = !paused; current.Use(); }
@@ -434,8 +441,8 @@ namespace ThreadZero
                 else if (current.keyCode == KeyCode.F3) { UiTheme.Next(); Notify("界面配色：" + UiTheme.Name + "（F3 切换）", 2.5f); current.Use(); }
             }
             Ui.FillScreen(Ui.Ground);
-            bool modal = navigation.HasModal;
-            Ui.Blocked = modal;
+            bool modal = navigation.HasModal, exhibitUi = exhibitPanel || exhibitExitPanel;
+            Ui.Blocked = modal || exhibitUi;
             switch (navigation.Screen)
             {
                 case GameScreen.Action: ActionPage(); break;
@@ -452,8 +459,11 @@ namespace ThreadZero
             Toast();
             Tips();   // v0.20 新手提示
             if (testSave) TestSaveBadge();
-            Ui.Blocked = false;
+            ExhibitIdleBanner();
+            Ui.Blocked = exhibitUi;
             if (modal && navigation.HasModal) Modal();
+            Ui.Blocked = false;
+            ExhibitPanels();
         }
 
         private void Rail()

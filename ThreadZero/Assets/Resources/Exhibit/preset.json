@@ -1,0 +1,340 @@
+{
+    "version": 1,
+    "items": [
+        {
+            "uid": "6b89743d0e444d49b8415173298ecac2",
+            "baseId": "w3",
+            "quality": 1,
+            "level": 28,
+            "locked": false,
+            "rerolls": 0,
+            "affixLocks": 0,
+            "affixes": [
+                {
+                    "stat": 3,
+                    "value": 0.09845025837421417
+                }
+            ],
+            "chips": [],
+            "mod": 0
+        },
+        {
+            "uid": "7334131e086e439eb913e125a8a5bc29",
+            "baseId": "l6",
+            "quality": 2,
+            "level": 25,
+            "locked": false,
+            "rerolls": 0,
+            "affixLocks": 0,
+            "affixes": [
+                {
+                    "stat": 4,
+                    "value": 0.062048424035310745
+                },
+                {
+                    "stat": 1,
+                    "value": 7.89640998840332
+                }
+            ],
+            "chips": [],
+            "mod": 0
+        },
+        {
+            "uid": "27b3111e4e4f429d949c4b6c3104e43a",
+            "baseId": "b5",
+            "quality": 4,
+            "level": 24,
+            "locked": false,
+            "rerolls": 0,
+            "affixLocks": 0,
+            "affixes": [
+                {
+                    "stat": 3,
+                    "value": 0.09268014132976532
+                },
+                {
+                    "stat": 0,
+                    "value": 25.111753463745117
+                },
+                {
+                    "stat": 4,
+                    "value": 0.057481251657009125
+                },
+                {
+                    "stat": 1,
+                    "value": 7.371857643127441
+                }
+            ],
+            "chips": [],
+            "mod": 0
+        },
+        {
+            "uid": "af27c3d0ed794ac7901d402cab3df2df",
+            "baseId": "h7",
+            "quality": 4,
+            "level": 29,
+            "locked": false,
+            "rerolls": 0,
+            "affixLocks": 0,
+            "affixes": [
+                {
+                    "stat": 4,
+                    "value": 0.0749509185552597
+                },
+                {
+                    "stat": 1,
+                    "value": 8.517192840576172
+                },
+                {
+                    "stat": 0,
+                    "value": 36.71864318847656
+                },
+                {
+                    "stat": 5,
+                    "value": 5.240884304046631
+                }
+            ],
+            "chips": [],
+            "mod": 0
+        },
+        {
+            "uid": "e9d9c9912261441382009890d98e5ad3",
+            "baseId": "c8",
+            "quality": 2,
+            "level": 26,
+            "locked": false,
+            "rerolls": 0,
+            "affixLocks": 0,
+            "affixes": [
+                {
+                    "stat": 2,
+                    "value": 5.663565635681152
+                },
+                {
+                    "stat": 0,
+                    "value": 31.48282814025879
+                }
+            ],
+            "chips": [],
+            "mod": 0
+        },
+        {
+            "uid": "879a9b9a74c448c1a0b7c541c4ca6b63",
+            "baseId": "w7",
+            "quality": 2,
+            "level": 33,
+            "locked": false,
+            "rerolls": 0,
+            "affixLocks": 0,
+            "affixes": [
+                {
+                    "stat": 2,
+                    "value": 6.071216106414795
+                },
+                {
+                    "stat": 1,
+                    "value": 9.136823654174805
+                }
+            ],
+            "chips": [],
+            "mod": 0
+        },
+        {
+            "uid": "f7ee2cee7bb549cc8332df1e7651e19e",
+            "baseId": "c9",
+            "quality": 2,
+            "level": 32,
+            "locked": false,
+            "rerolls": 0,
+            "affixLocks": 0,
+            "affixes": [
+                {
+                    "stat": 2,
+                    "value": 5.121400833129883
+                },
+                {
+                    "stat": 0,
+                    "value": 34.03111267089844
+                }
+            ],
+            "chips": [],
+            "mod": 0
+        },
+        {
+            "uid": "8b24d15d9c734c4899bb5ee7ce069891",
+            "baseId": "w9",
+            "quality": 1,
+            "level": 33,
+            "locked": false,
+            "rerolls": 0,
+            "affixLocks": 0,
+            "affixes": [
+                {
+                    "stat": 3,
+                    "value": 0.11094468086957932
+                }
+            ],
+            "chips": [],
+            "mod": 0
+        }
+    ],
+    "collection": [
+        "w1",
+        "h0",
+        "c0",
+        "b0",
+        "l0",
+        "l3",
+        "b3",
+        "c2",
+        "c1",
+        "c3",
+        "l4",
+        "w4",
+        "c4",
+        "w0",
+        "w2",
+        "b2",
+        "h1",
+        "b1",
+        "l1",
+        "l2",
+        "h3",
+        "w3",
+        "b4",
+        "h4",
+        "h2",
+        "b9",
+        "b8",
+        "c9",
+        "c7",
+        "h9",
+        "l8",
+        "h7",
+        "l9",
+        "b7",
+        "b6",
+        "h8",
+        "h5",
+        "w6",
+        "l5",
+        "c6",
+        "b5",
+        "l6",
+        "c5",
+        "h6",
+        "w7",
+        "w5",
+        "w8",
+        "l7",
+        "w9",
+        "c8"
+    ],
+    "equipped": [
+        "6b89743d0e444d49b8415173298ecac2",
+        "af27c3d0ed794ac7901d402cab3df2df",
+        "e9d9c9912261441382009890d98e5ad3",
+        "27b3111e4e4f429d949c4b6c3104e43a",
+        "7334131e086e439eb913e125a8a5bc29"
+    ],
+    "appearance": [
+        "",
+        "",
+        "",
+        "",
+        ""
+    ],
+    "region": 14,
+    "unlockedRegion": 14,
+    "scrap": 146,
+    "training": 0,
+    "kills": 1405,
+    "bosses": 2,
+    "bossMask": 3,
+    "retryRegion": -1,
+    "retryFarms": 0,
+    "retryStreak": 0,
+    "retryPower": 0.0,
+    "sinceRare": 1,
+    "sinceEpic": 15,
+    "sinceLegendary": 68,
+    "recoveryTarget": "",
+    "targetBossMisses": 0,
+    "glowMode": 2,
+    "shakeMode": 0,
+    "autoSalvage": 0,
+    "schema": 4,
+    "parts": [
+        0,
+        0,
+        0,
+        0
+    ],
+    "cores": 7,
+    "implants": [
+        "arm_l",
+        "eye_r"
+    ],
+    "implantLevels": [
+        1,
+        1,
+        0,
+        0,
+        0
+    ],
+    "shards": 0,
+    "echoFloor": 0,
+    "echoBest": 0,
+    "savedAt": 0,
+    "scrapRate": 5.089850425720215,
+    "anomalies": [],
+    "tips": 0,
+    "tipsVersion": 1,
+    "epilogueSeen": false,
+    "chipBag": [],
+    "modBag": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+    ],
+    "chipGift": false,
+    "board": [
+        44,
+        36,
+        0
+    ],
+    "boardPerks": 0,
+    "boardVersion": 1,
+    "blueprints": [
+        0,
+        6,
+        3,
+        0,
+        0,
+        0,
+        0,
+        0
+    ],
+    "robotLevels": [
+        1,
+        5,
+        5,
+        0,
+        0,
+        0,
+        0,
+        0
+    ],
+    "deployed": [
+        1,
+        2
+    ],
+    "hangarGift": true,
+    "setsDone": 0,
+    "title": 0
+}

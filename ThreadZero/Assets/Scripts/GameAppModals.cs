@@ -11,7 +11,7 @@ namespace ThreadZero
             bool map = navigation.Modal == GameModal.Map, offline = navigation.Modal == GameModal.Offline;
             // 选关弹窗 v0.20 加宽 820 → 1000：五章的分页按钮（5 × 152）放在标题栏右侧，原来的宽度下第一章按钮伸出弹窗左边、压住标题
             float x = map ? 300 : offline ? 500 : 450, y = map ? 40 : offline ? 250 : 130, w = map ? 1000 : offline ? 600 : 700, h = map ? 800 : offline ? 380 : 640;
-            if (navigation.Modal == GameModal.Settings) { y = 96; h = 708; }   // v0.21 设置多了一行「语言」
+            if (navigation.Modal == GameModal.Settings) { y = 62; h = 776; }   // v0.21 设置多了「语言」「展览模式」两行
             string title = map ? "选择街区" : offline ? "欢迎回来" : navigation.Modal == GameModal.Help ? "行动指南" : navigation.Modal == GameModal.Salvage ? "一键分解"
                 : navigation.Modal == GameModal.Socket ? (socketSlot >= 0 ? "植入芯片" : "改装位") : "设置";
             Ui.Fill(x, y, w, h, Ui.Panel); Ui.Fill(x, y, w, 72, Ui.Ink); Ui.Fill(x, y, 8, 72, Ui.Orange);
@@ -119,6 +119,11 @@ namespace ThreadZero
             Ui.Text(x + 32, row, 300, 48, "显示", 17, Ui.Ink, TextAnchor.MiddleLeft, true);
             if (Ui.Button(x + w - 292, row, 260, 48, Screen.fullScreen ? "全屏 · 点击切回窗口" : "窗口 · 点击切到全屏", 0, true, 15)) Screen.fullScreen = !Screen.fullScreen;
             row += 68;
+            // v0.21 展览模式（GameAppExhibit.cs）：开着的时候只显示怎么退出
+            Ui.Text(x + 32, row, 300, 48, "展览模式", 17, Ui.Ink, TextAnchor.MiddleLeft, true);
+            if (ExhibitMode) Ui.Text(x + w - 392, row, 360, 48, "展览中 · 按 Ctrl+Shift+E 退出", 14, Ui.Orange, TextAnchor.MiddleRight, true);
+            else if (Ui.Button(x + w - 292, row, 260, 48, "开启…", 0, true, 15)) exhibitPanel = true;
+            row += 68;
             Ui.Fill(x + 32, row, w - 64, 1, Ui.Rule);
             Ui.Text(x + 32, row + 14, w - 64, 44, "自动分解不会处理第一次获得的外观和当前回收目标。进度每 30 秒和关键操作后自动保存。", 14, Ui.Mute, TextAnchor.UpperLeft, false, false, true);
             row += 72;
@@ -127,7 +132,7 @@ namespace ThreadZero
             { Save(); Notify(lastSaveOk ? "进度已保存" : "保存暂不可用，原有存档会保留。", 4); }
             if (Ui.Button(x + 44 + bw, row, bw, 52, "行动指南", 0, true, 16)) navigation.Open(GameModal.Help);
             if (!titleOpen && Ui.Button(x + 56 + bw * 2, row, bw, 52, "回到标题", 0, true, 16)) { BackToTitle(); return; }
-            Ui.Text(x + 32, y + 652, w - 64, 30, "THREAD ZERO · v0.21    空格 暂停 / 1 2 3 4 切换页面 / Esc 关闭弹窗", 12, Ui.Mute, TextAnchor.MiddleLeft);
+            Ui.Text(x + 32, y + 720, w - 64, 30, "THREAD ZERO · v0.21    空格 暂停 / 1 2 3 4 切换页面 / Esc 关闭弹窗", 12, Ui.Mute, TextAnchor.MiddleLeft);
         }
 
         private void HelpModal(float x, float y, float w)

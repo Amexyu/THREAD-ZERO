@@ -111,6 +111,24 @@ namespace ThreadZero.EditorTools
             public void Note(float t, string what) { events.Add(H(t) + " " + what); if (events.Count > 24) events.RemoveAt(0); }
         }
 
+        // v0.21 展览模式的预设存档：同一套模拟跑到第一次进第 stopAtRegion 关（第三章开头）就停，存下这时的状态。
+        private static int stopAtRegion = -1;
+        private static GameState stopState;
+        [MenuItem("Thread Zero/展览/生成预设展览存档（第三章开头）")]
+        public static void BuildExhibitPreset()
+        {
+            stopAtRegion = Chapters.FirstRegion(3); stopState = null;
+            try { Simulate(1); } finally { stopAtRegion = -1; }
+            if (stopState == null) { Debug.LogWarning("[展览] 模拟没打到第三章，没生成预设"); return; }
+            stopState.region = Chapters.FirstRegion(3); stopState.savedAt = 0; stopState.retryRegion = -1; stopState.retryStreak = 0; stopState.retryFarms = 0;
+            // 模拟不管机库：给两台第二章的机器人（装卸机前排、炮车后排，5 级）上场，来看的人一进来就能看到；回收无人机照常白送
+            stopState.hangarGift = true; stopState.robotLevels[0] = 1; stopState.robotLevels[1] = 5; stopState.robotLevels[2] = 5; stopState.deployed = new[] { 1, 2 };
+            string dir = Path.Combine(Application.dataPath, "Resources/Exhibit"); Directory.CreateDirectory(dir);
+            File.WriteAllText(Path.Combine(dir, "preset.json"), JsonUtility.ToJson(stopState, true));
+            AssetDatabase.Refresh();
+            Debug.Log("[展览] 预设展览存档已生成：Resources/Exhibit/preset.json（" + Catalog.StageCode(stopState.region) + "，装备 " + stopState.items.Count + " 件，核心 " + stopState.cores + "）");
+        }
+
         private static RunLog Simulate(int seed)
         {
             bool savedPower = GameModel.TestPower; GameModel.TestPower = false;
@@ -158,6 +176,7 @@ namespace ThreadZero.EditorTools
                             if (Chapters.Stage(region).kind == StageKind.Boss) run.bossAt[Chapters.ChapterOf(region) - 1] = t;
                             if (region == Chapters.BossRegion(UntilChapter)) { run.finished = true; break; }
                         }
+                        if (stopAtRegion >= 0 && model.state.unlockedRegion >= stopAtRegion) { stopState = model.state; break; }   // 生成展览预设时到这里就停
                         Policy(model);
                         t += Go(model, combat, run, region < model.state.unlockedRegion && model.CanAdvanceAfterClear() ? region + 1 : region, region);   // 和游戏一样：墙前回刷，变强了才往前
                         attemptStart = t;
