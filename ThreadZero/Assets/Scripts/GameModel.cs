@@ -353,9 +353,9 @@ namespace ThreadZero
             new EquipmentBase("l23", "零号战裤", Slot.Legs, 3, new Stats(26.1f, 1.4f, 2.9f, 0.03f), Effect.None, AttackStyle.Ranged, null, null),
             new EquipmentBase("l24", "终装长靴", Slot.Legs, 4, new Stats(23.2f, 1.4f, 2.9f, 0f, 0.02f, 2), Effect.None, AttackStyle.Ranged, null, null),
             // v0.21 零号深网限定（第 50 / 100 / 150 层各一件，只能在深网拿到；编号 90 不属于任何一章，不会掉落）。美术未到前借第二章首领那套的图。
-            new EquipmentBase("h90", "深网 · 零号视界", Slot.Head, 2, new Stats(26f, 2f, 4.3f, .03f, .02f, 2), Effect.Mark, AttackStyle.Ranged, "h9", null),
-            new EquipmentBase("c90", "深网 · 织网长衣", Slot.Coat, 2, new Stats(44f, 2f, 5.8f, .03f), Effect.Guard, AttackStyle.Ranged, "c9", null),
-            new EquipmentBase("b90", "深网 · 母线之翼", Slot.Back, 2, new Stats(30f, 2f, 2.9f, .04f, .02f, 2), Effect.Drone, AttackStyle.Ranged, "b9", null)
+            new EquipmentBase("h90", "深网 · 零号视界", Slot.Head, 2, new Stats(26f, 2f, 4.3f, .03f, .02f, 2), Effect.Mark, AttackStyle.Ranged, null, null),
+            new EquipmentBase("c90", "深网 · 织网长衣", Slot.Coat, 2, new Stats(44f, 2f, 5.8f, .03f), Effect.Guard, AttackStyle.Ranged, null, null),
+            new EquipmentBase("b90", "深网 · 母线之翼", Slot.Back, 2, new Stats(30f, 2f, 2.9f, .04f, .02f, 2), Effect.Drone, AttackStyle.Ranged, null, null)
         };
         /// v0.21 图鉴奖励：每章 5 套（同一编号的武器 / 头 / 外套 / 背包 / 下装），共 25 套；集齐一章的 5 套给称号。
         public const int SetCount = 25;
