@@ -29,8 +29,8 @@ namespace ThreadZero
         [Serializable] public class Manifest { public float scale = 4; public string weapon_class; public float[] shoulder, shoulderF; public PartSet parts; public RigOffsets rig; }
         // 每件装备外观一个文件夹：Resources/Art/V13/Parts/<外观ID>/part.json + 图。只写这件装备负责的部件：
         // 头部 head；外套 torso + arm（可带 shoulder/shoulderF）；背部 pack；武器 weapon（带 tip，weapon_class = dagger/gun/heavy）。
-        [Serializable] public class LookFile { public float scale = 4; public string weapon_class; public float[] shoulder, shoulderF, pack_off; public PartEntry head, torso, arm, arm_far, pack, weapon, leg_near, leg_far, hook; }
-        private sealed class Look { public Part head, torso, arm, armFar, pack, weapon, legN, legF, hook; public bool hasShoulder, hasPackOff, hasEye; public Vector2 eye; public Vector2 sh, shF, tip, handPt, handPtF, packOff; public string cls; }
+        [Serializable] public class LookFile { public float scale = 4; public string weapon_class, chain; public float[] shoulder, shoulderF, pack_off; public PartEntry head, torso, arm, arm_far, pack, weapon, leg_near, leg_far, hook; }   // chain：锁链类程序画的那段链子的样子（rust 铁链 / fiber 光纤 / cable 线缆，默认铁链）
+        private sealed class Look { public Part head, torso, arm, armFar, pack, weapon, legN, legF, hook; public bool hasShoulder, hasPackOff, hasEye; public Vector2 eye; public Vector2 sh, shF, tip, handPt, handPtF, packOff; public string cls, chain; }
 
         private sealed class Part { public Texture2D tex; public Vector2 pivot, size; }
 
@@ -73,6 +73,7 @@ namespace ThreadZero
         private static Manifest m;
         private static Part handFar;   // 远侧手：单独的图（没有就用近侧手镜像压暗）
         private static Part hookPart;
+        private static string chainStyle;   // v0.20 卡27：光纤钩索 fiber、线缆鞭 cable，其余铁链
         private static Part head, torso, arm, armFar, hand, legN, legF, pack, weapon;   // armFar：远侧手臂单独的图（没有就用近侧镜像压暗）
         private static Vector2 starterPackOff;
         private static Vector2 handPtF, handPt, tipPt, hip, headOff, packOff, legNOff, legFOff, sh, shF;
@@ -101,7 +102,7 @@ namespace ThreadZero
                 var f = JsonUtility.FromJson<LookFile>(json.text);
                 string folder = PartsFolder + id + "/";
                 l = new Look { head = Load(folder, f.head, f.scale), torso = Load(folder, f.torso, f.scale), arm = Load(folder, f.arm, f.scale), armFar = Load(folder, f.arm_far, f.scale), legN = Load(folder, f.leg_near, f.scale), legF = Load(folder, f.leg_far, f.scale), hook = Load(folder, f.hook, f.scale),
-                               pack = Load(folder, f.pack, f.scale), weapon = Load(folder, f.weapon, f.scale), cls = f.weapon_class };
+                               pack = Load(folder, f.pack, f.scale), weapon = Load(folder, f.weapon, f.scale), cls = f.weapon_class, chain = f.chain };
                 l.hasShoulder = f.shoulder != null && f.shoulder.Length >= 2;
                 l.hasEye = f.head != null && f.head.eye != null && f.head.eye.Length >= 2; if (l.hasEye) l.eye = V(f.head.eye, Vector2.zero);
                 l.hasPackOff = f.pack_off != null && f.pack_off.Length >= 2; if (l.hasPackOff) l.packOff = V(f.pack_off, Vector2.zero);
@@ -147,6 +148,7 @@ namespace ThreadZero
             bool wpn = w != null && w.weapon != null;
             weapon = wpn ? w.weapon : starter.weapon; tipPt = wpn ? w.tip : starter.tip;
             hookPart = wpn ? w.hook : null;   // 锁链类武器：链子程序画，末端吊钩单独一张图
+            chainStyle = wpn ? w.chain : null;
             weaponClass = WeaponClass(model);
         }
         public static bool Ready()
@@ -668,12 +670,29 @@ namespace ThreadZero
             Vector2 sag = new Vector2(0, 3.5f * Mathf.Abs(dir.x));
             Vector2 ctrl = (hand + end) * .5f + sag;
             int n = Mathf.Max(3, Mathf.RoundToInt(len / 2.4f)); Vector2 prev = hand;
-            Color dark = new Color(.12f * tint.r, .1f * tint.g, .09f * tint.b, tint.a), rust = new Color(.62f * tint.r, .38f * tint.g, .24f * tint.b, tint.a), hi = new Color(.9f, .7f, .5f, .8f * tint.a);
+            bool fiber = chainStyle == "fiber", cable = chainStyle == "cable";
+            Color dark = fiber ? new Color(.1f * tint.r, .11f * tint.g, .13f * tint.b, tint.a) : cable ? new Color(.06f * tint.r, .06f * tint.g, .07f * tint.b, tint.a) : new Color(.12f * tint.r, .1f * tint.g, .09f * tint.b, tint.a);
+            Color rust = fiber ? new Color(.3f * tint.r, .33f * tint.g, .37f * tint.b, tint.a) : cable ? new Color(.17f * tint.r, .17f * tint.g, .19f * tint.b, tint.a) : new Color(.62f * tint.r, .38f * tint.g, .24f * tint.b, tint.a);
+            Color hi = fiber || cable ? new Color(.45f, 1, .95f, .9f * tint.a) : new Color(.9f, .7f, .5f, .8f * tint.a);
             for (int i = 1; i <= n; i++)
             {
                 float u = i / (float)n; Vector2 q = (1 - u) * (1 - u) * hand + 2 * (1 - u) * u * ctrl + u * u * end;
-                Segment(prev, q, 3.6f, dark); Segment(prev, q, i % 2 == 0 ? 2.2f : 1.4f, rust);
-                if (i % 2 == 0) Dot((prev + q) * .5f, .55f, hi);
+                if (fiber || cable)
+                {   // 光纤：深灰外皮 + 一道细青光，光点沿着线缆往钩头流；线缆：黑胶皮，隔一段一个青色小灯
+                    Segment(prev, q, cable ? 4f : 3.4f, dark); Segment(prev, q, cable ? 2.6f : 2f, rust);
+                    if (fiber)
+                    {
+                        Segment(prev, q, .6f, new Color(.45f, 1, .95f, .5f * tint.a));
+                        float flow = Mathf.Repeat(u * 3 - Time.unscaledTime * 1.6f, 1);
+                        if (flow < .12f) Glow((prev + q) * .5f, 2.6f, new Color(.45f, 1, .95f, (.12f - flow) / .12f * .8f * tint.a));
+                    }
+                    else if (i % 6 == 3) Dot((prev + q) * .5f, 1f, hi);
+                }
+                else
+                {
+                    Segment(prev, q, 3.6f, dark); Segment(prev, q, i % 2 == 0 ? 2.2f : 1.4f, rust);
+                    if (i % 2 == 0) Dot((prev + q) * .5f, .55f, hi);
+                }
                 prev = q;
             }
             Vector2 tan = end - ((1 - .9f) * (1 - .9f) * hand + 2 * .1f * .9f * ctrl + .81f * end); if (tan.sqrMagnitude < .0001f) tan = dir;

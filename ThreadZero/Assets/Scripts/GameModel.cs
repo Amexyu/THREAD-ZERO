@@ -239,7 +239,7 @@ namespace ThreadZero
             new EquipmentBase("l8", "轨道检修工装裤", Slot.Legs, 3, new Stats(18, 1, 2, .03f)),
             new EquipmentBase("l9", "信号员马裤", Slot.Legs, 4, new Stats(16, 1, 2, 0, .02f, 2)),
             // ---- v0.18 第三章 25 件（美术未到：外观借 art 指定的旧装备，武器招式借 mech 指定的旧武器）----
-            // v0.20 卡27：w10–w14 已有自己的图（art = null），招式仍借旧武器。
+            // v0.20 卡27：第三～五章 15 把武器（w10–w24）都有了自己的图（art = null），招式仍借同类旧武器（mech）。
             new EquipmentBase("w10", "天线警棍", Slot.Weapon, 0, new Stats(0f, 10.3f, 0f, -0.02f), Effect.Arc, AttackStyle.Melee, null, "w8"),
             new EquipmentBase("w11", "定向干扰枪", Slot.Weapon, 1, new Stats(0f, 6.9f, 0f, 0.06f), Effect.Mark, AttackStyle.Ranged, null, "w6"),
             new EquipmentBase("w12", "雷达碟炮", Slot.Weapon, 2, new Stats(9.2f, 10.3f, 1.1f), Effect.None, AttackStyle.Ranged, null, "w3"),
@@ -266,11 +266,11 @@ namespace ThreadZero
             new EquipmentBase("l13", "天线兵马裤", Slot.Legs, 3, new Stats(20.7f, 1.1f, 2.3f, 0.03f), Effect.None, AttackStyle.Ranged, "l8", null),
             new EquipmentBase("l14", "中继护膝", Slot.Legs, 4, new Stats(18.4f, 1.1f, 2.3f, 0f, 0.02f, 2), Effect.None, AttackStyle.Ranged, "l9", null),
             // ---- v0.18 第四章 25 件（美术未到：外观借 art 指定的旧装备，武器招式借 mech 指定的旧武器）----
-            new EquipmentBase("w15", "镜刃", Slot.Weapon, 0, new Stats(0f, 11.7f, 0f, -0.02f), Effect.Execute, AttackStyle.Melee, "w1", "w1"),   // v0.20 镜刃用匕首的图，招式也用匕首的迅切连击
-            new EquipmentBase("w16", "折光步枪", Slot.Weapon, 1, new Stats(0f, 7.8f, 0f, 0.06f), Effect.Mark, AttackStyle.Ranged, "w0", "w0"),   // v0.20 折光步枪用霰弹的图，招式也用贴脸轰击
-            new EquipmentBase("w17", "审计手炮", Slot.Weapon, 2, new Stats(10.4f, 11.7f, 1.3f), Effect.Leech, AttackStyle.Ranged, "w3", "w3"),
-            new EquipmentBase("w18", "冷却重锤", Slot.Weapon, 3, new Stats(0f, 7.8f, 0f, 0.1f, 0.02f), Effect.None, AttackStyle.Melee, "w4", "w4"),
-            new EquipmentBase("w19", "光纤钩索", Slot.Weapon, 4, new Stats(0f, 10.4f, 0f, 0f, 0.04f), Effect.Leech, AttackStyle.Melee, "w7", "w7"),
+            new EquipmentBase("w15", "镜刃", Slot.Weapon, 0, new Stats(0f, 11.7f, 0f, -0.02f), Effect.Execute, AttackStyle.Melee, null, "w1"),   // v0.20 镜刃招式用匕首的迅切连击（卡27 起用自己的图）
+            new EquipmentBase("w16", "折光步枪", Slot.Weapon, 1, new Stats(0f, 7.8f, 0f, 0.06f), Effect.Mark, AttackStyle.Ranged, null, "w0"),   // v0.20 折光步枪招式用贴脸轰击（卡27 起用自己的图）
+            new EquipmentBase("w17", "审计手炮", Slot.Weapon, 2, new Stats(10.4f, 11.7f, 1.3f), Effect.Leech, AttackStyle.Ranged, null, "w3"),
+            new EquipmentBase("w18", "冷却重锤", Slot.Weapon, 3, new Stats(0f, 7.8f, 0f, 0.1f, 0.02f), Effect.None, AttackStyle.Melee, null, "w4"),
+            new EquipmentBase("w19", "光纤钩索", Slot.Weapon, 4, new Stats(0f, 10.4f, 0f, 0f, 0.04f), Effect.Leech, AttackStyle.Melee, null, "w7"),
             new EquipmentBase("h15", "镜面面罩", Slot.Head, 0, new Stats(15.6f, 0f, 2.6f, 0f, 0f, 2), Effect.None, AttackStyle.Ranged, "h0", null),
             new EquipmentBase("h16", "审计耳机", Slot.Head, 1, new Stats(7.8f, 1.3f, 1.3f, 0.05f), Effect.Mark, AttackStyle.Ranged, "h1", null),
             new EquipmentBase("h17", "冷光头盔", Slot.Head, 2, new Stats(26, 0f, 5.2f), Effect.Guard, AttackStyle.Ranged, "h2", null),
@@ -292,11 +292,11 @@ namespace ThreadZero
             new EquipmentBase("l18", "白金战术裤", Slot.Legs, 3, new Stats(23.4f, 1.3f, 2.6f, 0.03f), Effect.None, AttackStyle.Ranged, "l3", null),
             new EquipmentBase("l19", "玻璃纤维靴裤", Slot.Legs, 4, new Stats(20.8f, 1.3f, 2.6f, 0f, 0.02f, 2), Effect.None, AttackStyle.Ranged, "l4", null),
             // ---- v0.18 第五章 25 件（美术未到：外观借 art 指定的旧装备，武器招式借 mech 指定的旧武器）----
-            new EquipmentBase("w20", "织针刺剑", Slot.Weapon, 0, new Stats(0f, 13, 0f, -0.02f), Effect.Execute, AttackStyle.Melee, "w8", "w8"),
-            new EquipmentBase("w21", "线缆鞭", Slot.Weapon, 1, new Stats(0f, 8.7f, 0f, 0.06f), Effect.Leech, AttackStyle.Melee, "w7", "w7"),
-            new EquipmentBase("w22", "协议发射器", Slot.Weapon, 2, new Stats(11.6f, 13, 1.4f), Effect.Arc, AttackStyle.Ranged, "w2", "w2"),
-            new EquipmentBase("w23", "母线重锤", Slot.Weapon, 3, new Stats(0f, 8.7f, 0f, 0.1f, 0.02f), Effect.None, AttackStyle.Melee, "w4", "w4"),
-            new EquipmentBase("w24", "零号霰枪", Slot.Weapon, 4, new Stats(0f, 11.6f, 0f, 0f, 0.04f), Effect.None, AttackStyle.Ranged, "w0", "w0"),
+            new EquipmentBase("w20", "织针刺剑", Slot.Weapon, 0, new Stats(0f, 13, 0f, -0.02f), Effect.Execute, AttackStyle.Melee, null, "w8"),
+            new EquipmentBase("w21", "线缆鞭", Slot.Weapon, 1, new Stats(0f, 8.7f, 0f, 0.06f), Effect.Leech, AttackStyle.Melee, null, "w7"),
+            new EquipmentBase("w22", "协议发射器", Slot.Weapon, 2, new Stats(11.6f, 13, 1.4f), Effect.Arc, AttackStyle.Ranged, null, "w2"),
+            new EquipmentBase("w23", "母线重锤", Slot.Weapon, 3, new Stats(0f, 8.7f, 0f, 0.1f, 0.02f), Effect.None, AttackStyle.Melee, null, "w4"),
+            new EquipmentBase("w24", "零号霰枪", Slot.Weapon, 4, new Stats(0f, 11.6f, 0f, 0f, 0.04f), Effect.None, AttackStyle.Ranged, null, "w0"),
             new EquipmentBase("h20", "织网面纱", Slot.Head, 0, new Stats(17.4f, 0f, 2.9f, 0f, 0f, 2), Effect.Mark, AttackStyle.Ranged, "h5", null),
             new EquipmentBase("h21", "协议头环", Slot.Head, 1, new Stats(8.7f, 1.4f, 1.4f, 0.05f), Effect.None, AttackStyle.Ranged, "h6", null),
             new EquipmentBase("h22", "零号目镜", Slot.Head, 2, new Stats(29, 0f, 5.8f), Effect.Mark, AttackStyle.Ranged, "h7", null),
