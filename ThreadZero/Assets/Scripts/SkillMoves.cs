@@ -38,7 +38,9 @@ namespace ThreadZero
         {
             var times = new List<float>(); var eases = new List<int>(); var rows = new List<Dictionary<string, float>>();
             var evT = new List<float>(); var evN = new List<string>();
-            foreach (string raw in src.Split('\n'))
+            // Windows 上 git 会把换行签出成 \r\n：这几张表是写在 .cs 里的多行字符串，多出来的 \r 会让空行变成 "\r"，
+            // 解析数字时 FormatException（行尾的 ~lin、!事件名 也会带上 \r 认不出来）。所以先把 \r 去掉。
+            foreach (string raw in src.Replace("\r", "").Split('\n'))
             {
                 string line = raw; int c = line.IndexOf("//", StringComparison.Ordinal); if (c >= 0) line = line.Substring(0, c);
                 string[] tok = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
@@ -68,6 +70,31 @@ namespace ThreadZero
                 tracks.Add(new Track { name = n, t = times.ToArray(), v = vv, ease = eases.ToArray() });
             }
             return new Move { tracks = tracks.ToArray(), hasSx = names.Contains("sx"), evT = evT.ToArray(), evName = evN.ToArray() };
+        }
+        /// 自检（冒烟测试调用）：每张动作表把换行换成 Windows 的 \r\n 再解析一遍，和原样解析的结果逐项比较。返回空字符串 = 全部一致。
+        public static string CheckMoveLineEndings()
+        {
+            var sb = new System.Text.StringBuilder();
+            foreach (var kv in MoveSource)
+            {
+                Move a, b;
+                try { a = Parse(kv.Value); b = Parse(kv.Value.Replace("\r", "").Replace("\n", "\r\n")); }
+                catch (Exception e) { sb.Append(kv.Key).Append("：").Append(e.GetType().Name).Append("；"); continue; }
+                if (!SameMove(a, b)) sb.Append(kv.Key).Append(" 解析结果不一样；");
+            }
+            return sb.ToString();
+        }
+        private static bool SameMove(Move a, Move b)
+        {
+            if (a.tracks.Length != b.tracks.Length || a.evName.Length != b.evName.Length || a.hasSx != b.hasSx) return false;
+            for (int i = 0; i < a.evName.Length; i++) if (a.evName[i] != b.evName[i] || a.evT[i] != b.evT[i]) return false;
+            for (int i = 0; i < a.tracks.Length; i++)
+            {
+                Track x = a.tracks[i], y = b.tracks[i];
+                if (x.name != y.name || x.v.Length != y.v.Length) return false;
+                for (int j = 0; j < x.v.Length; j++) if (x.v[j] != y.v[j] || x.t[j] != y.t[j] || x.ease[j] != y.ease[j]) return false;
+            }
+            return true;
         }
         private static float Neutral(string n, float fallback)
         {

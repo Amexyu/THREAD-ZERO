@@ -26,7 +26,11 @@ namespace ThreadZero.Editor
             try
             {
                 BuildProject.Smoke(); SaveFieldCheck(sb);
-                sb.AppendLine("status ok"); sb.AppendLine("冒烟测试通过：战斗推进、存档往返、主存档损坏后从备份恢复都正常。");
+                // v0.20 Windows 上 git 把 .cs 签出成 \r\n 换行，技能动作表解析时 FormatException（11-22 在 Windows 上踩到）
+                string crlf = LayeredRigView.CheckMoveLineEndings();
+                if (crlf.Length > 0) throw new Exception("技能动作表换成 Windows 换行（\\r\\n）后解析出错：" + crlf);
+                sb.AppendLine("技能动作表：换成 Windows 换行（\\r\\n）解析结果和原样一致。");
+                sb.AppendLine("status ok"); sb.AppendLine("冒烟测试通过：战斗推进、存档往返、主存档损坏后从备份恢复、技能动作表换行都正常。");
             }
             catch (Exception e) { sb.AppendLine("status fail"); sb.AppendLine(e.ToString()); }
             Write("check_smoke.txt", sb.ToString());
