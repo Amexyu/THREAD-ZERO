@@ -263,7 +263,7 @@ namespace ThreadZero
             if (stageTime > (Boss ? BossTimeLimit : StageTimeLimit))
             {
                 timeouts++; stageTime = 0; RetreatRequested = true; shots.Clear(); model.NoteDefeat();
-                OnMessage?.Invoke(Boss ? "首领战拖了 3 分钟还没打下来：撤回上一关补给，变强后自动再挑战。" : "这一关打了太久：撤回上一关补给，变强后自动再挑战。");
+                OnMessage?.Invoke(Boss ? "首领战拖了 " + Math.Round(BossTimeLimit / 60) + " 分钟还没打下来：撤回上一关补给，变强后自动再挑战。" : "这一关打了太久：撤回上一关补给，变强后自动再挑战。");   // v0.20 时限早改成 4 分钟了，提示还写着 3 分钟
                 return;
             }
             Stats s = model.Total(); health = Math.Min(health, s.health);
