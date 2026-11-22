@@ -1,0 +1,123 @@
+# 套装、称号、模块效果、芯片、机库、改造板、存档提示、配装总结（GameModel.cs）
+回收员§回収員§Recycler§회수원
+夜行侦察§夜間偵察§Night Scout§야간 정찰
+线圈信号§コイル信号§Coil Signal§코일 신호
+逆流护卫§逆流護衛§Backflow Guard§역류 호위
+白噪研究§ホワイトノイズ研究§White Noise Lab§백색소음 연구
+反光雨衣§リフレクター雨具§Reflective Rainwear§반사 우비
+装卸工§荷役作業員§Loader§하역 인부
+吊臂潜工§クレーン潜水工§Crane Diver§크레인 잠수공
+轨道检修§軌道点検§Track Inspector§궤도 점검
+雨幕信号员§雨幕の信号係§Rain Signalman§빗발 신호원
+屋顶维修§屋上整備§Rooftop Repair§옥상 정비
+屏蔽干扰§遮断妨害§Shield Jammer§차폐 방해
+机房雷达§サーバー室レーダー§Server Room Radar§서버실 레이더
+屏蔽天线兵§遮断アンテナ兵§Shield Antenna Trooper§차폐 안테나병
+断讯中继§断信中継§Dead-Signal Relay§단신 중계
+镜面卫兵§鏡面衛兵§Mirror Guard§거울 경비병
+审计员§監査員§Auditor§감사원
+冷光折翼§冷光屈折翼§Cold-Light Wings§냉광 굴절날개
+白金审计§プラチナ監査§Platinum Audit§백금 감사
+上城玻璃§上層街ガラス§Uptown Glass§상층 도시 유리
+织网者§織り手§Weaver§직조자
+协议守卫§プロトコル守衛§Protocol Guard§프로토콜 수호병
+线缆编织§ケーブル編み§Cable Weave§케이블 편조
+零号战装§零号戦装§Zero Battle Gear§제로 전투 장비
+沉降区回收员§沈降区の回収員§Sinkzone Recycler§침강 구역의 회수원
+物流高架装卸长§物流高架の荷役長§Overpass Loadmaster§물류 고가의 하역장
+信号禁区断讯者§信号禁区の断信者§Signal Silencer§신호 금지 구역의 단신자
+镜面上城的访客§鏡面上層街の訪問者§Visitor of Mirror Uptown§거울 상층 도시의 방문자
+零号的织工§零号の織り手§Weaver of Zero§제로의 직조공
+电弧：每三次攻击追加伤害§アーク：3回攻撃ごとに追加ダメージ§Arc: bonus damage every third attack§아크: 공격 3회마다 추가 피해
+汲取：造成伤害恢复生命§吸収：与えたダメージで体力を回復§Leech: heal from the damage you deal§흡수: 입힌 피해로 체력 회복
+护盾：减伤蓄能，强化下一次攻击§シールド：被ダメージを軽減して蓄積し、次の攻撃を強化§Shield: blocks damage and charges your next attack§실드: 받는 피해를 줄이며 충전해 다음 공격을 강화
+处决：敌人低血时提高伤害§処刑：体力の少ない敵へのダメージ上昇§Execute: more damage to low-HP enemies§처형: 체력이 낮은 적에게 피해 증가
+无人机：每 2.4 秒自动射击，标记增伤§ドローン：2.4秒ごとに自動射撃、マーク中はダメージ上昇§Drone: fires every 2.4 s, more damage to marked targets§드론: 2.4초마다 자동 사격, 표식 대상에게 피해 증가
+标记：定时锁定目标，联动无人机与电弧§マーク：定期的に標的をロックし、ドローンとアークを強化§Mark: periodically locks a target, boosting Drone and Arc§표식: 주기적으로 대상을 고정하고 드론·아크와 연계
+推进：每 4 秒突袭，近战武器强化冲击§推進：4秒ごとに突撃、近接武器なら衝撃強化§Thruster: dash strike every 4 s, stronger with melee weapons§추진: 4초마다 돌격, 근접 무기면 충격 강화
+无特殊效果§特殊効果なし§No special effect§특수 효과 없음
+过载§オーバーロード§Overload§과부하
+装甲§装甲§Armor§장갑
+调度§管制§Dispatch§관제
+汲取§吸収§Leech§흡수
+缓冲§緩衝§Buffer§완충
+聚焦§集中§Focus§집중
+技能冷却§スキルのクールダウン§Skill Cooldown§스킬 재사용 대기시간
+伤害回血§ダメージ吸収§Life Steal§피해 흡혈
+受到伤害§被ダメージ§Damage Taken§받는 피해
+单体伤害§単体ダメージ§Single-Target Damage§단일 대상 피해
+前排§前衛§Front§전열
+后排§後衛§Back§후열
+支援§支援§Support§지원
+回收无人机§回収ドローン§Recycler Drone§회수 드론
+每 8 秒给主角回复 3% 生命§8秒ごとに主人公の体力を3%回復§Heals you for 3% HP every 8 s§8초마다 주인공의 체력을 3% 회복
+改装装卸机§改造荷役機§Rebuilt Loader§개조 하역기
+替主角挡下 35% 的伤害§主人公の代わりにダメージの35%を受ける§Takes 35% of the damage meant for you§주인공 대신 피해의 35%를 받는다
+改装炮车§改造砲車§Rebuilt Gun Cart§개조 포차
+每 2 秒炮击目标§2秒ごとに標的を砲撃§Shells the target every 2 s§2초마다 대상을 포격
+改装甲兵§改造甲兵§Rebuilt Trooper§개조 갑병
+替主角挡下 35% 的伤害，血更厚§主人公の代わりにダメージの35%を受ける。耐久が高い§Takes 35% of your damage, with more HP§주인공 대신 피해의 35%를 받는다. 체력이 더 높다
+改装折光炮台§改造屈折砲台§Rebuilt Prism Turret§개조 굴절 포대
+每 2 秒射击，打穿目标身后的一只§2秒ごとに射撃し、標的の後ろの1体も貫通§Fires every 2 s, piercing the enemy behind the target§2초마다 사격, 대상 뒤의 적 하나까지 관통
+改装镜面无人机§改造鏡面ドローン§Rebuilt Mirror Drone§개조 거울 드론
+每 10 秒给主角 6% 生命的护盾§10秒ごとに主人公へ体力6%分のシールド§Gives you a shield worth 6% HP every 10 s§10초마다 주인공에게 체력 6%의 실드
+改装母线炮§改造母線砲§Rebuilt Busbar Cannon§개조 모선포
+每 3 秒重炮一发§3秒ごとに重砲を1発§Fires a heavy shell every 3 s§3초마다 중포 1발
+改装协议守卫§改造プロトコル守衛§Rebuilt Protocol Guard§개조 프로토콜 수호병
+替主角挡下 35% 的伤害，血最厚§主人公の代わりにダメージの35%を受ける。耐久が最も高い§Takes 35% of your damage, with the most HP§주인공 대신 피해의 35%를 받는다. 체력이 가장 높다
+火力§火力§Firepower§화력
+机体§機体§Chassis§기체
+回收§回収§Salvage§회수
+每级攻击 +1.5§1レベルごとに攻撃 +1.5§Attack +1.5 per level§레벨당 공격 +1.5
+每级生命 +8§1レベルごとに体力 +8§HP +8 per level§레벨당 체력 +8
+每级零件回收 +0.4%、幸运 +0.05§1レベルごとにパーツ回収 +0.4%、幸運 +0.05§Parts Recovery +0.4% and Luck +0.05 per level§레벨당 부품 회수 +0.4%, 행운 +0.05
+连击校准§連撃キャリブレーション§Combo Calibration§연격 보정
+首领克星§ボスキラー§Boss Breaker§보스 킬러
+过载释放§オーバーロード解放§Overload Release§과부하 해방
+红线§レッドライン§Redline§레드라인
+应急维修§緊急修理§Emergency Repair§긴급 수리
+复合装甲§複合装甲§Composite Armor§복합 장갑
+护盾回路§シールド回路§Shield Circuit§실드 회로
+不屈§不屈§Unyielding§불굴
+精英扫描§エリートスキャン§Elite Scan§엘리트 스캔
+拾荒§拾い屋§Scavenger§넝마주이
+拆解专家§解体のプロ§Dismantling Expert§해체 전문가
+芯片嗅探§チップ探知§Chip Sniffer§칩 탐지
+每第 5 次普攻必定暴击§通常攻撃5回ごとに必ず会心§Every 5th basic attack is a guaranteed crit§일반 공격 5회마다 반드시 치명타
+打精英和首领伤害 +10%§エリートとボスへのダメージ +10%§+10% damage to elites and bosses§엘리트와 보스에게 주는 피해 +10%
+技能伤害 +20%§スキルダメージ +20%§Skill damage +20%§스킬 피해 +20%
+生命低于一半时伤害 +25%§体力が半分未満の時、ダメージ +25%§+25% damage while below half HP§체력이 절반 미만일 때 피해 +25%
+每关一次：生命低于 30% 时回复 25%§ステージごとに1回：体力が30%を切ると25%回復§Once per stage: heal 25% when below 30% HP§스테이지당 1회: 체력이 30% 미만이 되면 25% 회복
+受到伤害 −8%§被ダメージ −8%§Damage taken −8%§받는 피해 −8%
+每一波开始得到 15% 生命的护盾§ウェーブ開始ごとに体力15%分のシールド§Gain a shield worth 15% HP at the start of each wave§웨이브가 시작될 때마다 체력 15%의 실드 획득
+每关一次：被打倒时一半概率留 20% 生命继续§ステージごとに1回：倒れた時、50%の確率で体力20%で踏みとどまる§Once per stage: 50% chance to survive a knockdown with 20% HP§스테이지당 1회: 쓰러질 때 50% 확률로 체력 20%로 버틴다
+精英掉落 10% 概率高一档品质§エリートのドロップが10%の確率で1段階上の品質に§Elite drops have a 10% chance to be one tier higher§엘리트 드롭이 10% 확률로 한 단계 높은 품질
+离线收益上限 2 小时 → 4 小时§オフライン収益の上限 2時間 → 4時間§Offline earnings cap 2 h → 4 h§오프라인 수익 상한 2시간 → 4시간
+分解得到的零件 +25%§分解で得るパーツ +25%§Parts from salvaging +25%§분해로 얻는 부품 +25%
+芯片掉率 ×1.5§チップのドロップ率 ×1.5§Chip drop rate ×1.5§칩 드롭률 ×1.5
+不支持此版本存档：§このバージョンのセーブデータには対応していません：§Unsupported save version: §지원하지 않는 버전의 세이브 데이터: 
+存档结构不完整§セーブデータの構造が不完全です§The save data is incomplete§세이브 데이터 구조가 불완전합니다
+装备数据无效§装備データが無効です§Invalid equipment data§장비 데이터가 유효하지 않습니다
+装备词条无效§装備のオプションが無効です§Invalid equipment affixes§장비 옵션이 유효하지 않습니다
+未知装备模板§不明な装備テンプレート§Unknown equipment template§알 수 없는 장비 템플릿
+目标标记§標的マーク§Target Mark§대상 표식
+电弧§アーク§Arc§아크
+引爆§起爆§Detonate§기폭
+近战突袭§近接突撃§Melee Rush§근접 돌격
+推进射击§推進射撃§Thruster Shot§추진 사격
+护盾反击§シールド反撃§Shield Counter§실드 반격
+无人机§ドローン§Drone§드론
+标记§マーク§Mark§표식
+推进§推進§Thruster§추진
+护盾§シールド§Shield§실드
+处决§処刑§Execute§처형
+常规攻击§通常攻撃§Basic attacks§일반 공격
+一§1§1§1
+二§2§2§2
+三§3§3§3
+四§4§4§4
+五§5§5§5
+六§6§6§6
+七§7§7§7
+八§8§8§8
+九§9§9§9

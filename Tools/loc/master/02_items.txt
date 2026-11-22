@@ -1,0 +1,129 @@
+# 装备名（第一～五章 125 件 + 深网限定 3 件）
+勤务短铳§勤務短銃§Duty Pistol§근무용 단총
+霓虹切刃§ネオンブレード§Neon Edge§네온 블레이드
+线圈发射器§コイルランチャー§Coil Launcher§코일 발사기
+逆流手炮§逆流ハンドキャノン§Backflow Hand Cannon§역류 핸드캐논
+重型破拆器§重型解体機§Heavy Breaker§중형 파쇄기
+回收员兜帽§回収員フード§Recycler Hood§회수원 후드
+夜行面罩§夜行マスク§Night Mask§야행 마스크
+信号护目镜§信号ゴーグル§Signal Goggles§신호 고글
+封闭式头盔§密閉型ヘルメット§Sealed Helmet§밀폐형 헬멧
+故障猫耳终端§故障ネコミミ端末§Glitched Cat-Ear Terminal§고장 난 고양이귀 단말
+防雨勤务夹克§防雨勤務ジャケット§Rainproof Duty Jacket§방우 근무 재킷
+反光机能风衣§リフレクター機能コート§Reflective Tech Coat§반사 기능성 코트
+轻型装甲外套§軽装甲コート§Light Armored Coat§경장갑 외투
+逆流束带上衣§逆流ハーネストップ§Backflow Harness Top§역류 하네스 상의
+白噪研究长衣§ホワイトノイズ研究コート§White-Noise Lab Coat§백색소음 연구 가운
+折叠回收背包§折りたたみ回収バッグ§Folding Recovery Pack§접이식 회수 배낭
+侦察天线模块§偵察アンテナモジュール§Recon Antenna Module§정찰 안테나 모듈
+蓄电线圈模块§蓄電コイルモジュール§Charge Coil Module§축전 코일 모듈
+折叠防护翼§折りたたみ防護翼§Folding Guard Wings§접이식 방호 날개
+轻量推进背架§軽量推進フレーム§Light Thruster Frame§경량 추진 프레임
+回收员工装裤§回収員ワークパンツ§Recycler Work Pants§회수원 작업 바지
+排污防水裤§排水防水パンツ§Sewer Waders§배수 방수 바지
+棚户补丁裤§バラックの継ぎはぎパンツ§Patched Shanty Pants§판자촌 누더기 바지
+护膝战术裤§ニーパッド付きタクティカルパンツ§Kneepad Tactical Pants§무릎 보호 전술 바지
+管廊液压腿甲§管廊油圧レッグアーマー§Gallery Hydraulic Greaves§관로 유압 다리갑옷
+撞杆矛§衝角槍§Ram Spear§충각창
+气动钉枪§エアネイルガン§Pneumatic Nail Gun§공압 네일건
+吊臂钩索§クレーンフック§Crane Hook Line§크레인 갈고리줄
+切割锯§カッターソー§Cutting Saw§절단 톱
+信号弩§信号クロスボウ§Signal Crossbow§신호 석궁
+反光雨帽§リフレクターレインハット§Reflective Rain Hat§반사 우비 모자
+调度耳麦§管制ヘッドセット§Dispatch Headset§관제 헤드셋
+吊车安全盔§クレーン安全帽§Crane Hard Hat§크레인 안전모
+货柜焊接面罩§コンテナ溶接マスク§Container Welding Mask§컨테이너 용접 마스크
+雨幕全息面罩§雨幕ホロマスク§Rain-Curtain Holo Mask§빗발 홀로 마스크
+反光雨披§リフレクターポンチョ§Reflective Poncho§반사 판초
+装卸工负重马甲§荷役ロードベスト§Loader's Load Vest§하역 부하 조끼
+防水潜工夹克§防水潜水作業ジャケット§Waterproof Diver Jacket§방수 잠수 작업 재킷
+轨道维修夹克§軌道保守ジャケット§Track Maintenance Jacket§궤도 정비 재킷
+信号员长衣§信号係ロングコート§Signalman's Long Coat§신호원 롱코트
+迷你集装箱背架§ミニコンテナ背負子§Mini Container Frame§미니 컨테이너 등짐틀
+绞盘线轴§ウインチリール§Winch Reel§윈치 릴
+伞架无人机§傘骨ドローン§Umbrella-Frame Drone§우산살 드론
+电池组信号塔§バッテリー信号塔§Battery Signal Mast§배터리 신호탑
+折叠货梯§折りたたみ荷物リフト§Folding Cargo Lift§접이식 화물 리프트
+荧光雨裤§蛍光レインパンツ§Hi-Vis Rain Pants§형광 우비 바지
+装卸工护腿§荷役レッグガード§Loader's Leg Guards§하역 다리 보호대
+防水潜工长靴裤§防水胴長§Waterproof Waders§방수 장화 바지
+轨道检修工装裤§軌道点検ワークパンツ§Track Inspection Pants§궤도 점검 작업 바지
+信号员马裤§信号係の乗馬ズボン§Signalman's Breeches§신호원 승마 바지
+天线警棍§アンテナ警棒§Antenna Baton§안테나 경봉
+定向干扰枪§指向性ジャミングガン§Directional Jammer Gun§지향성 방해총
+雷达碟炮§レーダーディッシュ砲§Radar Dish Cannon§레이더 접시포
+屏蔽网刃§遮断ネットブレード§Shield-Mesh Blade§차폐망 칼날
+中继弩枪§中継クロスボウガン§Relay Crossbow Gun§중계 석궁총
+天线耳罩§アンテナイヤーマフ§Antenna Earmuffs§안테나 귀마개
+降噪头盔§ノイズキャンセルヘルメット§Noise-Canceling Helmet§소음 차단 헬멧
+信号目镜§信号アイピース§Signal Eyepiece§신호 접안경
+屏蔽面罩§遮断マスク§Shielding Mask§차폐 마스크
+中继头环§中継ヘッドリング§Relay Circlet§중계 머리띠
+信号员风衣§信号係トレンチコート§Signalman's Trench Coat§신호원 트렌치코트
+屏蔽网背心§遮断メッシュベスト§Shield-Mesh Vest§차폐망 조끼
+机房防静电服§サーバー室静電防止服§Anti-Static Server Suit§서버실 정전기 방지복
+天线维修夹克§アンテナ整備ジャケット§Antenna Repair Jacket§안테나 정비 재킷
+断讯斗篷§断信マント§Dead-Signal Cloak§단신 망토
+折叠雷达碟§折りたたみレーダーディッシュ§Folding Radar Dish§접이식 레이더 접시
+中继电池箱§中継バッテリーボックス§Relay Battery Box§중계 배터리함
+天线束§アンテナ束§Antenna Bundle§안테나 다발
+干扰无人机舱§妨害ドローンポッド§Jammer Drone Pod§방해 드론 포드
+屏蔽伞§遮断傘§Shielding Umbrella§차폐 우산
+屋顶维修裤§屋上整備パンツ§Rooftop Repair Pants§옥상 정비 바지
+防静电工装裤§静電防止ワークパンツ§Anti-Static Work Pants§정전기 방지 작업 바지
+绝缘护腿§絶縁レッグガード§Insulated Leg Guards§절연 다리 보호대
+天线兵马裤§アンテナ兵の乗馬ズボン§Antenna Trooper Breeches§안테나병 승마 바지
+中继护膝§中継ニーガード§Relay Knee Guards§중계 무릎 보호대
+镜刃§ミラーブレード§Mirror Blade§거울날
+折光步枪§屈折ライフル§Refraction Rifle§굴절 소총
+审计手炮§監査ハンドキャノン§Auditor Hand Cannon§감사 핸드캐논
+冷却重锤§冷却ハンマー§Coolant Maul§냉각 해머
+光纤钩索§光ファイバーフック§Fiber-Optic Hook Line§광섬유 갈고리줄
+镜面面罩§鏡面マスク§Mirror Mask§거울 마스크
+审计耳机§監査ヘッドホン§Auditor Headphones§감사 헤드폰
+冷光头盔§冷光ヘルメット§Cold-Light Helmet§냉광 헬멧
+晶体护目镜§クリスタルゴーグル§Crystal Goggles§크리스탈 고글
+上城礼帽§上層街のシルクハット§Uptown Top Hat§상층 도시 실크햇
+镜面风衣§鏡面コート§Mirror Coat§거울 코트
+审计制服§監査制服§Auditor Uniform§감사 제복
+冷却服§冷却スーツ§Coolant Suit§냉각복
+白金防弹衣§プラチナ防弾ベスト§Platinum Body Armor§백금 방탄복
+玻璃斗篷§ガラスのマント§Glass Cloak§유리 망토
+镜面无人机舱§鏡面ドローンポッド§Mirror Drone Pod§거울 드론 포드
+冷却背罐§冷却タンク§Coolant Tank§냉각 탱크
+折光翼§屈折ウイング§Refraction Wings§굴절 날개
+审计数据箱§監査データケース§Audit Data Case§감사 데이터 케이스
+晶格推进器§格子スラスター§Lattice Thruster§격자 추진기
+镜面护腿§鏡面レッグガード§Mirror Leg Guards§거울 다리 보호대
+制服长裤§制服スラックス§Uniform Slacks§제복 바지
+冷却腿甲§冷却レッグアーマー§Coolant Greaves§냉각 다리갑옷
+白金战术裤§プラチナタクティカルパンツ§Platinum Tactical Pants§백금 전술 바지
+玻璃纤维靴裤§グラスファイバーブーツパンツ§Fiberglass Boot Pants§유리섬유 부츠 바지
+织针刺剑§織針レイピア§Weaving-Needle Rapier§뜨개바늘 레이피어
+线缆鞭§ケーブルウィップ§Cable Whip§케이블 채찍
+协议发射器§プロトコルランチャー§Protocol Launcher§프로토콜 발사기
+母线重锤§母線ハンマー§Busbar Maul§모선 해머
+零号霰枪§零号ショットガン§Zero Shotgun§제로 산탄총
+织网面纱§織網ヴェール§Weave Veil§직조 베일
+协议头环§プロトコルヘッドリング§Protocol Circlet§프로토콜 머리띠
+零号目镜§零号アイピース§Zero Eyepiece§제로 접안경
+线缆头盔§ケーブルヘルメット§Cable Helmet§케이블 헬멧
+母体冠§母体の冠§Matrix Crown§모체의 관
+织网长袍§織網ローブ§Weave Robe§직조 로브
+协议外骨骼§プロトコル外骨格§Protocol Exoskeleton§프로토콜 외골격
+线缆编织甲§ケーブル編み鎧§Cable-Woven Armor§케이블 편조 갑옷
+零号战衣§零号戦闘服§Zero Battle Suit§제로 전투복
+回收员终装§回収員の最終装備§Recycler's Final Outfit§회수원의 최종 장비
+织网纺锤§織網スピンドル§Weave Spindle§직조 방추
+母线线轴§母線リール§Busbar Reel§모선 릴
+协议无人机§プロトコルドローン§Protocol Drone§프로토콜 드론
+零号核心包§零号コアパック§Zero Core Pack§제로 코어 팩
+织网之翼§織網の翼§Weave Wings§직조의 날개
+织网绑腿§織網ゲートル§Weave Puttees§직조 각반
+协议护胫§プロトコルすね当て§Protocol Shin Guards§프로토콜 정강이 보호대
+线缆护腿§ケーブルレッグガード§Cable Leg Guards§케이블 다리 보호대
+零号战裤§零号戦闘パンツ§Zero Combat Pants§제로 전투 바지
+终装长靴§最終装備ロングブーツ§Final Outfit Boots§최종 장비 롱부츠
+深网 · 零号视界§深網・零号ビジョン§Deep Net · Zero Vision§딥넷 · 제로 비전
+深网 · 织网长衣§深網・織網ロングコート§Deep Net · Weave Longcoat§딥넷 · 직조 롱코트
+深网 · 母线之翼§深網・母線の翼§Deep Net · Busbar Wings§딥넷 · 모선의 날개

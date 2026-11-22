@@ -1,0 +1,122 @@
+# 行动页、弹窗（GameAppAction.cs、GameAppModals.cs）。key 一律去掉首尾空格（Loc 会先按去空格的整句查）。
+re:维修中 · ([\d.]+) 秒§修理中・{1}秒§Repairing · {1}s§수리 중 · {1}초
+re:回刷补给 · 战力 ([+-]?\d+)%（\+(\d+)% 或再刷 (\d+) 次后再挑战）§補給周回・戦力 {1}%（+{2}% か、あと{3}回周回で再挑戦）§Resupply farming · Power {1}% (retry at +{2}% or after {3} more runs)§보급 반복 · 전투력 {1}% (+{2}% 또는 {3}회 더 반복 후 재도전)
+re:—  第 (\d+) / (\d+) 波 · 剩余 (\d+)  —§—  ウェーブ {1}/{2}・残り {3}  —§—  Wave {1}/{2} · {3} left  —§—  {1}/{2} 웨이브 · 남은 적 {3}  —
+re:CHAPTER (\d) / 第(.)章§CHAPTER {1} / 第{2}章§CHAPTER {1}§CHAPTER {1} / {2}장
+re:最高 (\d+) 层 · 下个里程碑 (\d+)§最高 {1}層・次の節目 {2}層§Best F{1} · Next milestone F{2}§최고 {1}층 · 다음 마일스톤 {2}층
+re:不选 · (\d+) 秒后跳过§選ばない・{1}秒後にスキップ§Skip · auto in {1}s§선택 안 함 · {1}초 후 건너뜀
+re:义体接入 · (.+)§義体接続・{1}§Implant installed · {1}§의체 접속 · {1}
+re:机械飞升  (\d+) / (\d+)§機械昇華  {1} / {2}§Mechanical Ascension  {1} / {2}§기계 승화  {1} / {2}
+re:(\d+) 件未查看§未確認 {1}件§{1} unseen§미확인 {1}개
+re:已自动分解 (\d+) 件 · \+(\d+)§自動分解 {1}件・+{2}§Auto-salvaged {1} · +{2}§자동 분해 {1}개 · +{2}
+re:精英 / 首领保底 (\d+) / (\d+)§エリート／ボス天井 {1} / {2}§Elite/Boss pity {1} / {2}§엘리트/보스 보장 {1} / {2}
+re:你离开了 (\d+) 小时 (\d+) 分§離れていた時間：{1}時間{2}分§You were away for {1} h {2} min§자리를 비운 시간: {1}시간 {2}분
+re:你离开了 (\d+) 分钟§離れていた時間：{1}分§You were away for {1} min§자리를 비운 시간: {1}분
+re:回收无人机带回了 (\d+) 零件§回収ドローンがパーツを {1} 個持ち帰った§The Recycler Drone brought back {1} parts§회수 드론이 부품 {1}개를 가져왔다
+re:离线按挂机收益的 (\d+)% 算，最多算 (\d+) 小时（这次超出的部分没算）。挂着游戏收益是离线的 4 倍。§オフライン中は放置収益の {1}% として計算し、上限は {2} 時間です（今回、上限を超えた分は計算されていません）。ゲームを起動したままなら、オフラインの4倍稼げます。§Offline time earns {1}% of the idle rate, up to {2} h (time beyond the cap wasn't counted this time). Leaving the game running earns 4× as much.§오프라인 중에는 방치 수익의 {1}%로 계산하며 최대 {2}시간까지입니다(이번에 상한을 넘은 시간은 계산되지 않았습니다). 게임을 켜 두면 오프라인의 4배를 법니다.
+re:离线按挂机收益的 (\d+)% 算，最多算 (\d+) 小时。挂着游戏收益是离线的 4 倍。§オフライン中は放置収益の {1}% として計算し、上限は {2} 時間です。ゲームを起動したままなら、オフラインの4倍稼げます。§Offline time earns {1}% of the idle rate, up to {2} h. Leaving the game running earns 4× as much.§오프라인 중에는 방치 수익의 {1}%로 계산하며 최대 {2}시간까지입니다. 게임을 켜 두면 오프라인의 4배를 법니다.
+re:持有零件 (\d+)§所持パーツ {1}§Parts held: {1}§보유 부품 {1}
+断讯 · 出手变慢§断信・攻撃が遅くなる§Jammed · Slower attacks§단신 · 공격이 느려짐
+镜面 · 打它会反伤§鏡面・攻撃すると反射ダメージ§Mirrored · Reflects damage§거울 · 공격하면 피해 반사
+维修中 ·§修理中・§Repairing ·§수리 중 ·
+秒§秒§s§초
+已暂停§一時停止中§Paused§일시정지됨
+修好后撤回上一关补给，变强后自动再挑战§修理後は前のステージに戻って補給し、強くなったら自動で再挑戦します§After repairs you'll fall back a stage to resupply, then retry automatically once you're stronger§수리 후 이전 스테이지로 물러나 보급하고, 강해지면 자동으로 재도전합니다
+装备与收藏不会丢失，修好后重新开始本关§装備とコレクションは失われません。修理後にこのステージをやり直します§Your gear and collection are safe. After repairs, this stage restarts§장비와 수집품은 사라지지 않습니다. 수리 후 이 스테이지를 다시 시작합니다
+按空格或右下角按钮继续§スペースキーか右下のボタンで再開§Press Space or the button at the bottom right to resume§스페이스 키나 오른쪽 아래 버튼으로 계속
+首领§ボス§Boss§보스
+精英§エリート§Elite§엘리트
+关§オフ§Off§끔
+首领关§ボスステージ§Boss stage§보스 스테이지
+精英关§エリートステージ§Elite stage§엘리트 스테이지
+最高§最高§Best§최고
+鼠标移到边缘 · 呼出终端§マウスを画面の端に寄せるとターミナルを表示§Move the mouse to an edge to open the terminal§마우스를 화면 가장자리로 옮기면 터미널 표시
+DEEP NET / 零号深网§DEEP NET / 零号深網§DEEP NET§DEEP NET / 제로 딥넷
+章§章§Chapter§장
+飞升§昇華§Ascension§승화
+自动推进 · 开§オート進行・オン§Auto-advance · On§자동 진행 · 켬
+自动推进 · 关§オート進行・オフ§Auto-advance · Off§자동 진행 · 끔
+首§B§B§B
+精§E§E§E
+无协议异常§プロトコル異常なし§No protocol anomalies§프로토콜 이상 없음
+零件§パーツ§Parts§부품
+协议异常 · 三选一§プロトコル異常・3つから1つ選択§Protocol Anomaly · Pick 1 of 3§프로토콜 이상 · 3개 중 1개 선택
+叠上去更难，掉得更好（最多 3 个）§重ねるほど難しくなり、ドロップも良くなる（最大3つ）§Each one makes it harder but improves drops (up to 3)§쌓을수록 어려워지지만 드롭이 좋아진다 (최대 3개)
+接入§接続§Connect§접속
+协议异常接入：§プロトコル異常を接続：§Protocol anomaly connected:§프로토콜 이상 접속:
+义体接入 ·§義体接続・§Implant installed ·§의체 접속 ·
+机械飞升§機械昇華§Mechanical Ascension§기계 승화
+装上义体：§義体を装着：§Implant installed:§의체 장착:
+身上又多了一根「线」。§体にまた一本「線」が増えた。§One more "thread" runs through your body.§몸에 「선」이 하나 더 늘었다.
+织网碎片§織網片§Weave Shards§직조 조각
+获得称号「零号」§称号「零号」を獲得§Title "Zero" obtained§칭호 「제로」 획득
+暴击§会心§Crit§치명타
+当前配装§現在の装備§Current Loadout§현재 장비
+最近回收§最近の回収§Recent Finds§최근 회수
+击败敌人后，回收到的装备会出现在这里§敵を倒して回収した装備がここに表示されます§Gear you recover from defeated enemies shows up here§적을 쓰러뜨리고 회수한 장비가 여기에 표시됩니다
+TARGET / 回收目标§TARGET / 回収目標§TARGET / Recovery Target§TARGET / 회수 목표
+产地 ·§入手場所・§Source ·§획득처 ·
+还没有设定回收目标§回収目標が未設定です§No recovery target set§회수 목표가 설정되지 않았습니다
+去衣柜挑一件想要的装备§ワードローブで欲しい装備を選ぼう§Pick something you want in the Wardrobe§옷장에서 원하는 장비를 골라 보세요
+继续行动§行動再開§Resume§행동 재개
+暂停§一時停止§Pause§일시정지
+通关后§クリア後§After clear§클리어 후
+选择街区§街区選択§Districts§구역 선택
+欢迎回来§おかえりなさい§Welcome Back§다시 오신 것을 환영합니다
+行动指南§行動ガイド§Field Guide§행동 가이드
+植入芯片§チップを埋め込む§Install Chip§칩 이식
+改装位§改装スロット§Mod Slot§개조 슬롯
+设置§設定§Settings§설정
+关闭§閉じる§Close§닫기
+小时§時間§h§시간
+分钟§分§min§분
+收下§受け取る§Collect§받기
+re:第(.)章 · (.+)§第{1}章・{2}§Chapter {1} · {2}§{1}장 · {2}
+通过上一关后开放§前のステージをクリアすると開放§Unlocks after clearing the previous stage§이전 스테이지를 클리어하면 개방
+re:首领：(.+) · 会呼叫支援§ボス：{1}・増援を呼ぶ§Boss: {1} · Calls reinforcements§보스: {1} · 지원을 부름
+re:(\d+) 波 · 约 (\d+) 只§{1}ウェーブ・約{2}体§{1} waves · about {2} enemies§{1}웨이브 · 약 {2}마리
+· 回收目标产地§・回収目標の入手場所§· Recovery target source§· 회수 목표 획득처
+正在行动§行動中§In progress§진행 중
+前往§向かう§Go§이동
+未解锁§未解放§Locked§미해금
+零号深网§零号深網§Deep Net Zero§제로 딥넷
+re:零号深网 · 第 (\d+) 层§零号深網・{1}層§Deep Net Zero · F{1}§제로 딥넷 · {1}층
+击败 1-7 闸门看守后开放§1-7 の水門番を倒すと開放§Unlocks after defeating the Gatekeeper at 1-7§1-7 수문 감시자를 쓰러뜨리면 개방
+re:最高 (\d+) 层 · 从第 (\d+) 层开始 · 下一奖励 第 (\d+) 层（限定外观）(.*)§最高 {1}層・{2}層から開始・次の報酬 {3}層（限定外見）{4}§Best F{1} · Start at F{2} · Next reward F{3} (exclusive look){4}§최고 {1}층 · {2}층부터 시작 · 다음 보상 {3}층 (한정 외형){4}
+re:最高 (\d+) 层 · 从第 (\d+) 层开始 · 下一奖励 第 (\d+) 层(.*)§最高 {1}層・{2}層から開始・次の報酬 {3}層{4}§Best F{1} · Start at F{2} · Next reward F{3}{4}§최고 {1}층 · {2}층부터 시작 · 다음 보상 {3}층{4}
+re: · 异常 (\d+)§・異常 {1}§ · Anomalies {1}§ · 이상 {1}
+清除异常§異常をクリア§Clear anomalies§이상 제거
+协议异常已清除§プロトコル異常をクリアしました§Protocol anomalies cleared§프로토콜 이상을 제거했습니다
+进入§入る§Enter§입장
+未开放§未開放§Not yet open§미개방
+语言§言語§Language§언어
+音乐§音楽§Music§음악
+音效§効果音§Sound FX§효과음
+装备辉光§装備の輝き§Gear Glow§장비 광채
+低强度§控えめ§Low§약하게
+完整§フル§Full§전체
+震屏§画面の揺れ§Screen Shake§화면 흔들림
+减弱§控えめ§Reduced§약하게
+自动分解§自動分解§Auto-Salvage§자동 분해
+显示§表示§Display§화면
+全屏 · 点击切回窗口§フルスクリーン・クリックでウィンドウへ§Fullscreen · Click for windowed§전체 화면 · 클릭하면 창 모드
+窗口 · 点击切到全屏§ウィンドウ・クリックでフルスクリーンへ§Windowed · Click for fullscreen§창 모드 · 클릭하면 전체 화면
+展览模式§展示モード§Exhibition Mode§전시 모드
+展览中 · 按 Ctrl+Shift+E 退出§展示中・Ctrl+Shift+E で終了§Exhibiting · Ctrl+Shift+E to exit§전시 중 · Ctrl+Shift+E로 종료
+开启…§オンにする…§Turn on…§켜기…
+自动分解不会处理第一次获得的外观和当前回收目标。进度每 30 秒和关键操作后自动保存。§自動分解は、初めて手に入れた外見と現在の回収目標には手を付けません。進行状況は30秒ごとと重要な操作の後に自動保存されます。§Auto-salvage never touches a look you're getting for the first time or your current recovery target. Progress autosaves every 30 seconds and after key actions.§자동 분해는 처음 얻은 외형과 현재 회수 목표는 건드리지 않습니다. 진행 상황은 30초마다, 그리고 중요한 조작 후에 자동 저장됩니다.
+立即保存§今すぐ保存§Save Now§지금 저장
+进度已保存§進行状況を保存しました§Progress saved§진행 상황을 저장했습니다
+保存暂不可用，原有存档会保留。§現在保存できません。既存のセーブデータはそのまま残ります。§Saving isn't available right now. Your existing save is kept.§지금은 저장할 수 없습니다. 기존 세이브 데이터는 그대로 유지됩니다.
+回到标题§タイトルへ戻る§Back to Title§타이틀로
+THREAD ZERO · v0.21    空格 暂停 / 1 2 3 4 切换页面 / Esc 关闭弹窗§THREAD ZERO · v0.21    Space 一時停止 / 1 2 3 4 ページ切替 / Esc ウィンドウを閉じる§THREAD ZERO · v0.21    Space Pause / 1 2 3 4 Switch pages / Esc Close window§THREAD ZERO · v0.21    Space 일시정지 / 1 2 3 4 페이지 전환 / Esc 창 닫기
+自动行动§自動行動§Auto Action§자동 행동
+装备与外观§装備と外見§Gear & Looks§장비와 외형
+有目标地回收§狙って回収§Targeted Recovery§목표 회수
+设备联动§装置の連携§Module Synergy§장치 연계
+零号深网与机械飞升§零号深網と機械昇華§Deep Net Zero & Ascension§제로 딥넷과 기계 승화
+角色会自动战斗、自动推进。每章 7 关，x-3、x-6 是精英，x-7 是首领。倒下只要维修几秒：先回刷前面的关攒零件，变强后自动再挑战。关掉游戏也有离线收益（最多算 2 小时）。§キャラクターは自動で戦い、自動で進みます。各章は7ステージで、x-3・x-6はエリート、x-7はボス。倒れても数秒の修理で済みます。まず前のステージを周回してパーツを貯め、強くなったら自動で再挑戦します。ゲームを閉じていてもオフライン収益があります（最大2時間分）。§Your character fights and advances on their own. Each chapter has 7 stages: x-3 and x-6 are elite stages, x-7 is the boss. Getting knocked down only costs a few seconds of repairs: you farm earlier stages for parts, then retry automatically once you're stronger. You also earn offline while the game is closed (up to 2 hours).§캐릭터는 자동으로 싸우고 자동으로 전진합니다. 각 장은 7스테이지이며 x-3, x-6은 엘리트, x-7은 보스입니다. 쓰러져도 몇 초 수리하면 됩니다. 앞 스테이지를 반복해 부품을 모으고, 강해지면 자동으로 재도전합니다. 게임을 꺼 두어도 오프라인 수익이 있습니다(최대 2시간).
+在整备里穿戴装备改变属性；在衣柜里应用外观只改变样子（武器外观只能套在同类武器上）。锁定或穿戴中的装备不能分解。§整備で装備を身に着けると能力が変わります。ワードローブで外見を適用すると見た目だけが変わります（武器の外見は同じ種類の武器にしか使えません）。ロック中・装備中のものは分解できません。§Equip gear in the Loadout to change your stats; applying a look in the Wardrobe only changes how you look (weapon looks only fit weapons of the same type). Locked or equipped gear can't be salvaged.§정비에서 장비를 착용하면 능력치가 바뀝니다. 옷장에서 외형을 적용하면 모습만 바뀝니다(무기 외형은 같은 종류의 무기에만 적용 가능). 잠금 또는 착용 중인 장비는 분해할 수 없습니다.
+在衣柜里把想要的装备设为回收目标并查看产地：在它那一章打精英和首领，最多 8 次必得；品质和随机属性另行抽取。§ワードローブで欲しい装備を回収目標に設定し、入手場所を確認しましょう。その章のエリートとボスを倒せば、最大8回で必ず手に入ります（品質とランダム能力は別に抽選）。§In the Wardrobe, set the gear you want as your recovery target and check where it drops: beat elites and bosses in its chapter and it's guaranteed within 8 tries (quality and random stats are rolled separately).§옷장에서 원하는 장비를 회수 목표로 설정하고 획득처를 확인하세요. 그 장의 엘리트와 보스를 쓰러뜨리면 최대 8번 안에 반드시 얻습니다(품질과 랜덤 능력치는 따로 추첨).
+无人机自动射击；标记会强化无人机和电弧；推进器搭配近战武器冲击更强；护盾会为下一次攻击蓄能。成群的关用手炮、重锤这类群伤武器更轻松。§ドローンは自動で射撃します。マークはドローンとアークを強化し、推進器は近接武器と組み合わせると衝撃が強くなります。シールドは次の攻撃に力を蓄えます。敵の多いステージでは、ハンドキャノンやハンマーのような範囲攻撃武器が楽です。§Drones fire automatically; Mark boosts Drone and Arc; Thrusters hit harder with melee weapons; Shield charges up your next attack. Crowded stages are easier with area weapons like hand cannons and mauls.§드론은 자동으로 사격합니다. 표식은 드론과 아크를 강화하고, 추진기는 근접 무기와 함께 쓰면 충격이 강해집니다. 실드는 다음 공격에 힘을 모읍니다. 적이 많은 스테이지에서는 핸드캐논이나 해머 같은 범위 공격 무기가 수월합니다.
+打过第一个首领后，选关最下面可以进零号深网：一层层往上刷，每层都有掉落和织网碎片。织网碎片在整备页左边升级义体，义体越多越强，主角一步步机械飞升。§最初のボスを倒すと、ステージ選択の一番下から零号深網に入れます。1層ずつ登っていき、どの層にもドロップと織網片があります。織網片は整備画面の左側で義体の強化に使い、義体が増えるほど強くなり、主人公は少しずつ機械へと昇華していきます。§After your first boss, you can enter Deep Net Zero from the bottom of stage select: climb floor by floor, with drops and Weave Shards on every floor. Spend Weave Shards on the left side of the Loadout page to upgrade implants; the more implants, the stronger you get, step by step toward Mechanical Ascension.§첫 보스를 쓰러뜨리면 스테이지 선택 맨 아래에서 제로 딥넷에 들어갈 수 있습니다. 한 층씩 올라가며 층마다 드롭과 직조 조각이 있습니다. 직조 조각은 정비 화면 왼쪽에서 의체 강화에 쓰며, 의체가 많을수록 강해지고 주인공은 한 걸음씩 기계 승화에 다가갑니다.

@@ -1,0 +1,173 @@
+# 品质、协议异常、技能名、整备、背包筛选、分解、衣柜、存档提示、界面配色
+量产§量産§Standard§양산
+改良§改良§Improved§개량
+特装§特装§Special§특장
+军规§軍規§Military§군용
+机密§機密§Classified§기밀
+原型§原型§Prototype§프로토타입
+厚甲§厚い装甲§Thick Armor§두꺼운 장갑
+怪物生命 +50%；普通怪掉落率 ×1.4§敵の体力 +50%、通常敵のドロップ率 ×1.4§Enemy HP +50%; regular enemy drop rate ×1.4§적 체력 +50%, 일반 적 드롭률 ×1.4
+怪物出手快 25%；幸运 +15，高品质更常见§敵の攻撃が25%速い、幸運 +15で高品質が出やすい§Enemies attack 25% faster; Luck +15, high quality more common§적의 공격이 25% 빨라짐, 행운 +15로 고품질이 더 자주 나옴
+狂潮§狂乱§Frenzy§광란
+每波冲锋怪 +50%；零件 ×1.5§ウェーブごとの突撃型 +50%、パーツ ×1.5§+50% chargers per wave; parts ×1.5§웨이브당 돌격형 적 +50%, 부품 ×1.5
+精英化§エリート化§Elitization§엘리트화
+普通怪有 12% 变成精英（精英掉 2 件）§通常敵の12%がエリートになる（エリートは2つドロップ）§12% of regular enemies become elites (elites drop 2 items)§일반 적의 12%가 엘리트가 됨 (엘리트는 2개 드롭)
+迅切连击§迅切連撃§Swift Slash Combo§신속 연격
+贴脸轰击§ゼロ距離砲撃§Point-Blank Blast§근접 포격
+连锁放电§連鎖放電§Chain Discharge§연쇄 방전
+过压弹§過電圧弾§Overvolt Shot§과전압탄
+震地§地震撃§Ground Quake§지진 강타
+贯穿突刺§貫通突き§Piercing Thrust§관통 찌르기
+钉射扫射§釘掃射§Nail Barrage§못 난사
+吊钩横扫§フック薙ぎ払い§Hook Sweep§갈고리 휩쓸기
+回旋切割§回転切断§Spin Cutter§회전 절단
+信号爆矢§信号爆矢§Signal Burst Bolt§신호 폭발 화살
+获得顺序§入手順§Order acquired§획득 순서
+稀有度§レア度§Rarity§희귀도
+等级§レベル§Level§레벨
+生命§体力§HP§체력
+攻击§攻撃§Attack§공격
+防御§防御§Defense§방어
+攻速§攻撃速度§Attack Speed§공격 속도
+幸运§幸運§Luck§행운
+全部状态§すべての状態§All states§모든 상태
+已穿戴§装備中§Equipped§착용 중
+未穿戴§未装備§Not equipped§미착용
+已锁定§ロック中§Locked§잠김
+未锁定§未ロック§Unlocked§잠기지 않음
+排序：§並び順：§Sort:§정렬:
+最新优先 ↓§新しい順 ↓§Newest first ↓§최신순 ↓
+最早优先 ↑§古い順 ↑§Oldest first ↑§오래된순 ↑
+从高到低 ↓§高い順 ↓§High to low ↓§높은순 ↓
+从低到高 ↑§低い順 ↑§Low to high ↑§낮은순 ↑
+筛选§絞り込み§Filter§필터
+清空筛选§絞り込み解除§Clear filters§필터 해제
+名称§名前§Name§이름
+品质§品質§Quality§품질
+最低等级不能大于最高等级§最低レベルは最高レベル以下にしてください§Min level can't be higher than max level§최저 레벨은 최고 레벨보다 클 수 없습니다
+留空不限 · 1–§空欄なら制限なし・1–§Leave blank for any · 1–§비워 두면 제한 없음 · 1–
+全部随机词条§すべてのランダム能力§All random stats§모든 랜덤 능력치
+随机词条§ランダム能力§Random stats§랜덤 능력치
+全部固定效果§すべての固定効果§All fixed effects§모든 고정 효과
+品质可多选；不同条件同时满足。词条／效果按钮点击切换。§品質は複数選択可。条件はすべて同時に満たすものを表示。能力／効果ボタンはクリックで切り替え。§You can pick several qualities; all conditions must match. Click the stat/effect buttons to toggle them.§품질은 여러 개 선택할 수 있으며, 모든 조건을 동시에 만족하는 것만 표시합니다. 능력치/효과 버튼은 클릭으로 전환합니다.
+选择一件装备\n查看属性与替换效果§装備を選ぶと\n能力と付け替えた時の変化を表示§Select a piece of gear\nto see its stats and what changes if you swap§장비를 선택하면\n능력치와 교체 시 변화를 볼 수 있다
+· 空§・空き§· Empty§· 비어 있음
+每秒攻击§毎秒攻撃回数§Attacks/s§초당 공격
+改造板 ›§改造ボード ›§Mod Board ›§개조판 ›
+改造板：火力加攻击、机体加生命、回收加零件和幸运；后面的章节还能解锁改变打法的节点。§改造ボード：火力で攻撃、機体で体力、回収でパーツと幸運が上がる。後の章では戦い方を変えるノードも解放される。§Mod Board: Firepower adds Attack, Chassis adds HP, Salvage adds parts and Luck. Later chapters unlock nodes that change how you fight.§개조판: 화력은 공격, 기체는 체력, 회수는 부품과 행운을 올린다. 이후 장에서는 전투 방식을 바꾸는 노드도 열린다.
+手臂§腕§Arm§팔
+义眼§義眼§Eye§의안
+脊柱§脊柱§Spine§척추
+心脏§心臓§Heart§심장
+接口§端子§Port§단자
+攻击 +§攻撃 +§Attack +§공격 +
+生命 +§体力 +§HP +§체력 +
+防御 +§防御 +§Defense +§방어 +
+攻速 +§攻撃速度 +§Attack Speed +§공격 속도 +
+暴击 +§会心 +§Crit +§치명타 +
+幸运 +§幸運 +§Luck +§행운 +
+暴击伤害 +§会心ダメージ +§Crit Damage +§치명타 피해 +
+现在：§現在：§Now:§현재:
+已经满级§最大レベル§Max level§최대 레벨
+下一级：§次のレベル：§Next level:§다음 레벨:
+re:织网碎片 (\d+)（持有 (\d+)）§織網片 {1}（所持 {2}）§{1} Weave Shards (have {2})§직조 조각 {1} (보유 {2})
+re:零件 (\d+)（持有 (\d+)）§パーツ {1}（所持 {2}）§{1} parts (have {2})§부품 {1} (보유 {2})
+re:升级到 Lv (\d+)§Lv {1} に強化§Upgrade to Lv {1}§Lv {1}로 강화
+织网碎片不足 · 去零号深网刷§織網片が足りない・零号深網で稼ごう§Not enough Weave Shards · Farm Deep Net Zero§직조 조각 부족 · 제로 딥넷에서 모으자
+零件不足§パーツ不足§Not enough parts§부품 부족
+这件义体已经满级。其余义体升满后机械飞升完成。§この義体は最大レベル。残りの義体も最大にすると機械昇華が完了する。§This implant is maxed. Max out the rest to complete Mechanical Ascension.§이 의체는 최대 레벨이다. 나머지 의체도 최대로 올리면 기계 승화가 완료된다.
+re:(.+) 升到 Lv (\d+) · 飞升度 (\d+)%§{1} が Lv {2} に・昇華度 {3}%§{1} reached Lv {2} · Ascension {3}%§{1} Lv {2} 달성 · 승화도 {3}%
+re:机械飞升进入「(.+)」· 回到行动页看看§機械昇華が「{1}」に到達・行動画面で確認しよう§Mechanical Ascension reached "{1}" · Check the Action page§기계 승화가 「{1}」에 도달 · 행동 화면에서 확인해 보자
+重看尾声 ›§エピローグを見る ›§Rewatch epilogue ›§에필로그 다시 보기 ›
+未解锁 ·§未解放・§Locked ·§미해금 ·
+（点击升级）§（クリックで強化）§(click to upgrade)§(클릭해서 강화)
+re:击败第 (\d) 章的首领后装上。§第{1}章のボスを倒すと装着される。§Installed after beating the Chapter {1} boss.§{1}장 보스를 쓰러뜨리면 장착된다.
+全部§すべて§All§전체
+re:显示 (\d+) / (\d+) 件 · 同值优先等级、品质、最近获得§{1} / {2} 件を表示・同値ならレベル・品質・入手の新しさ順§Showing {1} / {2} · Ties sorted by level, quality, newest§{1} / {2}개 표시 · 같으면 레벨, 품질, 최신순
+一键分解§一括分解§Salvage All§일괄 분해
+没有符合条件的装备。\n可修改条件或点击「清空筛选」。§条件に合う装備がありません。\n条件を変えるか「絞り込み解除」を押してください。§No gear matches.\nChange the filters or click "Clear filters".§조건에 맞는 장비가 없습니다.\n조건을 바꾸거나 「필터 해제」를 누르세요.
+穿戴中§装備中§Equipped§착용 중
+新§NEW§NEW§NEW
+· 群伤§・範囲攻撃§· Area§· 범위 공격
+· 单体§・単体攻撃§· Single target§· 단일 공격
+群伤§範囲攻撃§Area§범위 공격
+单体§単体攻撃§Single target§단일 공격
+已锁定 · 不会被分解§ロック中・分解されません§Locked · Won't be salvaged§잠김 · 분해되지 않음
+背包中§所持品§In bag§가방 안
+属性§能力§Stats§능력치
+当前穿戴§現在の装備§Equipped§현재 착용
+对比当前穿戴§現在の装備と比較§Compared to equipped§현재 착용과 비교
+MODULE / 固定效果§MODULE / 固定効果§MODULE / Fixed Effect§MODULE / 고정 효과
+改装：§改装：§Mod:§개조:
+re:◆ 标记的属性含随机词条，共 (\d+) 条§◆ の付いた能力はランダム能力を含む（全{1}つ）§Stats marked ◆ include random stats ({1} total)§◆ 표시 능력치는 랜덤 능력치 포함 (총 {1}개)
+穿戴装备§装備する§Equip§착용
+已穿戴§装備中§Equipped§착용 중
+仅使用外观§見た目だけ使う§Use look only§외형만 사용
+外观类别不同§見た目の種類が違う§Different look type§외형 종류가 다름
+已切换外观：§見た目を変更：§Look changed:§외형 변경:
+解锁§ロック解除§Unlock§잠금 해제
+锁定§ロック§Lock§잠금
+穿戴中的装备不可分解§装備中のものは分解できない§Equipped gear can't be salvaged§착용 중인 장비는 분해할 수 없다
+已锁定的装备不可分解§ロック中のものは分解できない§Locked gear can't be salvaged§잠긴 장비는 분해할 수 없다
+re:分解 · \+(\d+) 零件（外观保留）§分解・パーツ +{1}（見た目は残る）§Salvage · +{1} parts (look kept)§분해 · 부품 +{1} (외형 유지)
+已分解，收藏的外观保留§分解した。集めた見た目は残る§Salvaged. Your collected look is kept§분해했다. 수집한 외형은 유지된다
+仅量产§量産のみ§Standard only§양산만
+改良及以下§改良以下§Improved and below§개량 이하
+选一个档位，仓库里这个品质及以下的装备会全部换成零件。穿戴中和已锁定的不会动，收藏的外观保留。§段階を選ぶと、倉庫にあるその品質以下の装備がすべてパーツになる。装備中とロック中のものは対象外で、集めた見た目は残る。§Pick a tier and every piece of gear at or below that quality turns into parts. Equipped and locked gear is untouched, and collected looks are kept.§등급을 고르면 창고에 있는 그 품질 이하의 장비가 모두 부품이 된다. 착용 중이거나 잠긴 장비는 건드리지 않으며, 수집한 외형은 유지된다.
+及以下§以下§and below§이하
+没有可分解的装备§分解できる装備がない§Nothing to salvage§분해할 장비가 없다
+re:(\d+) 件  →  \+(\d+)§{1}件  →  +{2}§{1} items  →  +{2}§{1}개  →  +{2}
+分解§分解§Salvage§분해
+re:已分解 (\d+) 件，获得 (\d+) 个零件。§{1}件を分解し、パーツを{2}個手に入れた。§Salvaged {1} items for {2} parts.§{1}개를 분해해 부품 {2}개를 얻었다.
+想留下的装备，先在右侧详情里点「锁定」。不想每次手动点，可以在设置里打开自动分解。§残したい装備は、右の詳細で「ロック」しておこう。毎回手で分解したくなければ、設定で自動分解をオンにできる。§To keep a piece of gear, click "Lock" in its details on the right. If you'd rather not do this by hand, turn on Auto-Salvage in Settings.§남기고 싶은 장비는 오른쪽 상세에서 「잠금」을 눌러 두자. 매번 직접 하기 싫다면 설정에서 자동 분해를 켤 수 있다.
+穿搭预览 · 只改变样子§コーデのプレビュー・見た目だけ変わる§Outfit preview · Looks only§코디 미리보기 · 모습만 바뀜
+外观收集§見た目コレクション§Look Collection§외형 수집
+恢复实际装备外观§実際の装備の見た目に戻す§Restore equipped looks§실제 장비 외형으로 되돌리기
+已恢复实际装备外观§実際の装備の見た目に戻した§Equipped looks restored§실제 장비 외형으로 되돌렸다
+re:套装 · (\d+) / (\d+)§セット・{1} / {2}§Sets · {1} / {2}§세트 · {1} / {2}
+re:这个部位没有深网限定外观\n零号深网第 (.+) 层各给一件：头部、外套、背包§この部位には深網限定の見た目がない\n零号深網の {1} 層で1つずつ：頭部・アウター・背中§No Deep Net exclusive look for this slot\nDeep Net Zero gives one each on floors {1}: head, coat, back§이 부위에는 딥넷 한정 외형이 없다\n제로 딥넷 {1}층에서 하나씩: 머리, 외투, 등
+已收藏§収集済み§Collected§수집함
+未收藏 ·§未収集・§Not collected ·§미수집 ·
+当前外观§現在の見た目§Current look§현재 외형
+回收目标§回収目標§Recovery target§회수 목표
+外观§見た目§Look§외형
+这款外观对应的装备只提供属性，没有固定模块。§この見た目の装備は能力のみで、固定モジュールはない。§This look's gear only gives stats; it has no fixed module.§이 외형의 장비는 능력치만 있고 고정 모듈은 없다.
+对应装备 ·§対応する装備・§Matching gear ·§대응 장비 ·
+外观只改变样子。属性和模块来自「整备」里实际穿戴的装备，分解装备不会丢失已收藏的外观。武器外观只能套在同类武器上（近战 / 远程）。§見た目は外見だけを変える。能力とモジュールは「整備」で実際に装備しているものから来る。装備を分解しても集めた見た目は失われない。武器の見た目は同じ種類の武器（近接／遠距離）にしか使えない。§Looks only change how you look. Stats and modules come from the gear you actually equip in the Loadout; salvaging gear never loses a collected look. Weapon looks only fit weapons of the same type (melee / ranged).§외형은 모습만 바꾼다. 능력치와 모듈은 「정비」에서 실제로 착용한 장비에서 나온다. 장비를 분해해도 수집한 외형은 사라지지 않는다. 무기 외형은 같은 종류의 무기(근접 / 원거리)에만 적용된다.
+尚未收藏§未収集§Not collected yet§아직 수집하지 않음
+需装备近战武器§近接武器の装備が必要§Requires a melee weapon§근접 무기 필요
+需装备远程武器§遠距離武器の装備が必要§Requires a ranged weapon§원거리 무기 필요
+应用外观§見た目を適用§Apply look§외형 적용
+已应用外观：§見た目を適用：§Look applied:§외형 적용:
+去零号深网§零号深網へ§Go to Deep Net Zero§제로 딥넷으로
+查看产出街区§入手できる街区を見る§View source district§획득 구역 보기
+TARGET / 定向回收§TARGET / 狙って回収§TARGET / Targeted Recovery§TARGET / 목표 회수
+正在定向回收这款外观§この見た目を狙って回収中§Targeting this look§이 외형을 목표로 회수 중
+re:深网限定 · 打到第 (\d+) 层就给§深網限定・{1}層到達で入手§Deep Net exclusive · Reach F{1} to get it§딥넷 한정 · {1}층 도달 시 획득
+想要这一款？设为回收目标§これが欲しい？回収目標に設定§Want this one? Set it as your recovery target§이걸 원해? 회수 목표로 설정
+re:深网限定外观不会掉落：第一次打过零号深网第 (\d+) 层时直接给（原型品质）。现在最高 (\d+) 层。§深網限定の見た目はドロップしない。零号深網の {1} 層を初めて突破した時に直接もらえる（原型品質）。現在の最高は {2} 層。§Deep Net exclusive looks never drop: you get it the first time you clear Deep Net Zero F{1} (Prototype quality). Your best is F{2}.§딥넷 한정 외형은 드롭되지 않는다. 제로 딥넷 {1}층을 처음 돌파하면 바로 받는다(프로토타입 품질). 현재 최고 {2}층.
+re:设为目标后，击败精英或首领时更容易掉落它，连续 (\d+) 次未掉落则第 (\d+) 次必得。§目標に設定すると、エリートやボスを倒した時に出やすくなる。{1}回連続で出なければ、{2}回目で必ず出る。§Once targeted, it drops more often from elites and bosses. After {1} misses in a row, the {2}th is guaranteed.§목표로 설정하면 엘리트나 보스를 쓰러뜨렸을 때 더 잘 나온다. {1}번 연속으로 안 나오면 {2}번째에는 반드시 나온다.
+re:击败精英或首领时更容易掉落。已 (\d+) 次未掉落，最多再 (\d+) 次必得。§エリートやボスを倒した時に出やすい。すでに {1} 回外れ、あと最大 {2} 回で必ず出る。§Drops more often from elites and bosses. {1} misses so far; guaranteed within {2} more.§엘리트나 보스를 쓰러뜨렸을 때 더 잘 나온다. 지금까지 {1}번 안 나왔고, 최대 {2}번 안에 반드시 나온다.
+初始装备不会掉落，换一件作为目标吧。§初期装備はドロップしないので、別の装備を目標にしよう。§Starter gear doesn't drop; pick something else as your target.§초기 장비는 드롭되지 않으니, 다른 장비를 목표로 하자.
+取消回收目标§回収目標を解除§Clear recovery target§회수 목표 해제
+深网限定 · 不能定向§深網限定・狙えない§Deep Net exclusive · Can't target§딥넷 한정 · 목표 지정 불가
+设为回收目标§回収目標に設定§Set as recovery target§회수 목표로 설정
+re:已集齐 · 核心 \+(\d+)、织网碎片 \+(\d+) 已领取§コンプリート・コア +{1}、織網片 +{2} 受け取り済み§Complete · +{1} Cores, +{2} Weave Shards claimed§완성 · 코어 +{1}, 직조 조각 +{2} 수령함
+re:已收藏 (\d+) / 5 · 集齐给核心 \+(\d+)、织网碎片 \+(\d+)§収集 {1} / 5・コンプリートでコア +{2}、織網片 +{3}§{1} / 5 collected · Complete for +{2} Cores, +{3} Weave Shards§수집 {1} / 5 · 완성하면 코어 +{2}, 직조 조각 +{3}
+TITLE / 称号§TITLE / 称号§TITLE§TITLE / 칭호
+集齐一章的全部 5 套就解锁那一章的称号，显示在整备页的角色脚下。§1章分の5セットをすべて揃えると、その章の称号が解放され、整備画面でキャラクターの足元に表示される。§Complete all 5 sets in a chapter to unlock that chapter's title, shown under your character on the Loadout page.§한 장의 세트 5개를 모두 모으면 그 장의 칭호가 열리고, 정비 화면의 캐릭터 발밑에 표시된다.
+re:第(.)章 · (\d) / 5 套§第{1}章・{2} / 5 セット§Chapter {1} · {2} / 5 sets§{1}장 · {2} / 5 세트
+？？？§？？？§???§???
+取下§外す§Remove§해제
+使用§使う§Use§사용
+本地自动保存§ローカルに自動保存§Autosaved locally§로컬 자동 저장
+存档缺少版本号§セーブデータにバージョン番号がない§Save data has no version number§세이브 데이터에 버전 번호가 없음
+空存档§空のセーブデータ§Empty save data§빈 세이브 데이터
+存档版本较新，已保护原文件；本次为临时进度§セーブデータが新しいバージョンのため元のファイルを保護した。今回の進行は一時的なもの§This save is from a newer version, so the original file is protected; this session's progress is temporary§세이브 데이터의 버전이 더 높아 원본 파일을 보호했습니다. 이번 진행은 임시입니다
+主存档损坏，已从备份恢复§メインのセーブデータが壊れていたので、バックアップから復元した§The main save was damaged and has been restored from the backup§메인 세이브 데이터가 손상되어 백업에서 복구했습니다
+读档失败§読み込み失敗§Failed to load§불러오기 실패
+存档损坏，原文件已保留；本次为临时进度§セーブデータが壊れている。元のファイルは残してある。今回の進行は一時的なもの§The save is damaged; the original file is kept. This session's progress is temporary§세이브 데이터가 손상되었습니다. 원본 파일은 보존했으며 이번 진행은 임시입니다
+保存失败：§保存失敗：§Save failed:§저장 실패:
+黑白橙 · 浅（原版）§白黒オレンジ・明るめ（オリジナル）§Black/White/Orange · Light (original)§흑백주황 · 밝게 (원본)
+黑白橙 · 中灰§白黒オレンジ・中間グレー§Black/White/Orange · Mid gray§흑백주황 · 중간 회색
+黑白橙 · 深灰§白黒オレンジ・ダークグレー§Black/White/Orange · Dark gray§흑백주황 · 짙은 회색

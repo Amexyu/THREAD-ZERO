@@ -224,7 +224,10 @@ namespace ThreadZero
             else if (kind == 3) { fill = hover ? Panel : Ink; text = hover ? Ink : Panel; edge = Panel; }
             else { fill = hover ? Ink : Panel; text = hover ? Panel : Ink; edge = Ink; }
             Fill(x, y, w, h, fill); Frame(x, y, w, h, 2, edge);
-            Text(x, y, w, h, label, size, text, TextAnchor.MiddleCenter, true, numeric);
+            // v0.21 四语：译文比中文长时把字缩小到放得下（最小 9）
+            float fit = size, tw = Width(label, size, true, numeric);
+            if (tw > w - 12) fit = Mathf.Max(9, size * (w - 12) / tw);
+            Text(x, y, w, h, label, fit, text, TextAnchor.MiddleCenter, true, numeric);
             bool hit = enabled && Click(x, y, w, h);
             if (hit) Clicked?.Invoke();
             return hit;

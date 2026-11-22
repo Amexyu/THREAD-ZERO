@@ -1,0 +1,63 @@
+# 工坊（装备台、改造板、芯片 / 改装件）GameAppWorkshop.cs
+re:零件回收 \+([\d.]+)%、幸运 \+([\d.]+)§パーツ回収 +{1}%、幸運 +{2}§Parts Recovery +{1}%, Luck +{2}§부품 회수 +{1}%, 행운 +{2}
+re:(.+) · 现在 (.+)§{1}・現在 {2}§{1} · Now {2}§{1} · 현재 {2}
+re:连升 10 级 · (\d+)§10レベル一気に・{1}§+10 levels · {1}§10레벨 연속 · {1}
+re:(.+) 升到 Lv\.(\d+)§{1} が Lv.{2} に上がった§{1} is now Lv.{2}§{1} Lv.{2} 달성
+re:第(.)章开放 · 核心 (\d+)§第{1}章で開放・コア {2}§Unlocks in Chapter {1} · {2} Cores§{1}장 개방 · 코어 {2}
+re:第(.)章开放§第{1}章で開放§Unlocks in Chapter {1}§{1}장에서 개방
+re:激活 · 核心 (\d+)§有効化・コア {1}§Activate · {1} Cores§활성화 · 코어 {1}
+re:核心不足（持有 (\d+)）§コア不足（所持 {1}）§Not enough Cores (have {1})§코어 부족 (보유 {1})
+re:改造板节点激活：(.+) · (.+)§改造ボードのノードを有効化：{1}・{2}§Mod Board node activated: {1} · {2}§개조판 노드 활성화: {1} · {2}
+re:先激活「(.+)」§先に「{1}」を有効化§Activate "{1}" first§먼저 「{1}」 활성화
+re:突破完成：(.+) 现在是「(.+)」§突破完了：{1} は「{2}」になった§Breakthrough complete: {1} is now {2}§돌파 완료: {1}이(가) 「{2}」이(가) 되었다
+re:Lv\.(\d+)  /  许可上限 Lv\.(\d+)§Lv.{1}  /  許可上限 Lv.{2}§Lv.{1}  /  License cap Lv.{2}§Lv.{1}  /  허가 상한 Lv.{2}
+re:消耗 零件 (\d+)（持有 (\d+)）· 随机词条的数值会同步提高§消費 パーツ {1}（所持 {2}）・ランダム能力の数値も一緒に上がる§Costs {1} parts (have {2}) · Random stats scale up too§소모 부품 {1} (보유 {2}) · 랜덤 능력치도 함께 오른다
+re:升级到 Lv\.(\d+)§Lv.{1} に強化§Upgrade to Lv.{1}§Lv.{1}로 강화
+re:洗炼（锁 (\d+) 条） · 零件 (\d+)§リフォージ（{1}つロック）・パーツ {2}§Reforge ({1} locked) · {2} parts§재련 ({1}개 잠금) · 부품 {2}
+re:洗炼全部 · 零件 (\d+)§すべてリフォージ・パーツ {1}§Reforge all · {1} parts§전부 재련 · 부품 {1}
+re:重校 · 零件 (\d+)§再調整・パーツ {1}§Recalibrate · {1} parts§재조정 · 부품 {1}
+re:这件装备没有随机词条。(.+)及以上的装备才有。§この装備にはランダム能力がない。{1}以上の装備にだけ付く。§This gear has no random stats. Only {1} or better gear has them.§이 장비에는 랜덤 능력치가 없다. {1} 이상의 장비에만 붙는다.
+re:进入第四章后开放：用核心把「(.+)」突破为「(.+)」§第四章で開放：コアを使って「{1}」を「{2}」に突破§Unlocks in Chapter 4: use Cores to break {1} through to {2}§4장에서 개방: 코어로 「{1}」을(를) 「{2}」(으)로 돌파
+re:先把等级升到 Lv\.(\d+)，再用核心突破为「(.+)」§まず Lv.{1} まで強化してから、コアで「{2}」に突破§Raise it to Lv.{1} first, then use Cores to break through to {2}§먼저 Lv.{1}까지 강화한 뒤 코어로 「{2}」(으)로 돌파
+re:突破为「(.+)」· 多一条词条，属性更高§「{1}」に突破・能力が1つ増え、数値も上がる§Break through to {1} · one more stat, higher values§「{1}」(으)로 돌파 · 능력치 1개 추가, 수치 상승
+re:核心 (\d+)（持有 (\d+)）§コア {1}（所持 {2}）§{1} Cores (have {2})§코어 {1} (보유 {2})
+re:芯片槽 (\d+) 个 · 改装位 1 个 · 进入第五章后开放§チップスロット {1}・改装スロット 1・第五章で開放§{1} chip slots · 1 mod slot · Unlocks in Chapter 5§칩 슬롯 {1}개 · 개조 슬롯 1개 · 5장에서 개방
+re:这个槽里已有「(.+)」（(.+)），植入新的会把它销毁。§このスロットには「{1}」（{2}）が入っている。新しいチップを埋め込むと破壊される。§This slot already holds {1} ({2}). Installing a new chip destroys it.§이 슬롯에는 이미 「{1}」({2})이(가) 있다. 새 칩을 이식하면 파괴된다.
+re:已植入：(.+) · (.+)§埋め込み完了：{1}・{2}§Installed: {1} · {2}§이식 완료: {1} · {2}
+re:当前：(.+)§現在：{1}§Current: {1}§현재: {1}
+re:(.+)   持有 (\d+)§{1}   所持 {2}§{1}   Have {2}§{1}   보유 {2}
+re:已装上改装件：(.+)§改装パーツを装着：{1}§Mod installed: {1}§개조 부품 장착: {1}
+re:制作 · 核心 (\d+)§製作・コア {1}§Craft · {1} Cores§제작 · 코어 {1}
+re:制作了改装件：(.+)（持有核心 (\d+)）§改装パーツを製作：{1}（所持コア {2}）§Crafted mod: {1} ({2} Cores left)§개조 부품 제작: {1} (보유 코어 {2})
+re:持有核心 (\d+)（核心也用于突破和组装机器人）§所持コア {1}（コアは突破やロボットの組み立てにも使う）§Cores: {1} (also used for breakthroughs and building robots)§보유 코어 {1} (코어는 돌파와 로봇 조립에도 쓰인다)
+已激活§有効§Active§활성화됨
+✓ 已激活§✓ 有効§✓ Active§✓ 활성화됨
+装备台§装備台§Bench§장비대
+改造板§改造ボード§Mod Board§개조판
+机库§格納庫§Hangar§격납고
+机库 · 第二章开放§格納庫・第二章で開放§Hangar · Unlocks in Chapter 2§격납고 · 2장에서 개방
+等级上限§レベル上限§Level Cap§레벨 상한
+核心§コア§Cores§코어
+从左边选一件装备\n在这里升级、重校词条或突破§左から装備を選ぶと\nここで強化・能力の再調整・突破ができる§Pick gear on the left\nto upgrade, recalibrate or break it through here§왼쪽에서 장비를 고르면\n여기서 강화, 능력치 재조정, 돌파를 할 수 있다
+UPGRADE / 升级§UPGRADE / 強化§UPGRADE§UPGRADE / 강화
+已到许可上限。击败下一关的首领后可以继续升级。§許可上限に達した。次のボスを倒すとさらに強化できる。§License cap reached. Beat the next boss to keep upgrading.§허가 상한에 도달했다. 다음 보스를 쓰러뜨리면 계속 강화할 수 있다.
+已到上限§上限到達§Maxed§상한 도달
+RECALIBRATE / 重校 · 洗炼§RECALIBRATE / 再調整・リフォージ§RECALIBRATE / REFORGE§RECALIBRATE / 재조정 · 재련
+洗炼 · 进入第三章后开放§リフォージ・第三章で開放§Reforge · Unlocks in Chapter 3§재련 · 3장에서 개방
+洗炼§リフォージ§Reforge§재련
+已锁§ロック中§Locked§잠김
+重校 · 第二章开放§再調整・第二章で開放§Recalibrate · Unlocks in Chapter 2§재조정 · 2장에서 개방
+重校：只换这一条。洗炼：没锁的全部重抽，每锁一条费用多一倍。特装及以上可能出橙色的特殊词条（暴击伤害、特效伤害、首领伤害、零件回收）。§再調整：この1つだけ引き直す。リフォージ：ロックしていない能力をすべて引き直す（1つロックするごとに費用2倍）。特装以上ではオレンジ色の特殊能力（会心ダメージ・効果ダメージ・ボスダメージ・パーツ回収）が出ることがある。§Recalibrate: reroll just this one. Reforge: reroll everything that isn't locked; each lock doubles the cost. Special or better gear can roll orange special stats (Crit Damage, Effect Damage, Boss Damage, Parts Recovery).§재조정: 이 하나만 다시 뽑는다. 재련: 잠그지 않은 능력치를 모두 다시 뽑으며, 하나 잠글 때마다 비용이 2배. 특장 이상에서는 주황색 특수 능력치(치명타 피해, 효과 피해, 보스 피해, 부품 회수)가 나올 수 있다.
+芯片§チップ§Chips§칩
+没有芯片槽（特装及以上才有）§チップスロットなし（特装以上のみ）§No chip slots (Special or better only)§칩 슬롯 없음 (특장 이상만)
+空槽 · 植入§空きスロット・埋め込む§Empty · Install§빈 슬롯 · 이식
+空槽§空きスロット§Empty§빈 슬롯
+空 · 装上§空き・装着§Empty · Install§비어 있음 · 장착
+空 · 制作§空き・製作§Empty · Craft§비어 있음 · 제작
+芯片植入后不能拆。以后往这个槽里植入新的，旧的会被销毁。数值随这件装备的等级上涨。§チップは一度埋め込むと外せない。このスロットに新しいチップを埋め込むと、古いものは破壊される。数値はこの装備のレベルに応じて上がる。§Chips can't be removed once installed. Installing a new chip in this slot destroys the old one. Values grow with this gear's level.§칩은 한번 이식하면 뗄 수 없다. 이 슬롯에 새 칩을 이식하면 이전 칩은 파괴된다. 수치는 이 장비의 레벨에 따라 오른다.
+还没有芯片。精英、首领有机会掉落，深网首领层更容易。§まだチップがない。エリートやボスが落とすことがあり、深網のボス層ならもっと出やすい。§No chips yet. Elites and bosses can drop them, and Deep Net boss floors drop them more often.§아직 칩이 없다. 엘리트와 보스가 떨어뜨릴 수 있으며, 딥넷 보스 층에서 더 잘 나온다.
+植入§埋め込む§Install§이식
+改装件给这件装备加一个模块效果，和装备自带的效果算在一起（同一种最多两份）。可以随时换，换下来的回到库存。§改装パーツはこの装備にモジュール効果を1つ追加し、装備本来の効果と合算される（同じ効果は最大2つ分）。いつでも付け替えられ、外したものは在庫に戻る。§A mod adds one module effect to this gear, stacking with its built-in effect (up to 2 of the same kind). Swap anytime; removed mods go back to your stock.§개조 부품은 이 장비에 모듈 효과 하나를 더하며, 장비 고유 효과와 합산된다(같은 효과는 최대 2개분). 언제든 바꿀 수 있고, 뺀 것은 재고로 돌아간다.
+卸下§外す§Remove§해제
+已装上§装着中§Installed§장착됨
+装上§装着§Install§장착

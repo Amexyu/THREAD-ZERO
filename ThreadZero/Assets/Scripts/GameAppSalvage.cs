@@ -7,7 +7,7 @@ namespace ThreadZero
     // 一键分解与自动分解。穿戴中、已锁定的装备永远不会被处理；收藏的外观不受分解影响。
     public sealed partial class GameApp
     {
-        private static readonly string[] AutoSalvageNames = { "关闭", "仅量产", "改良及以下" };
+        private static readonly string[] AutoSalvageNames = { "关", "仅量产", "改良及以下" };
         private int autoSalvagedCount, autoSalvagedScrap;
 
         private bool CanSalvage(Item item)

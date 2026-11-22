@@ -108,13 +108,13 @@ namespace ThreadZero
                 if (Ui.Button(x + w - 432 + i * 80, row, 76, 48, GameAudio.LevelNames[i], gameAudio.SfxLevel == i ? 2 : 0, true, 13)) gameAudio.SetSfx(i);
             row += 68;
             Ui.Text(x + 32, row, 300, 48, "装备辉光", 17, Ui.Ink, TextAnchor.MiddleLeft, true);
-            string[] glow = { "关闭", "低强度", "完整" };
+            string[] glow = { "关", "低强度", "完整" };   // v0.21 「关」= 关掉（「关闭」留给弹窗的关闭按钮，翻译时两个意思不一样）
             for (int i = 0; i < 3; i++)
                 if (Ui.Button(x + w - 292 + i * 88, row, 84, 48, glow[i], model.state.glowMode == i ? 2 : 0, true, 14)) { model.state.glowMode = i; Save(); }
             row += 68;
             // v0.20 技能连招加了震屏，给怕晕的玩家一个开关（存的值 0 完整 / 1 减弱 / 2 关闭，老存档默认完整；顿帧不受影响）
             Ui.Text(x + 32, row, 300, 48, "震屏", 17, Ui.Ink, TextAnchor.MiddleLeft, true);
-            string[] shake = { "关闭", "减弱", "完整" };
+            string[] shake = { "关", "减弱", "完整" };
             for (int i = 0; i < 3; i++)
                 if (Ui.Button(x + w - 292 + i * 88, row, 84, 48, shake[i], model.state.shakeMode == 2 - i ? 2 : 0, true, 14)) { model.state.shakeMode = 2 - i; Save(); }
             row += 68;
