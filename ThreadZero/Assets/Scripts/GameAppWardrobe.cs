@@ -72,7 +72,7 @@ namespace ThreadZero
                 Ui.Fill(x, y, cardW, cardH, hover ? Ui.Tile2 : Ui.Tile);
                 Ui.Text(x + 10, y + 6, 60, 22, "0" + (i + 1), 15, Ui.MuteOnInk, TextAnchor.MiddleLeft, true, true);
                 PaperDollView.DrawEquipmentIcon(b, Ui.R(x + (cardW - 136) / 2, y + 28, 136, 136), !has);
-                Ui.Text(x, y + 170, cardW, 26, b.name, 16, has ? Ui.Panel : Ui.MuteOnInk, TextAnchor.MiddleCenter, true);
+                Ui.FitText(x + 4, y + 170, cardW - 8, 26, b.name, 16, has ? Ui.Panel : Ui.MuteOnInk, TextAnchor.MiddleCenter, true);
                 Ui.Text(x, y + 198, cardW, 22, has ? "已收藏" : "未收藏 · " + Catalog.SourceShort(b.id), 13, has ? Ui.MuteOnInk : Ui.Grey, TextAnchor.MiddleCenter);
                 if (model.Appearance(b.slot).id == b.id) { Ui.Fill(x + cardW - 74, y, 74, 24, Ui.Panel); Ui.Text(x + cardW - 74, y, 74, 24, "当前外观", 12, Ui.Ink, TextAnchor.MiddleCenter, true); }
                 if (model.state.recoveryTarget == b.id) { Ui.Fill(x, y + cardH - 24, cardW, 24, Ui.Orange); Ui.Text(x, y + cardH - 24, cardW, 24, "回收目标", 12, Ui.OnAccent, TextAnchor.MiddleCenter, true); }
@@ -87,7 +87,7 @@ namespace ThreadZero
             string effectName, effectText; SplitEffect(chosen.effect, out effectName, out effectText);
             Ui.Fill(588, 380, 980, 496, Ui.Panel);
             Ui.Text(612, 400, 400, 18, "LOOK / " + Catalog.SlotNames[(int)chosen.slot] + "外观", 13, Ui.Mute, TextAnchor.MiddleLeft, true, true);
-            Ui.Text(612, 422, 560, 52, chosen.name, 36, Ui.Ink, TextAnchor.MiddleLeft, true);
+            Ui.FitText(612, 422, 560, 52, chosen.name, 36, Ui.Ink, TextAnchor.MiddleLeft, true);
             string regionLabel = "产地 · " + regionName; float regionWidth = Ui.Width(regionLabel, 14, true) + 58;
             Ui.Fill(612, 488, regionWidth, 32, Ui.Ink);
             Ui.Text(624, 488, 30, 32, "01", 17, Ui.Orange, TextAnchor.MiddleLeft, true, true);
@@ -143,7 +143,7 @@ namespace ThreadZero
                     bool hover = Ui.Hover(x, hy, 114, 84);
                     Ui.Fill(x, hy, 114, 84, hover ? Ui.Tile2 : done ? Ui.Steel : Ui.Tile2);
                     PaperDollView.DrawEquipmentIcon(b, Ui.R(x + 29, hy + 4, 56, 56), !has);
-                    Ui.Text(x + 2, hy + 62, 110, 20, b.name, 11, has ? Ui.Panel : Ui.Grey, TextAnchor.MiddleCenter);
+                    Ui.FitText(x + 3, hy + 62, 108, 20, b.name, 11, has ? Ui.Panel : Ui.Grey, TextAnchor.MiddleCenter);
                     if (Ui.Click(x, hy, 114, 84)) { wardrobeSlot = (int)b.slot; selectedLook = b.id; wardrobeSets = false; }   // 点一件：跳到这件的外观详情
                 }
             }

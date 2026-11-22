@@ -25,7 +25,7 @@
 零号战装§零号戦装§Zero Battle Gear§제로 전투 장비
 沉降区回收员§沈降区の回収員§Sinkzone Recycler§침강 구역의 회수원
 物流高架装卸长§物流高架の荷役長§Overpass Loadmaster§물류 고가의 하역장
-信号禁区断讯者§信号禁区の断信者§Signal Silencer§신호 금지 구역의 단신자
+信号禁区断讯者§信号禁区の断信者§Dead Zone Silencer§신호 금지 구역의 단신자
 镜面上城的访客§鏡面上層街の訪問者§Visitor of Mirror Uptown§거울 상층 도시의 방문자
 零号的织工§零号の織り手§Weaver of Zero§제로의 직조공
 电弧：每三次攻击追加伤害§アーク：3回攻撃ごとに追加ダメージ§Arc: bonus damage every third attack§아크: 공격 3회마다 추가 피해
@@ -70,7 +70,7 @@
 回收§回収§Salvage§회수
 每级攻击 +1.5§1レベルごとに攻撃 +1.5§Attack +1.5 per level§레벨당 공격 +1.5
 每级生命 +8§1レベルごとに体力 +8§HP +8 per level§레벨당 체력 +8
-每级零件回收 +0.4%、幸运 +0.05§1レベルごとにパーツ回収 +0.4%、幸運 +0.05§Parts Recovery +0.4% and Luck +0.05 per level§레벨당 부품 회수 +0.4%, 행운 +0.05
+每级零件回收 +0.4%、幸运 +0.05§Lvごとにパーツ +0.4%、幸運 +0.05§+0.4% Parts, +0.05 Luck per level§레벨당 부품 +0.4%, 행운 +0.05
 连击校准§連撃キャリブレーション§Combo Calibration§연격 보정
 首领克星§ボスキラー§Boss Breaker§보스 킬러
 过载释放§オーバーロード解放§Overload Release§과부하 해방

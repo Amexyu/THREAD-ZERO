@@ -71,7 +71,7 @@ TARGET / 回收目标§TARGET / 回収目標§TARGET / Recovery Target§TARGET /
 小时§時間§h§시간
 分钟§分§min§분
 收下§受け取る§Collect§받기
-re:第(.)章 · (.+)§第{1}章・{2}§Chapter {1} · {2}§{1}장 · {2}
+re:第(.)章 · (.+)§第{1}章・{2}§Ch.{1} · {2}§{1}장 · {2}
 通过上一关后开放§前のステージをクリアすると開放§Unlocks after clearing the previous stage§이전 스테이지를 클리어하면 개방
 re:首领：(.+) · 会呼叫支援§ボス：{1}・増援を呼ぶ§Boss: {1} · Calls reinforcements§보스: {1} · 지원을 부름
 re:(\d+) 波 · 约 (\d+) 只§{1}ウェーブ・約{2}体§{1} waves · about {2} enemies§{1}웨이브 · 약 {2}마리

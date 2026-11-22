@@ -56,7 +56,7 @@ namespace ThreadZero
                 EquipmentBase b = Catalog.Find(item.baseId);
                 Ui.ItemTile(x + 5, y + 5, 42, 42, b, item.quality, true, false, 3, false);
                 Ui.Text(x + 56, y + 5, 136, 16, Catalog.SlotNames[i] + " · " + Catalog.QualityNames[(int)item.quality] + " Lv." + item.level, 11, Ui.Mute, TextAnchor.MiddleLeft);
-                Ui.Text(x + 56, y + 22, 136, 24, b.name, 14, Ui.Ink, TextAnchor.MiddleLeft, true);
+                Ui.FitText(x + 56, y + 22, 136, 24, b.name, 14, Ui.Ink, TextAnchor.MiddleLeft, true);
                 if (Ui.Click(x, y, tw, th)) { ResetInventoryFilters(); SelectItem(item); slotFilter = i; inventoryScroll = 0; }
             }
 
@@ -231,7 +231,7 @@ namespace ThreadZero
                 if (equipped) { Ui.Fill(tx + tileW - 50, ty, 50, 20, Ui.Panel); Ui.Text(tx + tileW - 50, ty, 50, 20, "穿戴中", 11, Ui.Ink, TextAnchor.MiddleCenter, true); }
                 else if (unseen.Contains(item.uid)) { Ui.Fill(tx + tileW - 26, ty, 26, 20, Ui.Orange); Ui.Text(tx + tileW - 26, ty, 26, 20, "新", 11, Ui.OnAccent, TextAnchor.MiddleCenter, true); }
                 if (item.locked) Ui.IconLock(tx + 8, ty + 26, Ui.MuteOnInk);
-                Ui.Text(tx, ty + 96, tileW, 22, b.name, 12, quality, TextAnchor.MiddleCenter, true);
+                Ui.FitText(tx + 2, ty + 96, tileW - 4, 22, b.name, 12, quality, TextAnchor.MiddleCenter, true);
                 Ui.Fill(tx, ty + tileH - 5, tileW, 5, quality);
                 if (inside && Ui.Click(tx, ty, tileW, tileH)) SelectItem(item);
             }
@@ -253,7 +253,7 @@ namespace ThreadZero
             Ui.Fill(1176, 44, 108, 108, Ui.Tile2); PaperDollView.DrawEquipmentIcon(b, Ui.R(1183, 51, 94, 94));
             Ui.Text(1300, 48, 256, 22, Catalog.QualityNames[(int)item.quality] + " · " + Catalog.SlotNames[(int)b.slot] + " · Lv." + item.level
                 + (b.slot == Slot.Weapon ? (Catalog.IsGroupWeapon(b.id) ? " · 群伤" : " · 单体") : ""), 14, quality, TextAnchor.MiddleLeft, true);   // v0.20 武器标群伤 / 单体，卡关提示里说的「换群伤武器」有地方看
-            Ui.Text(1300, 74, 256, 40, b.name, 24, Ui.Panel, TextAnchor.MiddleLeft, true);
+            Ui.FitText(1300, 74, 256, 40, b.name, 24, Ui.Panel, TextAnchor.MiddleLeft, true);
             Ui.Text(1300, 118, 256, 22, equippedNow ? "穿戴中" : item.locked ? "已锁定 · 不会被分解" : "背包中", 13, Ui.MuteOnInk, TextAnchor.MiddleLeft);
 
             Item worn = model.Equipped(b.slot);

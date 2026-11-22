@@ -23,7 +23,7 @@ namespace ThreadZero
                 Ui.Text(x + w - 220, 164, 200, 42, "Lv." + lv, 32, Ui.Orange, TextAnchor.MiddleRight, true, true);
                 string total = bi == 0 ? "攻击 +" + (lv * Balance.TrainingAttack).ToString("0.#") : bi == 1 ? "生命 +" + (lv * Balance.TrainingHealth).ToString("0")
                              : "零件回收 +" + (lv * Balance.BoardScrap * 100).ToString("0.#") + "%、幸运 +" + (lv * Balance.BoardLuck).ToString("0.##");
-                Ui.Text(x + 20, 204, w - 40, 22, Catalog.BoardPerLevel[bi] + " · 现在 " + total, 13, Ui.MuteOnInk, TextAnchor.MiddleLeft);
+                Ui.FitText(x + 20, 204, w - 40, 22, Catalog.BoardPerLevel[bi] + " · 现在 " + total, 13, Ui.MuteOnInk, TextAnchor.MiddleLeft);
                 int ten = 0; for (int k = 0; k < 10; k++) ten += Math.Max(10, (20 + 15 * (lv + k)) / 2);
                 if (Ui.Button(x + 20, 238, 232, 52, "升级 · 零件 " + cost, 1, model.CanUpgradeBoard(bi), 15) && model.UpgradeBoard(bi))
                 { combat.ClampHealth(); Save(); Play(equipSound); }
@@ -56,10 +56,11 @@ namespace ThreadZero
 
         private void WorkshopPage()
         {
-            Ui.Text(128, 16, 120, 52, "工坊", 30, Ui.Ink, TextAnchor.MiddleLeft, true);
+            float titleW = Ui.Width("工坊", 30, true);   // v0.21 四语：标题变长时页签跟着往右挪
+            Ui.Text(128, 16, titleW + 12, 52, "工坊", 30, Ui.Ink, TextAnchor.MiddleLeft, true);
             // v0.21 三个页签都能用：装备台、改造板（取代训练）、机库（机器人）
             string[] tabs = { "装备台", "改造板", model.HangarUnlocked ? "机库" : "机库 · 第二章开放" };
-            float tabX = 250;
+            float tabX = Mathf.Max(250, 128 + titleW + 28);
             for (int i = 0; i < 3; i++)
             {
                 bool open = i < 2 || model.HangarUnlocked; float width = Math.Max(120, Ui.Width(tabs[i], 14) + 40);
@@ -116,7 +117,7 @@ namespace ThreadZero
                 PaperDollView.DrawEquipmentIcon(b, Ui.R(x + (tileW - 74) / 2, y + 18, 74, 74));
                 LevelTag(item, x, y);
                 if (model.state.equipped.Contains(item.uid)) { Ui.Fill(x + tileW - 50, y, 50, 20, Ui.Panel); Ui.Text(x + tileW - 50, y, 50, 20, "穿戴中", 11, Ui.Ink, TextAnchor.MiddleCenter, true); }
-                Ui.Text(x, y + 96, tileW, 22, b.name, 12, quality, TextAnchor.MiddleCenter, true);
+                Ui.FitText(x + 2, y + 96, tileW - 4, 22, b.name, 12, quality, TextAnchor.MiddleCenter, true);
                 Ui.Fill(x, y + tileH - 5, tileW, 5, quality);
                 if (inside && Ui.Click(x, y, tileW, tileH)) SelectItem(item);
             }
@@ -211,7 +212,7 @@ namespace ThreadZero
             Ui.Fill(748, 156, 820, 132, Ui.Ink); Ui.Fill(748, 156, 820, 8, quality);
             Ui.Fill(764, 180, 92, 92, Ui.Tile2); PaperDollView.DrawEquipmentIcon(b, Ui.R(770, 186, 80, 80));
             Ui.Text(876, 182, 500, 22, Catalog.QualityNames[(int)item.quality] + " · " + Catalog.SlotNames[slot], 14, quality, TextAnchor.MiddleLeft, true);
-            Ui.Text(876, 206, 500, 40, b.name, 24, Ui.Panel, TextAnchor.MiddleLeft, true);
+            Ui.FitText(876, 206, 460, 40, b.name, 24, Ui.Panel, TextAnchor.MiddleLeft, true);
             Ui.Text(876, 248, 500, 22, "Lv." + item.level + "  /  许可上限 Lv." + license, 14, Ui.MuteOnInk, TextAnchor.MiddleLeft);
             if (item.level >= license) MaxBadge(766, 182);
             if (benchFxUid == item.uid) BenchFxDraw(item, quality);

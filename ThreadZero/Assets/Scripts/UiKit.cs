@@ -187,6 +187,14 @@ namespace ThreadZero
         }
         /// v0.20 直接压在战斗背景上的字（关卡号、波数、伤害数字、首领名）：先画一层深色投影再画字。
         /// 第四章「镜面上城」背景很亮（象牙白、天空），浅色字原来几乎看不见。投影色不在配色映射表里，任何配色方案下都是深色。
+        /// v0.21 四语：单行文字，译文比 w 宽时把字号缩到放得下（最小 9）。
+        public static void FitText(float x, float y, float w, float h, string value, float size, Color color,
+            TextAnchor anchor = TextAnchor.UpperLeft, bool bold = false, bool numeric = false)
+        {
+            if (string.IsNullOrEmpty(value)) return;
+            float tw = Width(value, size, bold, numeric);
+            Text(x, y, w, h, value, tw > w ? Mathf.Max(9, size * w / tw) : size, color, anchor, bold, numeric);
+        }
         public static void ShadowText(float x, float y, float w, float h, string value, float size, Color color,
             TextAnchor anchor = TextAnchor.UpperLeft, bool bold = false, bool numeric = false, float strength = .6f)
         {

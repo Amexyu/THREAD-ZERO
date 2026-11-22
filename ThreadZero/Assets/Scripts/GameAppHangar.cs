@@ -97,11 +97,11 @@ namespace ThreadZero
                 RobotPortrait(r, x + 104, y + h - 8, 132, Color.white);
                 Ui.Text(x + 196, y + 26, 360, 34, d.name, 22, Ui.Panel, TextAnchor.MiddleLeft, true);
                 Ui.Text(x + w - 200, y + 22, 180, 40, "Lv." + model.state.robotLevels[r], 28, Ui.Orange, TextAnchor.MiddleRight, true, true);
-                Ui.Text(x + 196, y + 62, w - 216, 20, Catalog.RobotRoles[d.role] + " · " + d.desc, 13, Ui.MuteOnInk, TextAnchor.MiddleLeft);
-                Ui.Text(x + 196, y + 84, w - 216, 20, RobotStatText(r, s), 13, Ui.Panel, TextAnchor.MiddleLeft);
+                Ui.FitText(x + 196, y + 62, w - 216, 20, Catalog.RobotRoles[d.role] + " · " + d.desc, 13, Ui.MuteOnInk, TextAnchor.MiddleLeft);
+                Ui.FitText(x + 196, y + 84, w - 356, 20, RobotStatText(r, s), 13, Ui.Panel, TextAnchor.MiddleLeft);
                 if (Ui.Button(x + w - 140, y + h - 50, 120, 36, "撤下", 0, true, 13)) { model.Undeploy(r); combat.RobotsChanged(); Save(); }
             }
-            Ui.Text(128, 312, 1440, 22, "最多上场两台，同一分工（前排 / 后排 / 支援）只能上一台 · 打对应的怪掉图纸碎片，首领必掉 3 片 · 集满 10 片组装 · 升级每级 +5%，最高 " + Catalog.RobotMaxLevel + " 级", 12, Ui.Mute, TextAnchor.MiddleLeft);
+            Ui.FitText(128, 312, 1440, 22, "最多上场两台，同一分工（前排 / 后排 / 支援）只能上一台 · 打对应的怪掉图纸碎片，首领必掉 3 片 · 集满 10 片组装 · 升级每级 +5%，最高 " + Catalog.RobotMaxLevel + " 级", 12, Ui.Mute, TextAnchor.MiddleLeft);
             for (int i = 0; i < Catalog.RobotCount; i++)
                 RobotCard(i, 128 + (i % 4) * 364, 342 + (i / 4) * 268, 352, 256, s);
         }
@@ -115,7 +115,7 @@ namespace ThreadZero
             RobotPortrait(i, x + 74, y + 142, 124, built ? Color.white : open ? new Color(.25f, .27f, .3f, .55f) : new Color(.2f, .2f, .22f, .22f));
             Ui.Text(x + 146, y + 14, w - 160, 26, d.name, 17, ink, TextAnchor.MiddleLeft, true);
             Ui.Text(x + 146, y + 40, w - 160, 18, Catalog.RobotRoles[d.role] + (built ? " · Lv." + model.state.robotLevels[i] : " · 第" + Catalog.ChapterNumber(d.chapter) + "章"), 12, on ? Ui.Orange : mute, TextAnchor.MiddleLeft, built);
-            Ui.Text(x + 146, y + 60, w - 160, 70, d.desc, 12, on ? Ui.Panel : open ? Ui.Body : Ui.Grey, TextAnchor.UpperLeft);
+            Ui.Text(x + 146, y + 60, w - 160, 70, d.desc, 12, on ? Ui.Panel : open ? Ui.Body : Ui.Grey, TextAnchor.UpperLeft, false, false, true);
             if (!open)
             {
                 Ui.Text(x + 16, y + h - 46, w - 32, 34, "第" + Catalog.ChapterNumber(d.chapter) + "章开放", 14, Ui.Grey, TextAnchor.MiddleCenter);
@@ -123,7 +123,7 @@ namespace ThreadZero
             }
             if (built)
             {
-                Ui.Text(x + 16, y + 152, w - 32, 36, RobotStatText(i, s), 12, on ? Ui.Panel : Ui.Body, TextAnchor.UpperLeft);
+                Ui.Text(x + 16, y + 152, w - 32, 36, RobotStatText(i, s), 12, on ? Ui.Panel : Ui.Body, TextAnchor.UpperLeft, false, false, true);
                 int lv = model.state.robotLevels[i]; bool max = lv >= Catalog.RobotMaxLevel;
                 if (Ui.Button(x + 16, y + h - 52, (w - 40) * .56f, 38, max ? "已满级" : "升级 · 零件 " + Catalog.RobotUpgradeScrap(lv), 1, model.CanUpgradeRobot(i), 13) && model.UpgradeRobot(i))
                 { combat.RobotsChanged(); Save(); Play(equipSound); }
@@ -135,7 +135,7 @@ namespace ThreadZero
             }
             // 还没组装：图纸进度 + 掉落提示 + 组装
             int have = model.state.blueprints[i];
-            Ui.Text(x + 16, y + 152, w - 32, 18, d.art == null ? "机库开放时送的" : "打「" + RobotMob[i] + "」等" + EnemyRoleNames[(int)d.source] + "怪、首领掉落", 12, Ui.Mute, TextAnchor.MiddleLeft);
+            Ui.FitText(x + 16, y + 152, w - 32, 18, d.art == null ? "机库开放时送的" : "打「" + RobotMob[i] + "」等" + EnemyRoleNames[(int)d.source] + "怪、首领掉落", 12, Ui.Mute, TextAnchor.MiddleLeft);
             Ui.Fill(x + 16, y + 176, w - 32, 10, Ui.Rule); Ui.Fill(x + 16, y + 176, (w - 32) * have / (float)Catalog.BlueprintNeed, 10, Ui.Orange);
             Ui.Text(x + 16, y + 186, w - 32, 18, "图纸碎片 " + have + " / " + Catalog.BlueprintNeed, 12, Ui.Body, TextAnchor.MiddleRight, true, true);
             bool can = model.CanAssemble(i);

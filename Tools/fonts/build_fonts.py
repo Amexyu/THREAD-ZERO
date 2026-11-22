@@ -42,7 +42,10 @@ def build():
     for lang, chars in sets.items():
         for weight, path in TTC.items():
             font = TTCollection(path).fonts[FACE[lang]]
-            opts = subset.Options(); opts.layout_features = ['*']; opts.name_IDs = ['*']; opts.name_languages = ['*']; opts.notdef_outline = True; opts.glyph_names = False
+            # layout_features 只留空：游戏里不用 OpenType 特性（地区字形已经靠拆成 SC / JP / KR 三个字体解决），不留就不会带上一万多个替换字形。
+            # retain_gids：字形编号保持和原字体一样。不这样的话，每次重裁（字多了几个）后面所有字形的编号都会挪位，
+            # Unity 编辑器不重启时还留着按旧编号缓存的字形，个别字就会画成别的字（11-23 遇到：日文「私」画成「秒」、韩文字体里「種」画成「窗」）。
+            opts = subset.Options(); opts.layout_features = []; opts.name_IDs = ['*']; opts.name_languages = ['*']; opts.notdef_outline = True; opts.glyph_names = False; opts.retain_gids = True
             sub = subset.Subsetter(opts); sub.populate(text=''.join(sorted(chars))); sub.subset(font)
             dst = os.path.join(OUT, 'NotoSans%s-%s.otf' % (lang, weight)); font.save(dst)
             print(os.path.basename(dst), len(chars), 'chars', os.path.getsize(dst) // 1024, 'KB')

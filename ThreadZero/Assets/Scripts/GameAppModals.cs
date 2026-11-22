@@ -15,7 +15,7 @@ namespace ThreadZero
             string title = map ? "选择街区" : offline ? "欢迎回来" : navigation.Modal == GameModal.Help ? "行动指南" : navigation.Modal == GameModal.Salvage ? "一键分解"
                 : navigation.Modal == GameModal.Socket ? (socketSlot >= 0 ? "植入芯片" : "改装位") : "设置";
             Ui.Fill(x, y, w, h, Ui.Panel); Ui.Fill(x, y, w, 72, Ui.Ink); Ui.Fill(x, y, 8, 72, Ui.Orange);
-            Ui.Text(x + 32, y, w - 160, 72, title, 22, Ui.Panel, TextAnchor.MiddleLeft, true);
+            Ui.FitText(x + 32, y, map ? 92 : w - 160, 72, title, 22, Ui.Panel, TextAnchor.MiddleLeft, true);   // 选关的标题右边紧挨着五个章节页签
             Ui.Frame(x, y, w, h, 2, Ui.Ink);
             if (Ui.Button(x + w - 108, y + 14, 92, 44, "关闭", 3, true, 15)) { navigation.Close(); return; }
             switch (navigation.Modal)

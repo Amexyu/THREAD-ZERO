@@ -84,7 +84,7 @@
 母线机房§母線機械室§Busbar Room§모선 기계실
 沉降区§沈降区§The Sinkzone§침강 구역
 物流高架§物流高架§Freight Overpass§물류 고가
-信号禁区§信号禁区§Signal Exclusion Zone§신호 금지 구역
+信号禁区§信号禁区§Dead Zone§신호 금지 구역
 镜面上城§鏡面上層街§Mirror Uptown§거울 상층 도시
 零号织网§零号織網§Weave Zero§제로 직조망
 回收员从沉降区最底部的排污口爬了出来§回収員は沈降区の最下層、排水口から這い出した§The Recycler crawled out of the outfall at the very bottom of the Sinkzone§회수원은 침강 구역 맨 밑바닥의 배수구에서 기어 나왔다
@@ -101,14 +101,14 @@
 分拣仓把一切都当作货物处理，包括人§仕分け倉庫は何もかもを貨物として扱う。人間さえも§The sorting bay treats everything as cargo, people included§분류 창고는 모든 것을 화물로 취급한다. 사람까지도
 传送干线的尽头亮着总调度塔的灯§搬送幹線の果てに、総管制塔の灯りがともっている§At the end of the conveyor trunk, the lights of the Dispatch Tower are on§컨베이어 간선 끝에 총관제탑의 불빛이 켜져 있다
 总调度吊臂：整条货运线的管理者§総管制クレーン：貨物線全体の管理者§The Dispatch Crane: warden of the whole freight line§총관제 크레인: 화물선 전체의 관리자
-货运线之上是信号禁区，屋顶上长满了天线§貨物線の上は信号禁区。屋上はアンテナで埋め尽くされている§Above the freight line lies the Signal Exclusion Zone, its rooftops overgrown with antennas§화물선 위는 신호 금지 구역. 옥상마다 안테나가 빽빽하다
+货运线之上是信号禁区，屋顶上长满了天线§貨物線の上は信号禁区。屋上はアンテナで埋め尽くされている§Above the freight line lies the Dead Zone, its rooftops overgrown with antennas§화물선 위는 신호 금지 구역. 옥상마다 안테나가 빽빽하다
 每一根天线都在低声重复同一段广播§どのアンテナも、同じ放送を小声で繰り返している§Every antenna whispers the same broadcast over and over§모든 안테나가 같은 방송을 낮게 되풀이한다
 中继塔之间的走廊被屏蔽甲兵封死了§中継塔の間の回廊は、遮断甲兵に塞がれている§The corridors between the relay towers are sealed off by Shield Troopers§중계탑 사이의 회랑은 차폐 갑병들이 막아섰다
 雨停了，回收员第一次看见了天色§雨が止み、回収員は初めて空の色を見た§The rain stopped. For the first time, the Recycler saw the color of the sky§비가 그치고, 회수원은 처음으로 하늘빛을 보았다
 干扰站把所有信号都切成了噪音§妨害局は、あらゆる信号をノイズに切り刻んでいる§The jammer station chops every signal into noise§방해국은 모든 신호를 잡음으로 잘라 버린다
 冷却井深处，干扰中继还在嗡嗡作响§冷却井戸の奥で、妨害中継器がまだ唸っている§Deep in the cooling well, a jamming relay is still humming§냉각정 깊은 곳에서 방해 중계기가 아직 웅웅거린다
 断讯监视者：切断整座城市声音的东西§断信の監視者：街じゅうの声を断ち切ったもの§The Silent Watcher: the thing that cut off the whole city's voice§단신 감시자: 도시 전체의 목소리를 끊어 버린 것
-信号禁区之上，是从来不下雨的镜面上城§信号禁区の上には、決して雨の降らない鏡面上層街がある§Above the Signal Exclusion Zone is Mirror Uptown, where it never rains§신호 금지 구역 위에는 비가 내리지 않는 거울 상층 도시가 있다
+信号禁区之上，是从来不下雨的镜面上城§信号禁区の上には、決して雨の降らない鏡面上層街がある§Above the Dead Zone is Mirror Uptown, where it never rains§신호 금지 구역 위에는 비가 내리지 않는 거울 상층 도시가 있다
 这里的人从来不往下看§ここの人間は、決して下を見ない§People here never look down§이곳 사람들은 절대 아래를 내려다보지 않는다
 审计长廊的镜面卫兵只认通行证§監査回廊の鏡面衛兵は、通行証しか認めない§The Mirror Guards of the Audit Gallery only recognize passes§감사 회랑의 거울 경비병은 통행증만 인정한다
 玻璃天桥下面，是回收员一路爬上来的整座城§ガラスの空中橋の下に広がるのは、回収員がここまで登ってきた街のすべてだ§Below the glass skybridge lies the whole city the Recycler climbed up through§유리 구름다리 아래로, 회수원이 기어오른 도시 전체가 펼쳐진다

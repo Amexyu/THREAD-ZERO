@@ -381,6 +381,8 @@ namespace ThreadZero
         /// 测试用（桥接 call TestOpenHelp）：打开行动指南。
         public void TestOpenHelp() { navigation.Open(GameModal.Help); }
         public void TestOpenSettings() { navigation.Open(GameModal.Settings); }
+        /// v0.21 测试：打开任意弹窗（GameModal 的序号：1 选关 4 指南 6 分解 7 离线 …）。
+        public void TestModal(int m) { if (m == (int)GameModal.Offline) { offlineAway = 5400; offlineGain = 1234; } navigation.Open((GameModal)m); }
         /// 测试用（桥接 call TestStuckHint）：直接弹一条卡关提示。
         public void TestStuckHint() { model.state.retryRegion = model.state.unlockedRegion; model.state.retryStreak = 3; hintRegion = -1; StuckHint(); }
 

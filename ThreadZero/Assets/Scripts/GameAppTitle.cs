@@ -57,10 +57,10 @@ namespace ThreadZero
             bool sub = titleConfirmNew || creditsOpen || navigation.HasModal || exhibitPanel || exhibitExitPanel;
             Ui.Blocked = sub;
 
-            Ui.Text(92, 128, 900, 130, "零织协议", 104, Ui.Panel, TextAnchor.MiddleLeft, true);
+            Ui.FitText(92, 128, 760, 130, "零织协议", 104, Ui.Panel, TextAnchor.MiddleLeft, true);
             Ui.Text(98, 252, 800, 52, "THREAD ZERO", 42, Ui.Orange, TextAnchor.MiddleLeft, true, true);
             Ui.Fill(100, 312, 380, 4, Ui.Orange);
-            Ui.Text(100, 324, 600, 26, "回收、改造、穿上它——直到第零号接上整张网。", 15, Ui.MuteOnInk, TextAnchor.MiddleLeft);
+            Ui.FitText(100, 324, 560, 26, "回收、改造、穿上它——直到第零号接上整张网。", 15, Ui.MuteOnInk, TextAnchor.MiddleLeft);
 
             float y = 384;
             if (ExhibitMode)
@@ -168,9 +168,10 @@ namespace ThreadZero
             for (int i = 0; i < OpeningLines.Length; i++)
             {
                 float a = Mathf.Clamp01((t - 1f - i * OpeningStep) / .9f);
-                if (a > 0) Ui.Text(0, 330 + i * 64, 1600, 48, OpeningLines[i], 26, Ui.Alpha(i == OpeningLines.Length - 1 ? Ui.Orange : Ui.Panel, a), TextAnchor.MiddleCenter, i == OpeningLines.Length - 1);
+                if (a > 0) Ui.FitText(80, 330 + i * 64, 1440, 48, OpeningLines[i], 26, Ui.Alpha(i == OpeningLines.Length - 1 ? Ui.Orange : Ui.Panel, a), TextAnchor.MiddleCenter, i == OpeningLines.Length - 1);
             }
             float ba = Mathf.Clamp01((t - end) / .6f);
+            ProbeTextDraw();
             if (ba > 0 && Ui.Button(650, 600, 300, 60, "开始回收", 1, true, 19)) { EndOpening(); return; }
             if (Ui.Button(1440, 24, 136, 44, "跳过 ›", 0, true, 14)) { EndOpening(); return; }
             Event e = Event.current;
@@ -182,6 +183,20 @@ namespace ThreadZero
         public void TestTitle(int saved) { hasSave = saved != 0; titleOpen = true; titleAt = clock - 5; titleConfirmNew = creditsOpen = false; navigation.Close(); }
         public void TestCredits() { TestTitle(1); creditsOpen = true; }
         public void TestOpening(float at) { titleOpen = false; openingAt = clock - at; }
+        public string locProbe, probeText;
+        /// 测试：在屏幕上用几种字号画一串字（查字体里某个字画得对不对）。
+        public void TestProbeText(string t) { probeText = t; }
+        private void ProbeTextDraw()
+        {
+            if (string.IsNullOrEmpty(probeText)) return;
+            Ui.Fill(60, 560, 1480, 300, Ui.Ink);
+            Ui.Text(80, 570, 1440, 50, probeText, 26, Color.white, TextAnchor.MiddleLeft);
+            Ui.Text(80, 630, 1440, 50, probeText, 26, Color.white, TextAnchor.MiddleLeft, true);
+            Ui.Text(80, 690, 1440, 40, probeText, 15, Color.white, TextAnchor.MiddleLeft);
+            Ui.Text(80, 740, 1440, 90, probeText, 48, Color.white, TextAnchor.MiddleLeft);
+        }
+        /// 测试：开场第二句在当前语言下前 8 个字的码位（查译文和字体对不对得上）。
+        public void TestLocProbe() { string t = Loc.Tr(OpeningLines[1]); var sb = new System.Text.StringBuilder(); for (int i = 0; i < 8 && i < t.Length; i++) sb.Append(((int)t[i]).ToString("X4")).Append(' '); locProbe = sb.ToString(); }
         public void TestCloseTitle() { titleOpen = false; openingAt = -1; creditsOpen = titleConfirmNew = false; navigation.Close(); }
     }
 }

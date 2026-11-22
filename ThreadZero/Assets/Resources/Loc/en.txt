@@ -17,14 +17,14 @@ re:回收无人机带回了 (\d+) 零件	The Recycler Drone brought back {1} par
 re:离线按挂机收益的 (\d+)% 算，最多算 (\d+) 小时（这次超出的部分没算）。挂着游戏收益是离线的 4 倍。	Offline time earns {1}% of the idle rate, up to {2} h (time beyond the cap wasn't counted this time). Leaving the game running earns 4× as much.
 re:离线按挂机收益的 (\d+)% 算，最多算 (\d+) 小时。挂着游戏收益是离线的 4 倍。	Offline time earns {1}% of the idle rate, up to {2} h. Leaving the game running earns 4× as much.
 re:持有零件 (\d+)	Parts held: {1}
-re:第(.)章 · (.+)	Chapter {1} · {2}
+re:第(.)章 · (.+)	Ch.{1} · {2}
 re:首领：(.+) · 会呼叫支援	Boss: {1} · Calls reinforcements
 re:(\d+) 波 · 约 (\d+) 只	{1} waves · about {2} enemies
 re:零号深网 · 第 (\d+) 层	Deep Net Zero · F{1}
 re:最高 (\d+) 层 · 从第 (\d+) 层开始 · 下一奖励 第 (\d+) 层（限定外观）(.*)	Best F{1} · Start at F{2} · Next reward F{3} (exclusive look){4}
 re:最高 (\d+) 层 · 从第 (\d+) 层开始 · 下一奖励 第 (\d+) 层(.*)	Best F{1} · Start at F{2} · Next reward F{3}{4}
 re: · 异常 (\d+)	 · Anomalies {1}
-re:零件回收 \+([\d.]+)%、幸运 \+([\d.]+)	Parts Recovery +{1}%, Luck +{2}
+re:零件回收 \+([\d.]+)%、幸运 \+([\d.]+)	Parts +{1}%, Luck +{2}
 re:(.+) · 现在 (.+)	{1} · Now {2}
 re:连升 10 级 · (\d+)	+10 levels · {1}
 re:(.+) 升到 Lv\.(\d+)	{1} is now Lv.{2}
@@ -111,6 +111,8 @@ re:新手提示 · (\d+) / (\d+)	Tip · {1} / {2}
 re:机械飞升 (\d+)% · 零号深网最高 (\d+) 层 · 外观 (\d+) / (\d+)	Ascension {1}% · Deep Net best F{2} · Looks {3} / {4}
 re:第([一二三四五])章	Ch. {1}
 re:(\d) / 5 套	{1} / 5 sets
+re:(\d+) 件  →  \+(\d+) 零件	{1} items  →  +{2} parts
+re:排序：(.+)	Sort: {1}
 Ame（企划、美术指导、测试）	Ame (design, art direction, testing)
 DEEP NET / 零号深网	DEEP NET
 Kenney（www.kenney.nl）：Interface Sounds、Sci-fi Sounds、Impact Sounds，CC0	Kenney (www.kenney.nl): Interface Sounds, Sci-fi Sounds, Impact Sounds, CC0
@@ -184,9 +186,9 @@ v0.21 · 毕业制作 · 展览模式	v0.21 · Graduation Project · Exhibition 
 信号护目镜	Signal Goggles
 信号爆矢	Signal Burst Bolt
 信号目镜	Signal Eyepiece
-信号禁区	Signal Exclusion Zone
-信号禁区之上，是从来不下雨的镜面上城	Above the Signal Exclusion Zone is Mirror Uptown, where it never rains
-信号禁区断讯者	Signal Silencer
+信号禁区	Dead Zone
+信号禁区之上，是从来不下雨的镜面上城	Above the Dead Zone is Mirror Uptown, where it never rains
+信号禁区断讯者	Dead Zone Silencer
 修好后撤回上一关补给，变强后自动再挑战	After repairs you'll fall back a stage to resupply, then retry automatically once you're stronger
 光纤钩索	Fiber-Optic Hook Line
 全功率绞盘：攻击 +12	Full-Power Winch: Attack +12
@@ -580,7 +582,7 @@ v0.21 · 毕业制作 · 展览模式	v0.21 · Graduation Project · Exhibition 
 每第 5 次普攻必定暴击	Every 5th basic attack is a guaranteed crit
 每级攻击 +1.5	Attack +1.5 per level
 每级生命 +8	HP +8 per level
-每级零件回收 +0.4%、幸运 +0.05	Parts Recovery +0.4% and Luck +0.05 per level
+每级零件回收 +0.4%、幸运 +0.05	+0.4% Parts, +0.05 Luck per level
 毕业制作 · v0.21	Graduation Project · v0.21
 气动钉枪	Pneumatic Nail Gun
 汲取	Leech
@@ -770,7 +772,7 @@ v0.21 · 毕业制作 · 展览模式	v0.21 · Graduation Project · Exhibition 
 货柜焊接面罩	Container Welding Mask
 货运坡道	Cargo Ramp
 货运无人机	Cargo Drone
-货运线之上是信号禁区，屋顶上长满了天线	Above the freight line lies the Signal Exclusion Zone, its rooftops overgrown with antennas
+货运线之上是信号禁区，屋顶上长满了天线	Above the freight line lies the Dead Zone, its rooftops overgrown with antennas
 贯穿突刺	Piercing Thrust
 贴脸轰击	Point-Blank Blast
 起重机甲	Crane Mech
