@@ -465,8 +465,9 @@ namespace ThreadZero
         {
             if (!e.Alive) return false;
             if (e.boss || e.elite) damage *= 1 + s.bossDamage;   // v0.18 首领伤害词条（对精英也生效）
+            if (s.focus > 0 && e == Target) damage *= 1 + s.focus;   // v0.21 芯片「聚焦」：只有主目标吃到，范围 / 连锁波及的不算
             float actual = Math.Min(e.health, damage);
-            health = Math.Min(s.health, health + actual * Balance.LeechRatio * model.EffectCount(Effect.Leech));
+            health = Math.Min(s.health, health + actual * (Balance.LeechRatio * model.EffectCount(Effect.Leech) + s.leech));   // v0.21 加上芯片「汲取」
             e.health -= damage; e.hitFlash = .3f;
             if (e.boss && MirrorLeft > 0 && recovery <= 0) Hurt(actual * MirrorRatio, e.x, s);   // 镜面审计官的镜面反射
             lastPlayerDamage = damage; hitFlash = .3f; lastHitX = e.x;
@@ -512,6 +513,16 @@ namespace ThreadZero
             OnCheckpoint?.Invoke();
         }
 
+        /// v0.21 芯片（精英 4%、首领 25%、深网首领层 30%）和改装件（首领 20%），第五章开放以后才掉。
+        private void ChipDrops(Enemy e)
+        {
+            if (!model.ChipsUnlocked || e.summoned || !(e.boss || e.elite)) return;
+            float chance = e.boss ? (model.InEcho ? Balance.ChipEchoBossChance : Balance.ChipBossChance) : Balance.ChipEliteChance;
+            chance *= model.ChipFindBonus;
+            if (rng.NextDouble() < chance) { Chip c = model.NewChip(); OnMessage?.Invoke("获得芯片：" + Catalog.ChipLabel(c)); }
+            if (e.boss && rng.NextDouble() < Balance.ModBossChance)
+            { int k = 1 + rng.Next(7); model.state.modBag[k]++; OnMessage?.Invoke("获得改装件：" + Catalog.EffectShort((Effect)k)); }
+        }
         private void Reward(Enemy e)
         {
             int killScrap = (int)Math.Ceiling((e.boss ? 8 : e.elite ? 3 : 1) * (model.Anomaly("swarm") ? 1.5f : 1) * (1 + model.Total().scrapBonus));
@@ -526,6 +537,7 @@ namespace ThreadZero
                 model.state.bosses++; if (!model.InEcho) model.state.bossMask |= 1 << (ch - 1);
                 GrantImplant();
             }
+            ChipDrops(e);
             int before = model.state.collection.Count;
             // v0.16 掉落：普通怪按分工的概率掉 1 件；精英掉 2 件（至少 1 件特装）；首领掉 3 件（专属件 + 至少 1 件特装）。
             var drops = new List<Item>();

@@ -918,6 +918,7 @@ namespace ThreadZero
                         }
                     }
                 }
+            ModFx(b, tint);   // v0.21 改装件的光
             GL.PopMatrix();
             return true;
         }

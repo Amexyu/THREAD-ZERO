@@ -12,6 +12,7 @@ namespace ThreadZero
     public static partial class LayeredRigView
     {
         private static int fxMode, qWeapon = -1, qHead = -1, qCoat = -1, qBack = -1, qLegs = -1;
+        private static readonly int[] gearMods = new int[5];   // v0.21 各部位装的改装件（(int)Effect，0 = 没有）
         private static readonly float[] EdgeAlpha = { 0, 0, .34f, .48f, .6f, .7f };   // 按品质：量产 改良 特装 军规 机密 原型
         private const float ScanPeriod = 5.2f, ScanTime = 1.3f, SweepPeriod = 3.4f, SweepTime = .5f;
         /// 测试用：≥ 0 时光效的时钟停在这个值（截图对准扫光）；平时 -1。
@@ -28,6 +29,110 @@ namespace ThreadZero
             fxMode = model != null ? Mathf.Clamp(model.state.glowMode, 0, 2) : 0;
             qWeapon = QualityOf(model, Slot.Weapon); qHead = QualityOf(model, Slot.Head); qCoat = QualityOf(model, Slot.Coat);
             qBack = QualityOf(model, Slot.Back); qLegs = QualityOf(model, Slot.Legs);
+            for (int i = 0; i < 5; i++) { Item it = model != null ? model.Equipped((Slot)i) : null; gearMods[i] = it != null ? it.mod : 0; }
+        }
+
+        /// v0.21 改装件自己的光（和品质光效叠在一起）：电弧青色电花、汲取暗红水滴、护盾蓝色六边形、处决橙红刃光、无人机绕圈的小光点、
+        /// 标记黄色准星、推进橙色尾焰。画在装改装件的那个部位上；光效「低」只留一团静止的小光，「关」不画。
+        private static void ModFx(Bones b, Color tint)
+        {
+            if (fxMode == 0) return;
+            float now = GearNow;
+            for (int slot = 0; slot < 5; slot++)
+            {
+                int k = gearMods[slot]; if (k <= 0) continue;
+                Vector2 at = slot == 0 ? P(b.wpn, tipPt * .8f) : slot == 1 ? P(b.head, EyeInHead + new Vector2(-14, -30)) : slot == 2 ? P(b.torso, new Vector2(4, -30))
+                           : slot == 3 ? P(b.pack, new Vector2(-4, -22)) : P(b.legN, new Vector2(2, 16));
+                Color c = ModColor((Effect)k); float a = tint.a;
+                if (fxMode == 1) { Glow(at, 7, new Color(c.r, c.g, c.b, .35f * a)); continue; }
+                float ph = now + slot * 1.7f;
+                switch ((Effect)k)
+                {
+                    case Effect.Arc:
+                    {
+                        Glow(at, 9, new Color(c.r, c.g, c.b, .3f * a));
+                        int seed = (int)(ph * 12);   // 每 1/12 秒换一次形状
+                        var r = new System.Random(seed + slot * 97);
+                        for (int j = 0; j < 2; j++)
+                        {
+                            Vector2 p0 = at, dir = new Vector2((float)r.NextDouble() * 2 - 1, (float)r.NextDouble() * 2 - 1).normalized;
+                            for (int n = 0; n < 3; n++) { Vector2 p1 = p0 + dir * 4 + new Vector2((float)r.NextDouble() * 4 - 2, (float)r.NextDouble() * 4 - 2); Segment(p0, p1, .9f, new Color(.85f, 1, 1, .9f * a)); p0 = p1; }
+                        }
+                        break;
+                    }
+                    case Effect.Leech:
+                    {
+                        float u = Mathf.Repeat(ph * .7f, 1);
+                        Glow(at, 7, new Color(c.r, c.g, c.b, .35f * a));
+                        Vector2 drop = at + new Vector2(0, u * 12);
+                        Dot(drop, 1.4f * (1 - u * .5f), new Color(c.r, c.g, c.b, (1 - u) * .9f * a));
+                        break;
+                    }
+                    case Effect.Guard:
+                    {
+                        float pulse = .5f + .5f * Mathf.Sin(ph * 2.2f), r0 = 7 + pulse * 1.5f;
+                        for (int j = 0; j < 6; j++)
+                        {
+                            float a0 = (j * 60 + 30) * Mathf.Deg2Rad, a1 = ((j + 1) * 60 + 30) * Mathf.Deg2Rad;
+                            Segment(at + new Vector2(Mathf.Cos(a0), Mathf.Sin(a0)) * r0, at + new Vector2(Mathf.Cos(a1), Mathf.Sin(a1)) * r0, .8f, new Color(c.r, c.g, c.b, (.45f + .35f * pulse) * a));
+                        }
+                        Glow(at, 8, new Color(c.r, c.g, c.b, .15f * a));
+                        break;
+                    }
+                    case Effect.Execute:
+                    {
+                        float u = Mathf.Repeat(ph * .5f, 1), flash = u < .15f ? Mathf.Sin(u / .15f * Mathf.PI) : 0;
+                        Glow(at, 6, new Color(c.r, c.g, c.b, (.2f + .4f * flash) * a));
+                        if (flash > 0) Star(at, 7 * flash, 1.2f, new Color(1, .9f, .8f, flash * a));
+                        break;
+                    }
+                    case Effect.Drone:
+                    {
+                        for (int t = 0; t < 4; t++)
+                        {
+                            float ang = (ph - t * .06f) * 3.2f; Vector2 q = at + new Vector2(Mathf.Cos(ang) * 11, Mathf.Sin(ang) * 5);
+                            if (t == 0) { Glow(q, 4, new Color(c.r, c.g, c.b, .5f * a)); Dot(q, 1.3f, new Color(1, 1, 1, .95f * a)); }
+                            else Dot(q, .8f, new Color(c.r, c.g, c.b, (.5f - t * .12f) * a));
+                        }
+                        break;
+                    }
+                    case Effect.Mark:
+                    {
+                        float ang = ph * 1.4f, r0 = 6;
+                        for (int j = 0; j < 4; j++)
+                        {
+                            float aj = ang + j * Mathf.PI / 2; Vector2 d = new Vector2(Mathf.Cos(aj), Mathf.Sin(aj));
+                            Segment(at + d * (r0 - 2.5f), at + d * (r0 + 2), .9f, new Color(c.r, c.g, c.b, .85f * a));
+                        }
+                        Dot(at, .9f, new Color(c.r, c.g, c.b, .9f * a));
+                        break;
+                    }
+                    default:   // 推进：往后下方喷的尾焰，一明一暗地抖
+                    {
+                        for (int j = 0; j < 3; j++)
+                        {
+                            float f = .6f + .4f * Mathf.Sin(ph * 23 + j * 2.1f);
+                            Vector2 q = at + new Vector2(-4 - j * 4, 3 + j * 3);
+                            Glow(q, (6 - j * 1.5f) * f, new Color(c.r, c.g, c.b, (.55f - j * .15f) * a));
+                        }
+                        Dot(at + new Vector2(-3, 2), 1.4f, new Color(1, .95f, .8f, .9f * a));
+                        break;
+                    }
+                }
+            }
+        }
+        private static Color ModColor(Effect e)
+        {
+            switch (e)
+            {
+                case Effect.Arc: return new Color(.45f, 1, .95f);
+                case Effect.Leech: return new Color(.85f, .12f, .2f);
+                case Effect.Guard: return new Color(.4f, .7f, 1);
+                case Effect.Execute: return new Color(1, .42f, .18f);
+                case Effect.Drone: return new Color(.75f, .95f, 1);
+                case Effect.Mark: return new Color(1, .85f, .2f);
+                default: return new Color(1, .55f, .15f);
+            }
         }
         private static Color QC(int q, float a) { Color c = QualityVisual.Colors[Mathf.Clamp(q, 0, 5)]; c.a = Mathf.Clamp01(a); return c; }
 

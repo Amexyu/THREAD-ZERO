@@ -12,7 +12,8 @@ namespace ThreadZero
             // 选关弹窗 v0.20 加宽 820 → 1000：五章的分页按钮（5 × 152）放在标题栏右侧，原来的宽度下第一章按钮伸出弹窗左边、压住标题
             float x = map ? 300 : offline ? 500 : 450, y = map ? 40 : offline ? 250 : 130, w = map ? 1000 : offline ? 600 : 700, h = map ? 800 : offline ? 380 : 640;
             if (navigation.Modal == GameModal.Settings) { y = 96; h = 708; }   // v0.21 设置多了一行「语言」
-            string title = map ? "选择街区" : offline ? "欢迎回来" : navigation.Modal == GameModal.Help ? "行动指南" : navigation.Modal == GameModal.Salvage ? "一键分解" : "设置";
+            string title = map ? "选择街区" : offline ? "欢迎回来" : navigation.Modal == GameModal.Help ? "行动指南" : navigation.Modal == GameModal.Salvage ? "一键分解"
+                : navigation.Modal == GameModal.Socket ? (socketSlot >= 0 ? "植入芯片" : "改装位") : "设置";
             Ui.Fill(x, y, w, h, Ui.Panel); Ui.Fill(x, y, w, 72, Ui.Ink); Ui.Fill(x, y, 8, 72, Ui.Orange);
             Ui.Text(x + 32, y, w - 160, 72, title, 22, Ui.Panel, TextAnchor.MiddleLeft, true);
             Ui.Frame(x, y, w, h, 2, Ui.Ink);
@@ -24,6 +25,7 @@ namespace ThreadZero
                 case GameModal.Settings: SettingsModal(x, y, w); break;
                 case GameModal.Salvage: SalvageModal(x, y, w); break;
                 case GameModal.Offline: OfflineModal(x, y, w); break;
+                case GameModal.Socket: SocketModal(x, y, w); break;
                 default: navigation.Close(); break;
             }
         }

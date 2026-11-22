@@ -124,6 +124,8 @@ namespace ThreadZero
         {
             float delta = Time.unscaledDeltaTime;
             clock += delta * slowMo;   // 慢放录像时画面特效也一起慢下来
+            if (!model.state.chipGift && model.GiftChips())   // v0.21 第一次到第五章：送一块芯片、一件改装件，让玩家知道有这个系统
+            { Save(); Notify("芯片与改装件开放了：送你一块「过载 Mk1」和一件「标记」改装件，去工坊的装备台装上。", 7); }
             bool bossNow = combat != null && combat.BossEnemy != null;   // v0.20 首领出场：低沉的两短一长提示音
             if (bossNow && !bossWas) Play(bossSound);
             bossWas = bossNow;

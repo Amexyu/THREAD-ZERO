@@ -278,7 +278,12 @@ namespace ThreadZero
             Ui.Text(1190, y + 8, 348, 18, "MODULE / 固定效果", 12, Ui.Mute, TextAnchor.MiddleLeft, true, true);
             Ui.Text(1190, y + 28, 348, 24, effectName, 16, Ui.Ink, TextAnchor.MiddleLeft, true);
             Ui.Text(1190, y + 54, 348, 24, effectText, 13, Ui.Body, TextAnchor.MiddleLeft);
-            if (item.affixes.Count > 0) Ui.Text(1176, y + 96, 376, 22, "◆ 标记的属性含随机词条，共 " + item.affixes.Count + " 条", 12, Ui.Mute, TextAnchor.MiddleLeft);
+            // v0.21 芯片和改装件：一行写在固定效果框下面（芯片的数值不在上面的属性表里）
+            var extras = new List<string>();
+            if (item.mod > 0) extras.Add("改装：" + Catalog.EffectShort((Effect)item.mod));
+            if (item.chips != null) foreach (Chip c in item.chips) extras.Add(Catalog.ChipLabel(c) + " " + Catalog.ChipEffectText(c, item.level));
+            if (extras.Count > 0) Ui.Text(1176, y + 96, 376, 22, string.Join(" · ", extras), 12, Ui.OrangeInk, TextAnchor.MiddleLeft, true);
+            else if (item.affixes.Count > 0) Ui.Text(1176, y + 96, 376, 22, "◆ 标记的属性含随机词条，共 " + item.affixes.Count + " 条", 12, Ui.Mute, TextAnchor.MiddleLeft);
 
             if (Ui.Button(1176, 706, 376, 60, equippedNow ? "已穿戴" : "穿戴装备", 1, !equippedNow, 20))
             { model.Equip(item.uid); combat.SyncLoadout(); animationState.Clear(); Save(); Play(equipSound); Notify("已穿戴 " + b.name); }

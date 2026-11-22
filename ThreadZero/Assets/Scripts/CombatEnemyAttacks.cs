@@ -182,7 +182,7 @@ namespace ThreadZero
         /// 角色挨一下（护盾模块减伤并充能）。返回 true = 被打倒。
         private bool Hurt(float attack, float fromX, Stats s)
         {
-            float raw = GameModel.Damage(attack, s.defense);
+            float raw = GameModel.Damage(attack, s.defense) * (1 - s.reduction);   // v0.21 芯片「缓冲」、改造板「复合装甲」
             float blocked = raw * Balance.GuardReduction * model.EffectCount(Effect.Guard);
             float damage = raw - blocked;
             if (GameModel.TestPower) damage = 0;

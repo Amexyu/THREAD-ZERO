@@ -15,13 +15,17 @@ namespace ThreadZero
     {
         public float health, attack, defense, haste, crit, luck;
         public float critDamage, effectDamage, bossDamage, scrapBonus;   // v0.18 特殊词条（只来自装备词条）
+        // v0.21 芯片专属属性（普通词条池里没有）：攻击% 生命% 技能冷却缩短 伤害回血 受到伤害减免 单体伤害；改造板的技能伤害
+        public float attackPct, healthPct, cooldown, leech, reduction, focus, skillDamage;
         public Stats() { }
         public Stats(float hp, float atk, float def, float speed = 0, float critical = 0, float fortune = 0)
         { health = hp; attack = atk; defense = def; haste = speed; crit = critical; luck = fortune; }
         public void Add(Stats s)
         { health += s.health; attack += s.attack; defense += s.defense; haste += s.haste; crit += s.crit; luck += s.luck;
-          critDamage += s.critDamage; effectDamage += s.effectDamage; bossDamage += s.bossDamage; scrapBonus += s.scrapBonus; }
-        public Stats Copy() { var c = new Stats(health, attack, defense, haste, crit, luck); c.critDamage = critDamage; c.effectDamage = effectDamage; c.bossDamage = bossDamage; c.scrapBonus = scrapBonus; return c; }
+          critDamage += s.critDamage; effectDamage += s.effectDamage; bossDamage += s.bossDamage; scrapBonus += s.scrapBonus;
+          attackPct += s.attackPct; healthPct += s.healthPct; cooldown += s.cooldown; leech += s.leech; reduction += s.reduction; focus += s.focus; skillDamage += s.skillDamage; }
+        public Stats Copy() { var c = new Stats(health, attack, defense, haste, crit, luck); c.critDamage = critDamage; c.effectDamage = effectDamage; c.bossDamage = bossDamage; c.scrapBonus = scrapBonus;
+          c.attackPct = attackPct; c.healthPct = healthPct; c.cooldown = cooldown; c.leech = leech; c.reduction = reduction; c.focus = focus; c.skillDamage = skillDamage; return c; }
     }
 
     public sealed class EquipmentBase
@@ -41,6 +45,10 @@ namespace ThreadZero
     [Serializable]
     public sealed class Affix { public int stat; public float value; }
 
+    /// v0.21 芯片：kind 见 Catalog.ChipNames（过载 装甲 调度 汲取 缓冲 聚焦），tier 1–3（Mk1–Mk3）。植入装备后不能拆。
+    [Serializable]
+    public sealed class Chip { public int kind, tier; }
+
     [Serializable]
     public sealed class Item
     {
@@ -51,6 +59,8 @@ namespace ThreadZero
         public int rerolls;
         public int affixLocks;   // v0.18 洗炼时锁住的词条（按位，第 i 条 = 1 << i）
         public List<Affix> affixes = new List<Affix>();
+        public List<Chip> chips = new List<Chip>();   // v0.21 植入的芯片（最多 Balance.ChipSlots[品质] 块）
+        public int mod;                               // v0.21 改装件：0 = 没装，其余 = (int)Effect
     }
 
     [Serializable]
@@ -87,6 +97,9 @@ namespace ThreadZero
         public List<string> anomalies = new List<string>();
         public int tips, tipsVersion;   // v0.20 新手提示：看过的按位记（GameApp.Tip）；tipsVersion 0 = 还没做过老存档迁移
         public bool epilogueSeen;       // v0.20 机械飞升 100% 的尾声看过了（横幅放完后只自动弹一次）
+        public List<Chip> chipBag = new List<Chip>();   // v0.21 还没植入的芯片
+        public int[] modBag = new int[8];               // v0.21 改装件库存，按 (int)Effect 记数量（0 号不用）
+        public bool chipGift;                           // v0.21 芯片 / 改装件开放时送的那一块和那一件领过了
     }
 
     public sealed class ImplantDef
@@ -357,6 +370,24 @@ namespace ThreadZero
                 case Effect.Thruster: return "推进：每 4 秒突袭，近战武器强化冲击";
                 default: return "无特殊效果"; }
         }
+        /// 效果的短名（改装件、面板用）：电弧、汲取……
+        public static string EffectShort(Effect e) { string full = EffectName(e); int cut = full.IndexOf('：'); return cut > 0 ? full.Substring(0, cut) : full; }
+
+        // ---------- v0.21 芯片 ----------
+        public const int ChipKinds = 6;
+        public static readonly string[] ChipNames = { "过载", "装甲", "调度", "汲取", "缓冲", "聚焦" };
+        public static readonly string[] ChipStatNames = { "攻击", "生命", "技能冷却", "伤害回血", "受到伤害", "单体伤害" };
+        private static readonly float[,] ChipValues = { { .04f, .07f, .10f }, { .06f, .10f, .14f }, { .05f, .08f, .12f }, { .006f, .010f, .015f }, { .03f, .05f, .07f }, { .06f, .10f, .15f } };
+        public static readonly float[] ChipCaps = { .6f, .8f, .4f, .06f, .35f, 1f };
+        /// 芯片在这件装备上的数值：按 Mk 等级取基础值，再随装备等级涨（和特殊词条同一条成长线：每级 +1%）。
+        public static float ChipValue(Chip c, int level) { return ChipValues[Math.Max(0, Math.Min(ChipKinds - 1, c.kind)), Math.Max(1, Math.Min(3, c.tier)) - 1] * Balance.SpecialLevelFactor(level); }
+        public static string ChipLabel(Chip c) { return ChipNames[Math.Max(0, Math.Min(ChipKinds - 1, c.kind))] + " Mk" + Math.Max(1, Math.Min(3, c.tier)); }
+        /// 「攻击 +7.4%」「技能冷却 −8.0%」「受到伤害 −5.0%」
+        public static string ChipEffectText(Chip c, int level)
+        {
+            float v = ChipValue(c, level) * 100; bool minus = c.kind == 2 || c.kind == 4;
+            return ChipStatNames[Math.Max(0, Math.Min(ChipKinds - 1, c.kind))] + (minus ? " −" : " +") + v.ToString(v < 10 ? "0.0" : "0") + "%";
+        }
     }
 
     public sealed class GameModel
@@ -431,6 +462,17 @@ namespace ThreadZero
             // v0.16 统一货币：四种部位零件并入「零件」（scrap）。老存档里攒的部位零件全部折进来。
             for (int i = 0; i < 4; i++) { state.scrap += Math.Max(0, state.parts[i]); state.parts[i] = 0; }
             state.cores = Math.Max(0, state.cores);
+            // v0.21 芯片与改装件
+            if (state.chipBag == null) state.chipBag = new List<Chip>();
+            state.chipBag = state.chipBag.Where(c => c != null && c.kind >= 0 && c.kind < Catalog.ChipKinds && c.tier >= 1 && c.tier <= 3).ToList();
+            if (state.modBag == null || state.modBag.Length != 8) { var mb = new int[8]; if (state.modBag != null) Array.Copy(state.modBag, mb, Math.Min(8, state.modBag.Length)); state.modBag = mb; }
+            for (int i = 0; i < 8; i++) state.modBag[i] = Math.Max(0, state.modBag[i]);
+            foreach (Item it in state.items)
+            {
+                if (it.chips == null) it.chips = new List<Chip>();
+                it.chips = it.chips.Where(c => c != null && c.kind >= 0 && c.kind < Catalog.ChipKinds && c.tier >= 1 && c.tier <= 3).Take(Balance.ChipSlots[(int)it.quality]).ToList();
+                if (it.mod < 0 || it.mod > 7) it.mod = 0;
+            }
             if (state.implants == null) state.implants = new List<string>();
             if (state.anomalies == null) state.anomalies = new List<string>();
             state.anomalies = state.anomalies.Where(id => Chapters.FindAnomaly(id) != null).Distinct().Take(Chapters.MaxAnomalies).ToList();
@@ -574,7 +616,7 @@ namespace ThreadZero
         public Stats Total()
         {
             Stats s = new Stats(Balance.BaseHealth + state.training * Balance.TrainingHealth, Balance.BaseAttack + state.training * Balance.TrainingAttack, Balance.BaseDefense, 0, Balance.BaseCrit);
-            for(int i = 0; i < Catalog.SlotCount; i++) { Item item = Equipped((Slot)i); if (item != null) s.Add(ItemStats(item)); }
+            for(int i = 0; i < Catalog.SlotCount; i++) { Item item = Equipped((Slot)i); if (item != null) { s.Add(ItemStats(item)); AddChips(s, item); } }
             foreach (string id in state.implants)
             {   // v0.20 义体按等级放大；5 / 10 级的特性另加
                 ImplantDef d = Catalog.FindImplant(id); if (d == null) continue;
@@ -583,14 +625,81 @@ namespace ThreadZero
                 if (lv >= 5 && d.trait5 != null) s.Add(d.trait5);
                 if (lv >= 10 && d.trait10 != null) s.Add(d.trait10);
             }
+            s.attackPct = Math.Min(Catalog.ChipCaps[0], s.attackPct); s.healthPct = Math.Min(Catalog.ChipCaps[1], s.healthPct);
+            s.cooldown = Math.Min(Catalog.ChipCaps[2], s.cooldown); s.leech = Math.Min(Catalog.ChipCaps[3], s.leech);
+            s.reduction = Math.Min(Balance.ReductionCap, s.reduction); s.focus = Math.Min(Catalog.ChipCaps[5], s.focus);
+            s.attack *= 1 + s.attackPct; s.health *= 1 + s.healthPct;   // v0.21 芯片的攻击% / 生命% 乘在所有加成之后
             if (TestPower) { s.attack *= 10; s.health *= 10; }
             s.haste = Math.Max(-.5f, Math.Min(Balance.HasteCap, s.haste)); s.crit = Math.Max(0, Math.Min(Balance.CritCap, s.crit)); s.luck = Math.Max(0, Math.Min(Balance.LuckCap, s.luck));
             s.critDamage = Math.Min(Balance.CritDamageCap, s.critDamage); s.effectDamage = Math.Min(Balance.EffectDamageCap, s.effectDamage);
             s.bossDamage = Math.Min(Balance.BossDamageCap, s.bossDamage); s.scrapBonus = Math.Min(Balance.ScrapBonusCap, s.scrapBonus);
             return s;
         }
+        /// 效果份数 = 穿着的装备自带的 + 改装件装上的，同一种最多算 2 份（v0.21 改装件让外观和效果脱钩）。
         public int EffectCount(Effect effect)
-        { return Math.Min(2, state.items.Count(i => state.equipped.Contains(i.uid) && Catalog.Find(i.baseId).effect == effect)); }
+        {
+            int n = 0;
+            for (int i = 0; i < Catalog.SlotCount; i++)
+            {
+                Item it = Equipped((Slot)i); if (it == null) continue;
+                if (Catalog.Find(it.baseId).effect == effect) n++;
+                if (it.mod == (int)effect && effect != Effect.None) n++;
+            }
+            return Math.Min(2, n);
+        }
+        private static void AddChips(Stats s, Item item)
+        {
+            if (item.chips == null) return;
+            foreach (Chip c in item.chips)
+            {
+                float v = Catalog.ChipValue(c, item.level);
+                switch (c.kind) { case 0: s.attackPct += v; break; case 1: s.healthPct += v; break; case 2: s.cooldown += v; break;
+                    case 3: s.leech += v; break; case 4: s.reduction += v; break; default: s.focus += v; break; }
+            }
+        }
+
+        // ---------- v0.21 芯片与改装件（第五章开放） ----------
+        public bool ChipsUnlocked { get { return state.unlockedRegion >= Chapters.FirstRegion(5); } }
+        public int ChipSlotsOf(Item item) { return item == null ? 0 : Balance.ChipSlots[(int)item.quality]; }
+        /// 掉一块芯片进库存：深网 100 层起 Mk3，其余 Mk2。
+        public Chip NewChip(int tier = 0)
+        {
+            var c = new Chip { kind = rng.Next(Catalog.ChipKinds), tier = tier > 0 ? tier : InEcho && state.echoFloor >= 100 ? 3 : 2 };
+            state.chipBag.Add(c); return c;
+        }
+        /// 植入：往第 slot 个槽里放库存里第 bag 块芯片。槽里原来有芯片的会被销毁（芯片不能拆）。
+        public bool InsertChip(Item item, int slot, int bag)
+        {
+            if (!ChipsUnlocked || item == null || slot < 0 || slot >= ChipSlotsOf(item) || bag < 0 || bag >= state.chipBag.Count) return false;
+            if (item.chips == null) item.chips = new List<Chip>();
+            Chip c = state.chipBag[bag]; state.chipBag.RemoveAt(bag);
+            if (slot < item.chips.Count) item.chips[slot] = c; else item.chips.Add(c);
+            return true;
+        }
+        /// 芯片掉率倍率（改造板「芯片嗅探」×1.5，做改造板时接上）。
+        public float ChipFindBonus { get { return 1; } }
+        public bool CanCraftMod { get { return ChipsUnlocked && state.cores >= Balance.ModCraftCores; } }
+        public bool CraftMod(Effect kind)
+        {
+            if (!CanCraftMod || kind == Effect.None) return false;
+            state.cores -= Balance.ModCraftCores; state.modBag[(int)kind]++; return true;
+        }
+        /// 装改装件：换下来的回到库存（改装件可以随时换）。kind = None 是卸下。
+        public bool InstallMod(Item item, Effect kind)
+        {
+            if (!ChipsUnlocked || item == null) return false;
+            if (kind != Effect.None && state.modBag[(int)kind] <= 0) return false;
+            if (item.mod != 0) state.modBag[item.mod]++;
+            item.mod = (int)kind; if (kind != Effect.None) state.modBag[(int)kind]--;
+            return true;
+        }
+        public int ModCount { get { int n = 0; for (int i = 1; i < state.modBag.Length; i++) n += state.modBag[i]; return n; } }
+        /// 第一次到第五章：送一块过载 Mk1 和一件标记改装件，让玩家知道有这个系统。
+        public bool GiftChips()
+        {
+            if (!ChipsUnlocked || state.chipGift) return false;
+            state.chipGift = true; state.chipBag.Add(new Chip { kind = 0, tier = 1 }); state.modBag[(int)Effect.Mark]++; return true;
+        }
         public bool Has(Effect effect) { return EffectCount(effect) > 0; }
         public bool IsMelee
         { get { Item weapon = Equipped(Slot.Weapon); return weapon != null && Catalog.Find(weapon.baseId).attackStyle == AttackStyle.Melee; } }
@@ -643,6 +752,7 @@ namespace ThreadZero
             if (item == null || item.locked || state.equipped.Contains(uid)) return false;
             state.scrap += SalvageValue(item);
             if ((int)item.quality >= (int)Quality.Legendary) state.cores++;
+            if (item.mod > 0 && item.mod < state.modBag.Length) state.modBag[item.mod]++;   // v0.21 改装件退回库存（芯片随装备销毁）
             state.items.Remove(item); return true;
         }
         public static int SalvageValue(Item item) { return Math.Max(1, (int)Math.Round((2 + (int)item.quality * 3) * item.level * Balance.SalvageScale)); }

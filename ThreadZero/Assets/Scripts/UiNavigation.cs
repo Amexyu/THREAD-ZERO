@@ -1,7 +1,7 @@
 namespace ThreadZero
 {
     public enum GameScreen { Action, Loadout, Wardrobe, Workshop }
-    public enum GameModal { None, Map, Stats, Settings, Help, ItemRolls, Salvage, Offline, Epilogue }
+    public enum GameModal { None, Map, Stats, Settings, Help, ItemRolls, Salvage, Offline, Epilogue, Socket }   // v0.21 Socket：芯片槽 / 改装位
     public sealed class UiNavigation
     {
         public GameScreen Screen { get; private set; }

@@ -47,18 +47,20 @@ namespace ThreadZero
             get
             {
                 SkillDef s=EquippedSkill; if(s==null) return 0;
-                if(s.trigger==SkillTrigger.Cooldown) return s.cooldown<=0?1:1-SkillCooldown/s.cooldown;
+                if(s.trigger==SkillTrigger.Cooldown) { float cd=CooldownOf(s); return cd<=0?1:1-SkillCooldown/cd; }
                 if(s.trigger==SkillTrigger.EveryNAttacks) return s.attacks<=0?1:Math.Min(1f,(float)SkillCharge/s.attacks);
                 return s.pity<=0?0:Math.Min(1f,(float)skillMisses/s.pity);
             }
         }
 
+        /// v0.21 芯片「调度」：技能冷却按比例缩短（全身最多 −40%）。
+        private float CooldownOf(SkillDef s) { return s.cooldown*(1-model.Total().cooldown); }
         // 换装、维修时清空：不能把旧武器攒好的技能带到新武器上。
         private void ResetDagger()
         {
             DaggerAge=10; ActiveSkill=null; daggerBasic=false; skillNextHit=0; skillCanceled=true;
             SkillCharge=0; skillMisses=0;
-            SkillDef s=EquippedSkill; SkillCooldown=s!=null && s.trigger==SkillTrigger.Cooldown ? s.cooldown : 0;
+            SkillDef s=EquippedSkill; SkillCooldown=s!=null && s.trigger==SkillTrigger.Cooldown ? CooldownOf(s) : 0;
         }
         // 目标死亡：停掉剩余段，直接进入收招。
         private void CancelDagger()
@@ -86,7 +88,7 @@ namespace ThreadZero
                 if(target==null || !HeroInRange) continue;
                 // 技能伤害独立于普攻：不推进三连电弧计数，不吃普攻专用处决倍率；汲取走共用伤害入口。
                 float mult=s.hitDamage!=null && hit<s.hitDamage.Length ? s.hitDamage[hit] : 1;
-                float damage=Mitigate(stats.attack*mult);
+                float damage=Mitigate(stats.attack*mult)*(1+stats.skillDamage);   // v0.21 改造板「过载释放」：技能伤害
                 lastCritical=s.canCrit && model.Chance(stats.crit);
                 if(lastCritical) damage*=Balance.CritMultiplier;
                 OnDaggerHit?.Invoke(hit,damage);
@@ -120,7 +122,7 @@ namespace ThreadZero
             if(s!=null && SkillWanted(s,stats))
             {
                 ActiveSkill=s; daggerBasic=false; DaggerAge=0; skillNextHit=0; skillCanceled=false;
-                if(s.trigger==SkillTrigger.Cooldown) SkillCooldown=s.cooldown;
+                if(s.trigger==SkillTrigger.Cooldown) SkillCooldown=CooldownOf(s);
                 SkillCharge=0; skillMisses=0;
                 pendingStrike=false; OnSkillCast?.Invoke(s);
                 attackTimer=Math.Max(1/(1+stats.haste),s.duration);

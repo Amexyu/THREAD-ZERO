@@ -221,8 +221,95 @@ namespace ThreadZero
                 Ui.Text(796, 756, 540, 60, need, 15, !model.AscendUnlocked || item.level < model.AscendLevel ? Ui.MuteOnInk : Ui.Panel, TextAnchor.MiddleLeft, true);
                 if (Ui.Button(1348, 762, 188, 48, "核心 " + Balance.AscendCores + "（持有 " + model.state.cores + "）", 1, model.CanAscend(item), 14)) AscendClicked(item, b);
             }
-            int chipSlots = Balance.ChipSlots[(int)item.quality];
-            Ui.Text(772, 832, 772, 24, "芯片槽 " + chipSlots + " 个 · 改装位 1 个（芯片与改装件在下一步开放）", 13, Ui.Mute, TextAnchor.MiddleLeft);
+            ChipRow(item, 826);
+        }
+
+        // ---------- v0.21 芯片与改装件（企划 9A 第二步，第五章开放） ----------
+        private string socketUid; private int socketSlot;   // 正在操作的装备；socketSlot = 芯片槽序号，-1 = 改装位
+        private void ChipRow(Item item, float y)
+        {
+            int slots = model.ChipSlotsOf(item);
+            if (!model.ChipsUnlocked) { Ui.Text(772, y + 8, 772, 24, "芯片槽 " + slots + " 个 · 改装位 1 个 · 进入第五章后开放", 13, Ui.Mute, TextAnchor.MiddleLeft); return; }
+            Ui.Text(772, y, 44, 42, "芯片", 13, Ui.Mute, TextAnchor.MiddleLeft, true);
+            if (slots == 0) Ui.Text(820, y, 500, 42, "没有芯片槽（特装及以上才有）", 13, Ui.Mute, TextAnchor.MiddleLeft);
+            for (int i = 0; i < slots; i++)
+            {
+                float x = 820 + i * 172; Chip c = item.chips != null && i < item.chips.Count ? item.chips[i] : null;
+                Ui.Fill(x, y, 164, 42, Ui.Hover(x, y, 164, 42) ? Ui.Tile2 : Ui.Ink);
+                if (c != null)
+                {
+                    Ui.Text(x + 10, y + 2, 150, 20, Catalog.ChipLabel(c), 13, Ui.Panel, TextAnchor.MiddleLeft, true);
+                    Ui.Text(x + 10, y + 21, 150, 18, Catalog.ChipEffectText(c, item.level), 12, Ui.Orange, TextAnchor.MiddleLeft);
+                }
+                else Ui.Text(x, y, 164, 42, model.state.chipBag.Count > 0 ? "空槽 · 植入" : "空槽", 13, Ui.MuteOnInk, TextAnchor.MiddleCenter, true);
+                if (Ui.Click(x, y, 164, 42)) OpenSocket(item, i);
+            }
+            Ui.Fill(1348, y, 196, 42, Ui.Hover(1348, y, 196, 42) ? Ui.Tile2 : Ui.Ink);
+            Ui.Text(1358, y + 2, 180, 18, "改装位", 11, Ui.MuteOnInk, TextAnchor.MiddleLeft);
+            Ui.Text(1358, y + 19, 180, 22, item.mod > 0 ? Catalog.EffectShort((Effect)item.mod) : model.ModCount > 0 ? "空 · 装上" : "空 · 制作", 14, item.mod > 0 ? Ui.Orange : Ui.Panel, TextAnchor.MiddleLeft, true);
+            if (Ui.Click(1348, y, 196, 42)) OpenSocket(item, -1);
+        }
+        private void OpenSocket(Item item, int slot) { socketUid = item.uid; socketSlot = slot; navigation.Open(GameModal.Socket); }
+        public void TestOpenSocket(int slot, int which) { Item it = model.Equipped((Slot)slot); if (it != null) { selectedItem = it.uid; OpenSocket(it, which); } }
+        /// 测试用：给第 slot 个部位的装备植入库存里第一块芯片（放进第 chipSlot 个槽）；给某部位装上 effect 号改装件（没有就先用核心做一件）。
+        public void TestInsertChip(int slot, int chipSlot) { Item it = model.Equipped((Slot)slot); if (it != null && model.state.chipBag.Count > 0) { model.InsertChip(it, chipSlot, 0); combat.ClampHealth(); } }
+        public void TestMod(int slot, int effect) { Item it = model.Equipped((Slot)slot); if (it == null) return; if (model.state.modBag[effect] <= 0) { model.state.cores += Balance.ModCraftCores; model.CraftMod((Effect)effect); } model.InstallMod(it, (Effect)effect); combat.SyncLoadout(); }
+        public void TestChips(int n) { for (int i = 0; i < n; i++) model.NewChip(1 + i % 3); }
+
+        private void SocketModal(float x, float y, float w)
+        {
+            Item item = FindItem(socketUid); if (item == null) { navigation.Close(); return; }
+            EquipmentBase b = Catalog.Find(item.baseId);
+            float row = y + 90;
+            Ui.Text(x + 32, row, w - 64, 26, b.name + " · " + Catalog.QualityNames[(int)item.quality] + " · Lv." + item.level, 15, Ui.Ink, TextAnchor.MiddleLeft, true);
+            row += 34;
+            if (socketSlot >= 0)
+            {
+                Chip old = item.chips != null && socketSlot < item.chips.Count ? item.chips[socketSlot] : null;
+                string note = old != null ? "这个槽里已有「" + Catalog.ChipLabel(old) + "」（" + Catalog.ChipEffectText(old, item.level) + "），植入新的会把它销毁。"
+                                          : "芯片植入后不能拆。以后往这个槽里植入新的，旧的会被销毁。数值随这件装备的等级上涨。";
+                Ui.Text(x + 32, row, w - 64, 44, note, 13, old != null ? Ui.OrangeInk : Ui.Mute, TextAnchor.UpperLeft, false, false, true);
+                row += 50;
+                var groups = model.state.chipBag.Select((c, i) => new { c, i }).GroupBy(g => g.c.kind * 10 + g.c.tier)
+                    .OrderByDescending(g => g.Key % 10).ThenBy(g => g.Key / 10).ToList();
+                if (groups.Count == 0) Ui.Text(x + 32, row, w - 64, 40, "还没有芯片。精英、首领有机会掉落，深网首领层更容易。", 14, Ui.Mute, TextAnchor.MiddleLeft);
+                foreach (var g in groups)
+                {
+                    if (row > y + 580) break;
+                    Chip c = g.First().c; int bagIndex = g.First().i;
+                    Ui.Fill(x + 32, row, w - 64, 44, Ui.Ink);
+                    Ui.Text(x + 46, row, 210, 44, Catalog.ChipLabel(c) + (g.Count() > 1 ? "  ×" + g.Count() : ""), 15, Ui.Panel, TextAnchor.MiddleLeft, true);
+                    Ui.Text(x + 260, row, 260, 44, Catalog.ChipEffectText(c, item.level), 14, Ui.Orange, TextAnchor.MiddleLeft, true);
+                    if (Ui.Button(x + w - 150, row + 6, 104, 32, "植入", 1, true, 13) && model.InsertChip(item, socketSlot, bagIndex))
+                    { combat.ClampHealth(); Save(); Play(rareSound); Notify("已植入：" + Catalog.ChipLabel(c) + " · " + Catalog.ChipEffectText(c, item.level)); navigation.Close(); return; }
+                    row += 50;
+                }
+            }
+            else
+            {
+                Ui.Text(x + 32, row, w - 64, 44, "改装件给这件装备加一个模块效果，和装备自带的效果算在一起（同一种最多两份）。可以随时换，换下来的回到库存。", 13, Ui.Mute, TextAnchor.UpperLeft, false, false, true);
+                row += 50;
+                if (item.mod > 0)
+                {
+                    Ui.Text(x + 32, row, 300, 34, "当前：" + Catalog.EffectShort((Effect)item.mod), 15, Ui.Ink, TextAnchor.MiddleLeft, true);
+                    if (Ui.Button(x + w - 150, row + 1, 104, 32, "卸下", 0, true, 13)) { model.InstallMod(item, Effect.None); combat.SyncLoadout(); Save(); Play(equipSound); }
+                    row += 40;
+                }
+                for (int k = 1; k <= 7; k++)
+                {
+                    Effect e = (Effect)k; int have = model.state.modBag[k];
+                    string full = Catalog.EffectName(e); int cut = full.IndexOf('：');
+                    Ui.Fill(x + 32, row, w - 64, 50, Ui.Ink);
+                    Ui.Text(x + 46, row + 3, 300, 24, Catalog.EffectShort(e) + "   持有 " + have, 15, item.mod == k ? Ui.Orange : Ui.Panel, TextAnchor.MiddleLeft, true);
+                    Ui.Text(x + 46, row + 26, 380, 20, cut > 0 ? full.Substring(cut + 1) : full, 12, Ui.MuteOnInk, TextAnchor.MiddleLeft);
+                    if (Ui.Button(x + w - 276, row + 9, 100, 32, item.mod == k ? "已装上" : "装上", 1, have > 0 && item.mod != k, 13) && model.InstallMod(item, e))
+                    { combat.SyncLoadout(); Save(); Play(equipSound); Notify("已装上改装件：" + Catalog.EffectShort(e)); }
+                    if (Ui.Button(x + w - 168, row + 9, 122, 32, "制作 · 核心 " + Balance.ModCraftCores, 0, model.CanCraftMod, 12) && model.CraftMod(e))
+                    { Save(); Play(equipSound); Notify("制作了改装件：" + Catalog.EffectShort(e) + "（持有核心 " + model.state.cores + "）"); }
+                    row += 56;
+                }
+                Ui.Text(x + 32, row + 2, w - 64, 22, "持有核心 " + model.state.cores + "（核心也用于突破和组装机器人）", 12, Ui.Mute, TextAnchor.MiddleLeft);
+            }
         }
     }
 }
