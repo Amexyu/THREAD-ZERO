@@ -249,7 +249,10 @@ namespace ThreadZero
             wreckShown = leaveWreck; if(!combat.MovementEnabled)wreckWorldX = worldX; wreckDistrict = Catalog.District(region); wreckBoss = boss;
         }
         private void Save() { if (!daggerReview && !restarting && model != null && saves != null) { model.state.savedAt = System.DateTime.UtcNow.Ticks; lastSaveOk = saves.Save(model.state); } saveTimer = 0; }
-        private void OnApplicationQuit() { Save(); }
+        private void OnApplicationQuit() { Save(); Loc.DumpMissing(); }
+        /// 测试用：切语言（0 中文 1 日文 2 英文 3 韩文）；DumpLoc 把这次没翻到的句子写进 Logs/Loc/。
+        public void TestLang(int i) { Loc.Set((Loc.Lang)i); }
+        public void DumpLoc() { Loc.DumpMissing(); }
 
         // ---------- 测试存档 ----------
         private const string TestSaveKey = "tz_test_save";
@@ -356,6 +359,7 @@ namespace ThreadZero
         }
         /// 测试用（桥接 call TestOpenHelp）：打开行动指南。
         public void TestOpenHelp() { navigation.Open(GameModal.Help); }
+        public void TestOpenSettings() { navigation.Open(GameModal.Settings); }
         /// 测试用（桥接 call TestStuckHint）：直接弹一条卡关提示。
         public void TestStuckHint() { model.state.retryRegion = model.state.unlockedRegion; model.state.retryStreak = 3; hintRegion = -1; StuckHint(); }
 

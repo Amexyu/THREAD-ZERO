@@ -21,7 +21,7 @@ namespace ThreadZero
         private static readonly Stack<Vector2> origins = new Stack<Vector2>();
         private static readonly Dictionary<int, GUIStyle> styles = new Dictionary<int, GUIStyle>();
         private static float styleScale;
-        private static Font textFont, numberFont;
+        private static Font textFont, numberFont, textBold, numberBold;
         private static Texture2D hazard;
 
         public static Color Hex(int rgb)
@@ -35,13 +35,31 @@ namespace ThreadZero
             origins.Clear(); clipOffsets.Clear(); clipOffset = Vector2.zero;
             Blocked = false;
             if (Mathf.Abs(styleScale - K) > .0001f) { styles.Clear(); styleScale = K; }
-            if (textFont == null || numberFont == null)
-            {
-                var installed = new HashSet<string>(Font.GetOSInstalledFontNames());
-                textFont = Font.CreateDynamicFontFromOSFont(Pick(installed, "Microsoft YaHei", "Microsoft YaHei UI", "PingFang SC", "Noto Sans CJK SC", "SimHei", "Arial"), 18);
-                numberFont = Font.CreateDynamicFontFromOSFont(Pick(installed, "Bahnschrift", "DIN Alternate", "Arial Narrow", "Arial", "Microsoft YaHei"), 18);
-                styles.Clear();
-            }
+            if (textFont == null || numberFont == null) { LoadFonts(); styles.Clear(); }
+        }
+        /// v0.21 字体（11-22 用户在样本里选了 B）：正文思源黑体（Noto Sans CJK，按语言用 SC / JP / KR 各自的字形，粗体是单独的字体文件，
+        /// 不靠 Unity 假加粗），数字和英文编号用 Oxanium。都打包在 Resources/Fonts（OFL 授权），Windows 和 Mac 上一个样。
+        /// 字体由 Tools/fonts/build_fonts.py 生成（裁成用得到的字）；万一没读到，退回系统字体。
+        private static void LoadFonts()
+        {
+            Loc.Lang lang = Loc.Get();
+            string region = lang == Loc.Lang.Ja ? "JP" : lang == Loc.Lang.Ko ? "KR" : "SC";
+            textFont = Resources.Load<Font>("Fonts/NotoSans" + region + "-Regular");
+            textBold = Resources.Load<Font>("Fonts/NotoSans" + region + "-Bold");
+            numberFont = Resources.Load<Font>("Fonts/Oxanium-SemiBold");
+            numberBold = Resources.Load<Font>("Fonts/Oxanium-Bold");
+            if (textFont != null && numberFont != null) return;
+            var installed = new HashSet<string>(Font.GetOSInstalledFontNames());
+            if (textFont == null) { textFont = Font.CreateDynamicFontFromOSFont(Pick(installed, "Microsoft YaHei", "Microsoft YaHei UI", "PingFang SC", "Noto Sans CJK SC", "SimHei", "Arial"), 18); textBold = null; }
+            if (numberFont == null) { numberFont = Font.CreateDynamicFontFromOSFont(Pick(installed, "Bahnschrift", "DIN Alternate", "Arial Narrow", "Arial"), 18); numberBold = null; }
+        }
+        /// 换语言以后重新建字体和字号缓存。
+        public static void ResetFonts() { textFont = null; numberFont = null; textBold = null; numberBold = null; styles.Clear(); }
+        /// 数字字体（Oxanium）只有拉丁字母、数字和几个符号；带别的字（中日韩、箭头、◆）的「数字」文字改用正文字体。
+        private static bool NumberSafe(string s)
+        {
+            foreach (char c in s) if ((c < ' ' || c > '~') && "−×·…–—".IndexOf(c) < 0) return false;
+            return true;
         }
         private static string[] Pick(HashSet<string> installed, params string[] names)
         {
@@ -148,8 +166,9 @@ namespace ThreadZero
             if (!styles.TryGetValue(key, out style))
             {
                 style = new GUIStyle();
-                style.font = numeric ? numberFont : textFont; style.fontSize = pixels;
-                style.fontStyle = bold ? FontStyle.Bold : FontStyle.Normal;
+                Font real = numeric ? (bold && numberBold != null ? numberBold : numberFont) : (bold && textBold != null ? textBold : textFont);
+                style.font = real; style.fontSize = pixels;
+                style.fontStyle = bold && real == (numeric ? numberFont : textFont) ? FontStyle.Bold : FontStyle.Normal;   // 有单独的粗体文件就不再假加粗
                 style.alignment = anchor; style.wordWrap = wrap; style.richText = false; style.clipping = TextClipping.Overflow;
                 styles[key] = style;
             }
@@ -160,6 +179,8 @@ namespace ThreadZero
             TextAnchor anchor = TextAnchor.UpperLeft, bool bold = false, bool numeric = false, bool wrap = false)
         {
             if (string.IsNullOrEmpty(value)) return;
+            value = Loc.Tr(value);   // v0.21 四语：画字前换成当前语言
+            if (numeric && !NumberSafe(value)) numeric = false;
             GUIStyle style = Style(numeric, Pixels(size), bold, anchor, wrap);
             style.normal.textColor = UiTheme.Map(color, UiTheme.Role.Text);
             GUI.Label(R(x, y, w, h), value, style);
@@ -179,6 +200,8 @@ namespace ThreadZero
         public static float Width(string value, float size, bool bold = false, bool numeric = false)
         {
             if (string.IsNullOrEmpty(value)) return 0;
+            value = Loc.Tr(value);
+            if (numeric && !NumberSafe(value)) numeric = false;
             GUIStyle style = Style(numeric, Pixels(size), bold, TextAnchor.UpperLeft, false);
             return style.CalcSize(new GUIContent(value)).x / K;
         }

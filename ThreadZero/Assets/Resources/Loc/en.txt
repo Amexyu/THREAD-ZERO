@@ -1,0 +1,7 @@
+# THREAD ZERO 翻译表（en）。一行一条：中文原文<Tab>译文；re: 开头是正则模板，{1}{2} 是括号里抓到的部分（会再翻一遍）。\n 表示换行。
+语言	Language
+音效	Sound
+开启	On
+关闭	Off
+设置	Settings
+re:升级到 Lv\.(\d+)	Upgrade to Lv.{1}

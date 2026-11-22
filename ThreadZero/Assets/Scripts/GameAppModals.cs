@@ -11,6 +11,7 @@ namespace ThreadZero
             bool map = navigation.Modal == GameModal.Map, offline = navigation.Modal == GameModal.Offline;
             // 选关弹窗 v0.20 加宽 820 → 1000：五章的分页按钮（5 × 152）放在标题栏右侧，原来的宽度下第一章按钮伸出弹窗左边、压住标题
             float x = map ? 300 : offline ? 500 : 450, y = map ? 40 : offline ? 250 : 130, w = map ? 1000 : offline ? 600 : 700, h = map ? 800 : offline ? 380 : 640;
+            if (navigation.Modal == GameModal.Settings) { y = 96; h = 708; }   // v0.21 设置多了一行「语言」
             string title = map ? "选择街区" : offline ? "欢迎回来" : navigation.Modal == GameModal.Help ? "行动指南" : navigation.Modal == GameModal.Salvage ? "一键分解" : "设置";
             Ui.Fill(x, y, w, h, Ui.Panel); Ui.Fill(x, y, w, 72, Ui.Ink); Ui.Fill(x, y, 8, 72, Ui.Orange);
             Ui.Text(x + 32, y, w - 160, 72, title, 22, Ui.Panel, TextAnchor.MiddleLeft, true);
@@ -87,6 +88,11 @@ namespace ThreadZero
         private void SettingsModal(float x, float y, float w)
         {
             float row = y + 100;
+            // v0.21 四语：语言名字本身不翻译（Loc 认得这四个），切换后立刻换字体、重新查表
+            Ui.Text(x + 32, row, 300, 48, "语言", 17, Ui.Ink, TextAnchor.MiddleLeft, true);
+            for (int i = 0; i < Loc.Names.Length; i++)
+                if (Ui.Button(x + w - 388 + i * 89, row, 85, 48, Loc.Names[i], (int)Loc.Get() == i ? 2 : 0, true, 14)) Loc.Set((Loc.Lang)i);
+            row += 68;
             Ui.Text(x + 32, row, 300, 48, "音效", 17, Ui.Ink, TextAnchor.MiddleLeft, true);
             if (Ui.Button(x + w - 292, row, 260, 48, sound ? "开启" : "关闭", sound ? 2 : 0, true, 15)) sound = !sound;
             row += 68;
@@ -114,7 +120,7 @@ namespace ThreadZero
             if (Ui.Button(x + 32, row, (w - 76) / 2, 52, "立即保存", 0, true, 16))
             { Save(); Notify(lastSaveOk ? "进度已保存" : "保存暂不可用，原有存档会保留。", 4); }
             if (Ui.Button(x + 44 + (w - 76) / 2, row, (w - 76) / 2, 52, "行动指南", 0, true, 16)) navigation.Open(GameModal.Help);
-            Ui.Text(x + 32, y + 584, w - 64, 30, "THREAD ZERO · v0.20    空格 暂停 / 1 2 3 4 切换页面 / Esc 关闭弹窗", 12, Ui.Mute, TextAnchor.MiddleLeft);
+            Ui.Text(x + 32, y + 652, w - 64, 30, "THREAD ZERO · v0.21    空格 暂停 / 1 2 3 4 切换页面 / Esc 关闭弹窗", 12, Ui.Mute, TextAnchor.MiddleLeft);
         }
 
         private void HelpModal(float x, float y, float w)

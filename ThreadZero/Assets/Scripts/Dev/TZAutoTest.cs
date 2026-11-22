@@ -331,6 +331,7 @@ namespace ThreadZero
         {
             if (finished) return;
             SilenceAll();   // 打包版跑剧本没有编辑器的总静音兜底，这里先把声源都关掉
+            Loc.DumpMissing();   // v0.21 四语：这次剧本里没翻到的句子写进 Logs/Loc/
             if (status == "ok" && failures > 0) status = "fail";
             Note("end " + DateTime.Now.ToString("HH:mm:ss") + "  steps " + done + "/" + steps.Count + "  failures " + failures + "  log_errors " + logErrors);
             finished = true;
