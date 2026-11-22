@@ -239,11 +239,12 @@ namespace ThreadZero
             new EquipmentBase("l8", "轨道检修工装裤", Slot.Legs, 3, new Stats(18, 1, 2, .03f)),
             new EquipmentBase("l9", "信号员马裤", Slot.Legs, 4, new Stats(16, 1, 2, 0, .02f, 2)),
             // ---- v0.18 第三章 25 件（美术未到：外观借 art 指定的旧装备，武器招式借 mech 指定的旧武器）----
-            new EquipmentBase("w10", "天线警棍", Slot.Weapon, 0, new Stats(0f, 10.3f, 0f, -0.02f), Effect.Arc, AttackStyle.Melee, "w8", "w8"),
-            new EquipmentBase("w11", "定向干扰枪", Slot.Weapon, 1, new Stats(0f, 6.9f, 0f, 0.06f), Effect.Mark, AttackStyle.Ranged, "w6", "w6"),
-            new EquipmentBase("w12", "雷达碟炮", Slot.Weapon, 2, new Stats(9.2f, 10.3f, 1.1f), Effect.None, AttackStyle.Ranged, "w3", "w3"),
-            new EquipmentBase("w13", "屏蔽网刃", Slot.Weapon, 3, new Stats(0f, 6.9f, 0f, 0.1f, 0.02f), Effect.Guard, AttackStyle.Melee, "w5", "w5"),
-            new EquipmentBase("w14", "中继弩枪", Slot.Weapon, 4, new Stats(0f, 9.2f, 0f, 0f, 0.04f), Effect.Arc, AttackStyle.Ranged, "w9", "w9"),
+            // v0.20 卡27：w10–w14 已有自己的图（art = null），招式仍借旧武器。
+            new EquipmentBase("w10", "天线警棍", Slot.Weapon, 0, new Stats(0f, 10.3f, 0f, -0.02f), Effect.Arc, AttackStyle.Melee, null, "w8"),
+            new EquipmentBase("w11", "定向干扰枪", Slot.Weapon, 1, new Stats(0f, 6.9f, 0f, 0.06f), Effect.Mark, AttackStyle.Ranged, null, "w6"),
+            new EquipmentBase("w12", "雷达碟炮", Slot.Weapon, 2, new Stats(9.2f, 10.3f, 1.1f), Effect.None, AttackStyle.Ranged, null, "w3"),
+            new EquipmentBase("w13", "屏蔽网刃", Slot.Weapon, 3, new Stats(0f, 6.9f, 0f, 0.1f, 0.02f), Effect.Guard, AttackStyle.Melee, null, "w5"),
+            new EquipmentBase("w14", "中继弩枪", Slot.Weapon, 4, new Stats(0f, 9.2f, 0f, 0f, 0.04f), Effect.Arc, AttackStyle.Ranged, null, "w9"),
             new EquipmentBase("h10", "天线耳罩", Slot.Head, 0, new Stats(13.8f, 0f, 2.3f, 0f, 0f, 2), Effect.Mark, AttackStyle.Ranged, "h5", null),
             new EquipmentBase("h11", "降噪头盔", Slot.Head, 1, new Stats(6.9f, 1.1f, 1.1f, 0.05f), Effect.Guard, AttackStyle.Ranged, "h6", null),
             new EquipmentBase("h12", "信号目镜", Slot.Head, 2, new Stats(23, 0f, 4.6f), Effect.Mark, AttackStyle.Ranged, "h7", null),
