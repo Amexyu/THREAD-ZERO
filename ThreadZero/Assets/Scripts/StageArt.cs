@@ -126,6 +126,32 @@ namespace ThreadZero
             if (e.sinceStrike < .28f) return Pose.Strike;
             return Pose.Idle;
         }
+        /// v0.21 机库：按素材名画一只（被改造过来的）怪，flip = 左右翻过来（怪原本朝左，机器人朝右）。
+        /// outline：描一圈纯色边（青色 = 自己人，和同款敌人分开）。翻转用贴图坐标做，不动 GUI.matrix。
+        private static Material flatMat;
+        public static bool DrawKey(string key, Pose pose, float feetX, float feetY, float canvas, Color tint, bool flip, Color outline = default(Color))
+        {
+            Texture2D t = Tex(EnemyFolder + key + "_" + (pose == Pose.Windup ? "windup" : pose == Pose.Strike ? "strike" : "idle"));
+            if (t == null) t = Tex(EnemyFolder + key + "_idle");
+            if (t == null) return false;
+            Rect r = Ui.R(feetX - canvas / 2, feetY - canvas * .875f, canvas, canvas), uv = flip ? new Rect(1, 0, -1, 1) : new Rect(0, 0, 1, 1);
+            if (outline.a > 0 && Event.current.type == EventType.Repaint)
+            {
+                if (flatMat == null) { Shader fs = Shader.Find("GUI/Text Shader"); if (fs != null) flatMat = new Material(fs) { hideFlags = HideFlags.HideAndDontSave }; }
+                if (flatMat != null)
+                {
+                    float o = 2.2f * Ui.K;
+                    for (int k = 0; k < 8; k++)
+                    {
+                        float a = k * Mathf.PI / 4;
+                        Graphics.DrawTexture(new Rect(r.x + Mathf.Cos(a) * o, r.y + Mathf.Sin(a) * o, r.width, r.height), t, uv, 0, 0, 0, 0, outline, flatMat);
+                    }
+                }
+            }
+            Color old = GUI.color; GUI.color = tint;
+            GUI.DrawTextureWithTexCoords(r, t, uv, true);
+            GUI.color = old; return true;
+        }
         /// 正方形素材，脚底在图高 7/8 处。canvas = 画出来的边长（逻辑像素）。
         public static bool DrawEnemy(Enemy e, Pose pose, float feetX, float feetY, float canvas, Color tint, int walkFrame = 0)
         {

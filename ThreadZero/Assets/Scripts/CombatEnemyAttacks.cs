@@ -187,6 +187,7 @@ namespace ThreadZero
             float damage = raw - blocked;
             if (GameModel.TestPower) damage = 0;
             if (shield > 0 && damage > 0) { float soak = Math.Min(shield, damage); shield -= soak; damage -= soak; }   // v0.21 护盾回路
+            damage = TankAbsorb(damage, s);   // v0.21 前排机器人替主角挡一部分
             if (blocked > 0)
             { guardCharge = Math.Min(s.attack, guardCharge + blocked * Balance.GuardChargeRatio); guardFlash = .35f; Emit(Ability.GuardCharge, blocked); }
             health = Math.Max(0, health - damage); lastEnemyDamage = damage; hurtFlash = .25f; lastHurtX = fromX;

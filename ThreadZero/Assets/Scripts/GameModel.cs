@@ -104,6 +104,20 @@ namespace ThreadZero
         // boardVersion 1 = 老存档的训练等级已经换算过来（训练 T 级 → 火力 T 级 + 机体 T 级）
         public int[] board = new int[3];
         public int boardPerks, boardVersion;
+        // v0.21 机库：每台机器人的图纸碎片、等级（0 = 还没组装）、上场的两台（Catalog.Robots 的序号，-1 = 空），开放时送的无人机领过了
+        public int[] blueprints = new int[Catalog.RobotCount];
+        public int[] robotLevels = new int[Catalog.RobotCount];
+        public int[] deployed = { -1, -1 };
+        public bool hangarGift;
+    }
+
+    /// v0.21 机库的机器人：被改造过来的敌人（用那种敌人的图，翻过来朝右）。role 0 前排 · 1 后排 · 2 支援。
+    public sealed class RobotDef
+    {
+        public readonly string id, name, art, desc; public readonly int role, chapter; public readonly EnemyRole source;
+        public readonly float power, interval; public readonly bool pierce;
+        public RobotDef(string key, string title, int r, int ch, EnemyRole from, string artKey, float pw, float every, string text, bool pierceOne = false)
+        { id = key; name = title; role = r; chapter = ch; source = from; art = artKey; power = pw; interval = every; desc = text; pierce = pierceOne; }
     }
 
     public sealed class ImplantDef
@@ -387,6 +401,25 @@ namespace ThreadZero
         public static float ChipValue(Chip c, int level) { return ChipValues[Math.Max(0, Math.Min(ChipKinds - 1, c.kind)), Math.Max(1, Math.Min(3, c.tier)) - 1] * Balance.SpecialLevelFactor(level); }
         public static string ChipLabel(Chip c) { return ChipNames[Math.Max(0, Math.Min(ChipKinds - 1, c.kind))] + " Mk" + Math.Max(1, Math.Min(3, c.tier)); }
         /// 「攻击 +7.4%」「技能冷却 −8.0%」「受到伤害 −5.0%」
+        // ---------- v0.21 机库 ----------
+        public const int RobotCount = 8, RobotMaxLevel = 30;
+        public static readonly string[] RobotRoles = { "前排", "后排", "支援" };
+        /// power：前排 = 自身血量占主角最大生命的比例；后排 = 每发伤害占主角攻击的比例；支援 = 每次回复 / 护盾占最大生命的比例。
+        public static readonly RobotDef[] Robots = {
+            new RobotDef("r0", "回收无人机", 2, 2, EnemyRole.Swarmer, null, .03f, 8, "每 8 秒给主角回复 3% 生命"),
+            new RobotDef("r1", "改装装卸机", 0, 2, EnemyRole.Brute, "brute2", .5f, 0, "替主角挡下 35% 的伤害"),
+            new RobotDef("r2", "改装炮车", 1, 2, EnemyRole.Ranged, "ranged2", .3f, 2, "每 2 秒炮击目标"),
+            new RobotDef("r3", "改装甲兵", 0, 3, EnemyRole.Brute, "brute3", .75f, 0, "替主角挡下 35% 的伤害，血更厚"),
+            new RobotDef("r4", "改装折光炮台", 1, 4, EnemyRole.Ranged, "ranged4", .28f, 2, "每 2 秒射击，打穿目标身后的一只", true),
+            new RobotDef("r5", "改装镜面无人机", 2, 4, EnemyRole.Swarmer, "swarm4", .06f, 10, "每 10 秒给主角 6% 生命的护盾"),
+            new RobotDef("r6", "改装母线炮", 1, 5, EnemyRole.Ranged, "ranged5", .55f, 3, "每 3 秒重炮一发"),
+            new RobotDef("r7", "改装协议守卫", 0, 5, EnemyRole.Brute, "brute5", 1f, 0, "替主角挡下 35% 的伤害，血最厚"),
+        };
+        public const int BlueprintNeed = 10, RobotAssembleCores = 2;
+        public static int RobotAssembleScrap(int i) { return 150 * Robots[i].chapter; }
+        public static int RobotUpgradeScrap(int level) { return 40 + 25 * level; }
+        public static string RobotFx(int i) { return Robots[i].id == "r4" ? "coil" : Robots[i].role == 1 ? "cannon" : ""; }
+
         // ---------- v0.21 改造板 ----------
         public static readonly string[] BoardBranches = { "火力", "机体", "回收" };
         public static readonly string[] BoardPerLevel = { "每级攻击 +1.5", "每级生命 +8", "每级零件回收 +0.4%、幸运 +0.05" };
@@ -479,6 +512,14 @@ namespace ThreadZero
             if (state.board == null || state.board.Length != 3) { var bd = new int[3]; if (state.board != null) Array.Copy(state.board, bd, Math.Min(3, state.board.Length)); state.board = bd; }
             for (int i = 0; i < 3; i++) state.board[i] = Math.Max(0, Math.Min(Balance.TrainingCap, state.board[i]));
             if (state.boardVersion < 1) { state.board[0] = Math.Max(state.board[0], state.training); state.board[1] = Math.Max(state.board[1], state.training); state.boardVersion = 1; }
+            // v0.21 机库
+            int[] Fit(int[] arr, int n) { var o = new int[n]; if (arr != null) Array.Copy(arr, o, Math.Min(n, arr.Length)); return o; }
+            if (state.blueprints == null || state.blueprints.Length != Catalog.RobotCount) state.blueprints = Fit(state.blueprints, Catalog.RobotCount);
+            if (state.robotLevels == null || state.robotLevels.Length != Catalog.RobotCount) state.robotLevels = Fit(state.robotLevels, Catalog.RobotCount);
+            for (int i = 0; i < Catalog.RobotCount; i++) { state.blueprints[i] = Math.Max(0, Math.Min(Catalog.BlueprintNeed, state.blueprints[i])); state.robotLevels[i] = Math.Max(0, Math.Min(Catalog.RobotMaxLevel, state.robotLevels[i])); }
+            if (state.deployed == null || state.deployed.Length != 2) state.deployed = new[] { -1, -1 };
+            for (int k = 0; k < 2; k++) if (state.deployed[k] < -1 || state.deployed[k] >= Catalog.RobotCount || (state.deployed[k] >= 0 && state.robotLevels[state.deployed[k]] <= 0)) state.deployed[k] = -1;
+            if (state.deployed[0] >= 0 && state.deployed[1] >= 0 && (state.deployed[0] == state.deployed[1] || Catalog.Robots[state.deployed[0]].role == Catalog.Robots[state.deployed[1]].role)) state.deployed[1] = -1;
             // v0.21 芯片与改装件
             if (state.chipBag == null) state.chipBag = new List<Chip>();
             state.chipBag = state.chipBag.Where(c => c != null && c.kind >= 0 && c.kind < Catalog.ChipKinds && c.tier >= 1 && c.tier <= 3).ToList();
@@ -930,6 +971,78 @@ namespace ThreadZero
             item.rerolls++;
             return true;
         }
+        // ---------- v0.21 机库（企划 9A 第四步，第二章开放） ----------
+        public bool HangarUnlocked { get { return state.unlockedRegion >= Chapters.FirstRegion(2); } }
+        public bool RobotOpen(int i) { return state.unlockedRegion >= Chapters.FirstRegion(Catalog.Robots[i].chapter); }
+        public bool RobotBuilt(int i) { return state.robotLevels[i] > 0; }
+        /// 等级每升一级属性 +5%（最高 30 级 = ×2.45）。机器人按主角的攻击 / 生命算，主角变强它也跟着变强，所以等级加成给得克制。
+        public float RobotFactor(int i) { return 1 + .05f * Math.Max(0, state.robotLevels[i] - 1); }
+        public bool CanAssemble(int i) { return HangarUnlocked && RobotOpen(i) && !RobotBuilt(i) && state.blueprints[i] >= Catalog.BlueprintNeed && state.scrap >= Catalog.RobotAssembleScrap(i) && state.cores >= Catalog.RobotAssembleCores; }
+        public bool Assemble(int i)
+        {
+            if (!CanAssemble(i)) return false;
+            state.scrap -= Catalog.RobotAssembleScrap(i); state.cores -= Catalog.RobotAssembleCores; state.robotLevels[i] = 1;
+            if (DeployedOfRole(Catalog.Robots[i].role) < 0 && (state.deployed[0] < 0 || state.deployed[1] < 0)) Deploy(i);   // 有空位、这个分工还没人就直接上场
+            return true;
+        }
+        public bool CanUpgradeRobot(int i) { return RobotBuilt(i) && state.robotLevels[i] < Catalog.RobotMaxLevel && state.scrap >= Catalog.RobotUpgradeScrap(state.robotLevels[i]); }
+        public bool UpgradeRobot(int i)
+        {
+            if (!CanUpgradeRobot(i)) return false;
+            state.scrap -= Catalog.RobotUpgradeScrap(state.robotLevels[i]); state.robotLevels[i]++; return true;
+        }
+        public bool IsDeployed(int i) { return state.deployed[0] == i || state.deployed[1] == i; }
+        /// 已上场的这个分工的机器人在第几个位（-1 = 没有）。同一分工只能上一台：两台上场 = 三种分工里选两种。
+        public int DeployedOfRole(int role) { for (int k = 0; k < 2; k++) { int r = state.deployed[k]; if (r >= 0 && Catalog.Robots[r].role == role) return k; } return -1; }
+        /// 上场：同分工的换下来；否则放进空位；两个位都满了就换掉第 replace 个。
+        public bool Deploy(int i, int replace = 1)
+        {
+            if (!RobotBuilt(i) || IsDeployed(i)) return false;
+            int same = DeployedOfRole(Catalog.Robots[i].role);
+            if (same >= 0) state.deployed[same] = i;
+            else if (state.deployed[0] < 0) state.deployed[0] = i; else if (state.deployed[1] < 0) state.deployed[1] = i; else state.deployed[Math.Max(0, Math.Min(1, replace))] = i;
+            return true;
+        }
+        public void Undeploy(int i) { for (int k = 0; k < 2; k++) if (state.deployed[k] == i) state.deployed[k] = -1; }
+        /// 打死一只怪掉图纸碎片：怪的分工（冲锋 / 重型 / 远程）对得上、已经开放、碎片还没集满的机器人；
+        /// 先给这一章的那台（就是被打的这种怪改的），这一章没有就按开放顺序给前面的。
+        public int BlueprintDrop(EnemyRole role, bool elite, int chapter)
+        {
+            if (!HangarUnlocked || rng.NextDouble() >= (elite ? Balance.BlueprintElite : Balance.BlueprintNormal)) return -1;
+            int pick = -1;
+            for (int i = 0; i < Catalog.RobotCount; i++)
+            {
+                RobotDef d = Catalog.Robots[i];
+                if (d.art == null || d.source != role || !RobotOpen(i) || RobotBuilt(i) || state.blueprints[i] >= Catalog.BlueprintNeed) continue;
+                if (pick < 0 || d.chapter == chapter) pick = i;
+                if (d.chapter == chapter) break;
+            }
+            if (pick >= 0) state.blueprints[pick]++;
+            return pick;
+        }
+        /// 首领必掉 3 片：给这一章开放、还没集满的机器人里第一台。
+        public int BlueprintBoss(int chapter)
+        {
+            if (!HangarUnlocked) return -1;
+            int pick = -1;
+            for (int i = 0; i < Catalog.RobotCount; i++)
+            {
+                RobotDef d = Catalog.Robots[i];
+                if (d.art == null || !RobotOpen(i) || RobotBuilt(i) || state.blueprints[i] >= Catalog.BlueprintNeed) continue;
+                if (pick < 0 || (d.chapter == chapter && Catalog.Robots[pick].chapter != chapter)) pick = i;
+            }
+            if (pick >= 0) state.blueprints[pick] = Math.Min(Catalog.BlueprintNeed, state.blueprints[pick] + 3);
+            return pick;
+        }
+        /// 机库开放时：回收无人机成为第一台支援机（白送、直接上场）。
+        public bool GiftHangar()
+        {
+            if (!HangarUnlocked || state.hangarGift) return false;
+            state.hangarGift = true; if (state.robotLevels[0] <= 0) state.robotLevels[0] = 1;
+            if (!IsDeployed(0) && DeployedOfRole(2) < 0 && (state.deployed[0] < 0 || state.deployed[1] < 0)) Deploy(0);
+            return true;
+        }
+
         // ---------- v0.21 改造板（取代训练，企划 9A 第三步） ----------
         /// 每级价格 = 原来训练的一半：火力、机体各升一级 = 原来训练一级（数值和花费都一样，已经调好的节奏不变）。
         public int BoardCost(int branch) { return Math.Max(10, (20 + 15 * state.board[branch]) / 2); }

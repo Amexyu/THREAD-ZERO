@@ -64,6 +64,7 @@ namespace ThreadZero
             combat.OnEnemyAct = OnEnemyAct;
             combat.OnFloorCleared = (floor, best) => { if (best && floor % 10 == 0 && model.state.anomalies.Count < Chapters.MaxAnomalies) OfferAnomalies(); };
             combat.OnSkillCast = OnSkillCast; combat.OnSkillHit = OnSkillHit; combat.OnAbility = OnAbilityFx;
+            combat.OnRobotShot = OnRobotShot; combat.OnRobotSupport = OnRobotSupport;   // v0.21 机库
             combat.OnChainPull = e => EnemyFx.Burst(clock, e.x, GroundY - e.canvas * .4f, new Color(1, .62f, .25f), 1.1f);   // 钩拉：被拽的怪身上闪一下
             combat.OnCoilJump = CoilJumpFx;   // 线圈普攻：电流跳到第二只怪
             combat.OnImplant = d => { implantShown = d; implantAt = clock; implantNew = d.id; implantNewSeenAt = -1; Play(rareSound); Save(); };
@@ -126,6 +127,8 @@ namespace ThreadZero
             clock += delta * slowMo;   // 慢放录像时画面特效也一起慢下来
             if (!model.state.chipGift && model.GiftChips())   // v0.21 第一次到第五章：送一块芯片、一件改装件，让玩家知道有这个系统
             { Save(); Notify("芯片与改装件开放了：送你一块「过载 Mk1」和一件「标记」改装件，去工坊的装备台装上。", 7); }
+            if (!model.state.hangarGift && model.GiftHangar())   // v0.21 打完第一章首领：机库开放，回收无人机成为第一台支援机
+            { combat.RobotsChanged(); Save(); Notify("机库开放了：回收无人机成了第一台支援机，每 8 秒给你回血。打怪会掉机器人的图纸碎片，集满 10 片去工坊的机库组装。", 7); }
             bool bossNow = combat != null && combat.BossEnemy != null;   // v0.20 首领出场：低沉的两短一长提示音
             if (bossNow && !bossWas) Play(bossSound);
             bossWas = bossNow;

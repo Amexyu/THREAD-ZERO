@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace ThreadZero
 {
-    // v0.10 工坊。这一步只有「装备台」：升级、重校词条、突破。改造板与机库在后续步骤加入。
+    // v0.10 工坊：装备台（升级、重校词条、突破）· v0.21 改造板 · 机库（GameAppHangar.cs）。
     public sealed partial class GameApp
     {
         private float workshopScroll;
@@ -58,11 +58,11 @@ namespace ThreadZero
         {
             Ui.Text(128, 16, 120, 52, "工坊", 30, Ui.Ink, TextAnchor.MiddleLeft, true);
             // v0.21 三个页签都能用：装备台、改造板（取代训练）、机库（机器人）
-            string[] tabs = { "装备台", "改造板", "机库 · 制作中" };
+            string[] tabs = { "装备台", "改造板", model.HangarUnlocked ? "机库" : "机库 · 第二章开放" };
             float tabX = 250;
             for (int i = 0; i < 3; i++)
             {
-                float width = i == 2 ? 190 : 120; bool open = i < 2;
+                bool open = i < 2 || model.HangarUnlocked; float width = Math.Max(120, Ui.Width(tabs[i], 14) + 40);
                 if (Ui.Button(tabX, 22, width, 40, tabs[i], workshopTab == i ? 2 : 0, open, 14) && open) workshopTab = i;
                 tabX += width + 8;
             }
@@ -80,7 +80,9 @@ namespace ThreadZero
                 Ui.Text(x + 16, 102, chipW - 24, 34, (i == 0 ? "Lv." : "") + values[i], 24, i == 0 ? Ui.Orange : Ui.Panel, TextAnchor.MiddleLeft, true, true);
             }
 
+            if (workshopTab == 2 && !model.HangarUnlocked) workshopTab = 0;
             if (workshopTab == 1) { BoardPage(); return; }
+            if (workshopTab == 2) { HangarPage(); return; }
             WorkshopList();
             Item chosen = FindItem(selectedItem);
             Ui.Fill(748, 156, 820, 720, Ui.Panel);

@@ -148,7 +148,7 @@ namespace ThreadZero
         public void ResetRegion()
         {
             wave = 1; recovery = 0; StageCleared = false; RetreatRequested = false; stageTime = 0;
-            health = model.Total().health; ResetModules(); shield = 0; emergencyUsed = lastStandUsed = false;
+            health = model.Total().health; ResetModules(); shield = 0; emergencyUsed = lastStandUsed = false; ResetRobots(model.Total());
             enemies.Clear(); queue.Clear(); shots.Clear();
             Movement.ResetAtCamera(Movement.CameraX);
             StartWave();
@@ -334,6 +334,7 @@ namespace ThreadZero
                     OnBasicAttack?.Invoke();
                 }
             }
+            RobotsTick(dt, s);   // v0.21 机库的机器人
             if (HeroInRange && model.Has(Effect.Drone))
             {
                 droneTimer -= dt;
@@ -542,6 +543,11 @@ namespace ThreadZero
                 GrantImplant();
             }
             ChipDrops(e);
+            if (!e.summoned)   // v0.21 机库：打死对应分工的怪掉机器人图纸碎片，首领必掉 3 片
+            {
+                int bp = e.boss ? model.BlueprintBoss(e.skin + 1) : model.BlueprintDrop(e.role, e.elite, e.skin + 1);
+                if (bp >= 0) OnMessage?.Invoke("获得图纸碎片：" + Catalog.Robots[bp].name + "（" + model.state.blueprints[bp] + " / " + Catalog.BlueprintNeed + "）");
+            }
             int before = model.state.collection.Count;
             // v0.16 掉落：普通怪按分工的概率掉 1 件；精英掉 2 件（至少 1 件特装）；首领掉 3 件（专属件 + 至少 1 件特装）。
             var drops = new List<Item>();

@@ -66,6 +66,7 @@ namespace ThreadZero
             float entry = combat.EntryLeft > 0 ? 1 - combat.EntryLeft / CombatSession.EntryTime : 1;
             float rise = entry < 1 ? (1 - EaseOutBack(Mathf.Clamp01(entry / .75f))) * 210 : 0;
             float heroFeetY = GroundY + 2 - stride + rise;
+            DrawRobots(heroFeetX, entry < 1 ? Mathf.Clamp01((entry - .6f) / .4f) : 1, down, heroWalking, stats);   // v0.21 机库：上场的机器人站在主角身后（画在主角后面）
             if (entry < 1) Ui.Fill(heroFeetX - 60, GroundY - 2, 120, 8, Ui.Ink);   // 打开的舱口
             else Ui.Fill(heroFeetX - 56, GroundY - 3, 112, 5, Ui.Alpha(Ui.Ink, .16f));
             if (heroWalking)
