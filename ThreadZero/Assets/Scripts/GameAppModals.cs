@@ -11,7 +11,7 @@ namespace ThreadZero
             bool map = navigation.Modal == GameModal.Map, offline = navigation.Modal == GameModal.Offline;
             // 选关弹窗 v0.20 加宽 820 → 1000：五章的分页按钮（5 × 152）放在标题栏右侧，原来的宽度下第一章按钮伸出弹窗左边、压住标题
             float x = map ? 300 : offline ? 500 : 450, y = map ? 40 : offline ? 250 : 130, w = map ? 1000 : offline ? 600 : 700, h = map ? 800 : offline ? 380 : 640;
-            if (navigation.Modal == GameModal.Settings) { y = 62; h = 776; }   // v0.21 设置多了「语言」「展览模式」两行
+            if (navigation.Modal == GameModal.Settings) { y = 28; h = 844; }   // v0.21 设置多了「语言」「音乐」「展览模式」三行
             string title = map ? "选择街区" : offline ? "欢迎回来" : navigation.Modal == GameModal.Help ? "行动指南" : navigation.Modal == GameModal.Salvage ? "一键分解"
                 : navigation.Modal == GameModal.Socket ? (socketSlot >= 0 ? "植入芯片" : "改装位") : "设置";
             Ui.Fill(x, y, w, h, Ui.Panel); Ui.Fill(x, y, w, 72, Ui.Ink); Ui.Fill(x, y, 8, 72, Ui.Orange);
@@ -98,8 +98,14 @@ namespace ThreadZero
             for (int i = 0; i < Loc.Names.Length; i++)
                 if (Ui.Button(x + w - 388 + i * 89, row, 85, 48, Loc.Names[i], (int)Loc.Get() == i ? 2 : 0, true, 14)) Loc.Set((Loc.Lang)i);
             row += 68;
+            // v0.21 音乐、音效分开，各 5 档
+            Ui.Text(x + 32, row, 300, 48, "音乐", 17, Ui.Ink, TextAnchor.MiddleLeft, true);
+            for (int i = 0; i < 5; i++)
+                if (Ui.Button(x + w - 432 + i * 80, row, 76, 48, GameAudio.LevelNames[i], gameAudio.MusicLevel == i ? 2 : 0, true, 13)) gameAudio.SetMusic(i);
+            row += 68;
             Ui.Text(x + 32, row, 300, 48, "音效", 17, Ui.Ink, TextAnchor.MiddleLeft, true);
-            if (Ui.Button(x + w - 292, row, 260, 48, sound ? "开启" : "关闭", sound ? 2 : 0, true, 15)) sound = !sound;
+            for (int i = 0; i < 5; i++)
+                if (Ui.Button(x + w - 432 + i * 80, row, 76, 48, GameAudio.LevelNames[i], gameAudio.SfxLevel == i ? 2 : 0, true, 13)) gameAudio.SetSfx(i);
             row += 68;
             Ui.Text(x + 32, row, 300, 48, "装备辉光", 17, Ui.Ink, TextAnchor.MiddleLeft, true);
             string[] glow = { "关闭", "低强度", "完整" };
@@ -132,7 +138,7 @@ namespace ThreadZero
             { Save(); Notify(lastSaveOk ? "进度已保存" : "保存暂不可用，原有存档会保留。", 4); }
             if (Ui.Button(x + 44 + bw, row, bw, 52, "行动指南", 0, true, 16)) navigation.Open(GameModal.Help);
             if (!titleOpen && Ui.Button(x + 56 + bw * 2, row, bw, 52, "回到标题", 0, true, 16)) { BackToTitle(); return; }
-            Ui.Text(x + 32, y + 720, w - 64, 30, "THREAD ZERO · v0.21    空格 暂停 / 1 2 3 4 切换页面 / Esc 关闭弹窗", 12, Ui.Mute, TextAnchor.MiddleLeft);
+            Ui.Text(x + 32, y + 788, w - 64, 30, "THREAD ZERO · v0.21    空格 暂停 / 1 2 3 4 切换页面 / Esc 关闭弹窗", 12, Ui.Mute, TextAnchor.MiddleLeft);
         }
 
         private void HelpModal(float x, float y, float w)

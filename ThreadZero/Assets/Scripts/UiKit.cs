@@ -212,6 +212,8 @@ namespace ThreadZero
         { return !Blocked && GUI.Button(R(x, y, w, h), GUIContent.none, GUIStyle.none); }
 
         // kind: 0 描边按钮，1 主要按钮（橙色），2 深色按钮（选中的标签），3 深色底上的描边按钮。
+        /// v0.21 按钮按下时（放点击音）。
+        public static System.Action Clicked;
         public static bool Button(float x, float y, float w, float h, string label, int kind = 0, bool enabled = true, float size = 16, bool numeric = false)
         {
             bool hover = enabled && Hover(x, y, w, h);
@@ -223,7 +225,9 @@ namespace ThreadZero
             else { fill = hover ? Ink : Panel; text = hover ? Panel : Ink; edge = Ink; }
             Fill(x, y, w, h, fill); Frame(x, y, w, h, 2, edge);
             Text(x, y, w, h, label, size, text, TextAnchor.MiddleCenter, true, numeric);
-            return enabled && Click(x, y, w, h);
+            bool hit = enabled && Click(x, y, w, h);
+            if (hit) Clicked?.Invoke();
+            return hit;
         }
 
         // 装备格：近黑底 + 图标 + 底部品质色条。返回是否悬停，点击由调用方处理。

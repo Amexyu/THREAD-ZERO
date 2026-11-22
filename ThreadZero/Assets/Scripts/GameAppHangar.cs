@@ -62,6 +62,7 @@ namespace ThreadZero
             Vector2 m = new Vector2(f.x + sp.z * .3f, f.y - sp.z * .5f);
             Vector2 aim = new Vector2(t.x - worldX - t.canvas * .15f, GroundY + 2 - t.canvas * .45f + UnityEngine.Random.Range(-10f, 10f));
             WeaponFx.Plain = true; WeaponFx.Fire(Catalog.RobotFx(r), clock, m, (aim - m).normalized, aim); WeaponFx.Plain = false;   // 机器人不带武器的品质色
+            Sfx("robot_shot", .4f, .1f);
         }
         private void OnRobotSupport(int slot)
         {
@@ -71,11 +72,13 @@ namespace ThreadZero
             {   // 回收无人机回血：无人机和主角胸口各一团绿光
                 EnemyFx.Burst(clock, hx - 92, GroundY - 196, new Color(.45f, 1f, .6f), .8f);
                 EnemyFx.Burst(clock, hx, GroundY - 120, new Color(.45f, 1f, .6f), 1.2f);
+                Sfx("heal", .45f, .5f);
             }
             else
             {   // 镜面无人机给护盾
                 EnemyFx.Burst(clock, hx - 208, GroundY - 250, new Color(.55f, .85f, 1f), .8f);
                 EnemyFx.Shield(clock, hx + 70, GroundY - 110);
+                Sfx("shield", .45f, .5f);
             }
         }
 

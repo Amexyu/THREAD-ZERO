@@ -12,8 +12,13 @@ Ame（企划、美术指导、测试）
 思源黑体 / Noto Sans CJK（SC · JP · KR）：© Adobe，SIL Open Font License 1.1
 Oxanium：© The Oxanium Project Authors，SIL Open Font License 1.1
 
-# 音乐与音效
-（接入后补上来源和授权）
+# 音乐
+T & T Free Cyberpunk Pack 1、2：tricksntraps（Alexander Ehlers），OpenGameArt.org，CC0
+  Strange Experiments · Through the Sewers · New Factory · Electric Stream
+  Night Club Chill · Simulation Unknown · AI Fight · Experiment G
+
+# 音效
+Kenney（www.kenney.nl）：Interface Sounds、Sci-fi Sounds、Impact Sounds，CC0
 
 # 引擎
 Unity 6

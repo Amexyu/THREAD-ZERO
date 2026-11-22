@@ -22,7 +22,7 @@ namespace ThreadZero
         private AudioSource source;
         private AudioClip equipSound, dropSound, rareSound, salvageSound, bossSound;   // v0.20 企划要求分解、首领出现也有各自的提示音
         private bool bossWas;
-        private bool paused, sound = true, lastSaveOk = true;
+        private bool paused, lastSaveOk = true;
         private float slowMo = 1;   // 测试用慢放（桥接脚本 set slowMo 0.2 录技能动作）
         private int speed = 1, slotFilter = -1, wardrobeSlot, wardrobeChapter = 1, mapChapter, setCheckCount = -1;
         private bool wardrobeSets;   // v0.21 衣柜的「套装」视图
@@ -63,7 +63,7 @@ namespace ThreadZero
             combat.EnableMovement();
             combat.OnBasicAttack = () => animationState.TriggerAttack(model.IsMelee);
             combat.OnAdvance = dt => animationState.Tick(dt);
-            combat.OnHit = () => animationState.TriggerHit();
+            combat.OnHit = () => { animationState.TriggerHit(); Sfx("hurt", .45f, .25f); };
             combat.OnEnemyAct = OnEnemyAct;
             combat.OnFloorCleared = (floor, best) => { if (best && floor % 10 == 0 && model.state.anomalies.Count < Chapters.MaxAnomalies) OfferAnomalies(); };
             combat.OnSkillCast = OnSkillCast; combat.OnSkillHit = OnSkillHit; combat.OnAbility = OnAbilityFx;
@@ -71,7 +71,7 @@ namespace ThreadZero
             combat.OnChainPull = e => EnemyFx.Burst(clock, e.x, GroundY - e.canvas * .4f, new Color(1, .62f, .25f), 1.1f);   // 钩拉：被拽的怪身上闪一下
             combat.OnCoilJump = CoilJumpFx;   // 线圈普攻：电流跳到第二只怪
             combat.OnImplant = d => { implantShown = d; implantAt = clock; implantNew = d.id; implantNewSeenAt = -1; Play(rareSound); Save(); };
-            combat.OnDamage = (value, critical, x) => { AddFloater(value, critical, true, x); GearHit(critical, x); };
+            combat.OnDamage = (value, critical, x) => { AddFloater(value, critical, true, x); GearHit(critical, x); Sfx(critical ? "hit_crit" : model.IsMelee ? "hit_melee" : "hit", critical ? .5f : .35f, .07f); };
             combat.OnCheckpoint = Save;
             combat.OnMessage = message => Notify(message, 4);
             combat.OnDrop = (item, fresh) =>
@@ -85,6 +85,7 @@ namespace ThreadZero
             };
             selectedItem = model.state.items.Last().uid;
             source = gameObject.AddComponent<AudioSource>(); source.playOnAwake = false;
+            SetupAudio();   // v0.21 音乐与音效（GameAppAudio.cs）
             equipSound = Tone("equip", 620, .065f); dropSound = Tone("drop", 840, .07f); rareSound = Tone("rare", 1060, .18f);
             salvageSound = Tones("salvage", new[] { 700f, 470f }, .05f, .015f); bossSound = Tones("boss", new[] { 196f, 196f, 147f }, .11f, .05f);
             if (!saves.Writable) Notify("已有存档暂不可读，本次进度不会覆盖原文件。", 10);
@@ -123,7 +124,6 @@ namespace ThreadZero
                 for (int i = 0; i < per; i++) data[n * (per + pause) + i] = Mathf.Sin(i * 2 * Mathf.PI * frequencies[n] / rate) * .12f * (1 - (float)i / per);
             var clip = AudioClip.Create(name, data.Length, 1, rate, false); clip.SetData(data, 0); return clip;
         }
-        private void Play(AudioClip clip) { if (sound && source != null && clip != null) source.PlayOneShot(clip); }
 
         private void Update()
         {
@@ -148,6 +148,7 @@ namespace ThreadZero
             bossWas = bossNow;
             // 战斗按不超过 0.05 秒的小步推进；一旦击败敌人就切到行进，下一只敌人不会在行进途中挨打。
             ExhibitTick();
+            AudioTick(delta);   // v0.21 按场景换曲、交叉淡化
             float budget = paused || TitleBlocking ? 0 : Mathf.Min(.15f, delta) * speed * slowMo;   // v0.21 标题和开场期间战斗暂停
             for (int guard = 0; guard < 64 && budget > .0001f; guard++)
             {

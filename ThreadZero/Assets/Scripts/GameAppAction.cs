@@ -707,10 +707,11 @@ namespace ThreadZero
                 }
                 case Ability.Dash:
                 case Ability.Assault: // 推进器冲刺：目标处一团冲击
+                    Sfx("thruster", .45f, .3f);
                     if (t != null) EnemyFx.Burst(clock, t.x, GroundY + 2 - t.canvas * .45f, new Color(1, .6f, .25f), 1.3f);
                     break;
                 case Ability.GuardCharge:   // 护盾挡下伤害：角色前方一面弧形护盾闪一下
-                    EnemyFx.Shield(clock, combat.Movement.HeroX + 70, GroundY - 110);
+                    EnemyFx.Shield(clock, combat.Movement.HeroX + 70, GroundY - 110); Sfx("shield", .4f, .4f);
                     break;
                 case Ability.GuardRelease:  // 护盾反击：目标处炸开
                     if (t != null) EnemyFx.Burst(clock, t.x, GroundY + 2 - t.canvas * .45f, new Color(.45f, .85f, 1f), 1.6f);

@@ -62,8 +62,12 @@ namespace ThreadZero
         }
 
         /// 开火：kind = LayeredRigView.Kind（shotgun / coil / cannon / gun）。
+        /// v0.21 开火 / 落锤时通知一声（GameApp 放音效）。
+        public static System.Action<string> OnFire;
+        public static System.Action OnSlam;
         public static void Fire(string kind, float now, Vector2 muzzle, Vector2 aim, Vector2 target)
         {
+            OnFire?.Invoke(kind);
             if (kind == "coil")
             {
                 Add(K.Flash, now, .1f, muzzle, muzzle + aim, Cyan, 1.1f);
@@ -102,6 +106,7 @@ namespace ThreadZero
         /// 重武器落地：在锤头着地点出冲击波。
         public static void Slam(float now, Vector2 ground)
         {
+            OnSlam?.Invoke();
             Add(K.Shock, now, .5f, ground, ground, new Color(1, .72f, .35f));
             if (Geared) Add(K.Halo, now, .32f, ground + new Vector2(0, -12), ground, GearCol, .5f + .14f * (GearQuality - 1));   // v0.20 品质色的一团光
             Add(K.Flash, now, .1f, ground + new Vector2(0, -10), ground + new Vector2(0, -20), Hot, 1.6f);
