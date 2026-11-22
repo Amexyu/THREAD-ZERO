@@ -43,6 +43,7 @@ def components(m):
                     if 0 <= yy < h and 0 <= xx < w and m[yy, xx] and not lab[yy, xx]: lab[yy, xx] = n; st.append((yy, xx))
             objs.append((slice(ys[0], ys[1] + 1), slice(xs[0], xs[1] + 1))); sizes.append(cnt)
     return lab, objs, sizes
+FIT = {}
 def merge_json(pid, upd):
     d = ART + 'Parts/' + pid; os.makedirs(d, exist_ok=True); p = d + '/part.json'
     j = json.load(open(p)) if os.path.exists(p) else {'scale': 4}
@@ -59,10 +60,12 @@ def cut(part, src, ids, adj, preview):
         # 这一格的东西 = 整张图里中心落在这一格的那些连通块（东西可以伸出格子，邻格伸过来的碎片不要）
         cx0, cx1 = (1 + i * CW) * sx, (1 + (i + 1) * CW) * sx
         a = full.copy(); keep = np.zeros(lab.shape, bool)
-        for li, sl in enumerate(objs, 1):
-            if sl is None: continue
-            mx = (sl[1].start + sl[1].stop) / 2 * 4
-            if cx0 <= mx < cx1 and sizes[li - 1] > 30: keep |= lab == li
+        mine = [li for li, sl in enumerate(objs, 1)
+                if cx0 <= (sl[1].start + sl[1].stop) / 2 * 4 < cx1 and sizes[li - 1] > 30]
+        if mine:  # Gemini 偶尔在装备下面写名字：顶边在最大块底边之下的块一律不要
+            big = max(mine, key=lambda li: sizes[li - 1]); bottom = objs[big - 1][0].stop
+            for li in mine:
+                if objs[li - 1][0].start <= bottom + 3: keep |= lab == li
         keep = np.kron(keep, np.ones((4, 4), bool))[:a.shape[0], :a.shape[1]]
         a[..., 3] = np.where(keep, a[..., 3], 0)
         # 坐标系仍按格子：裁出 [格左, 格右] 加上伸出去的部分
@@ -77,10 +80,23 @@ def cut(part, src, ids, adj, preview):
         # 初始部件左上角在缩小后格子图里的位置
         ox = ((x0 + l * k) - (1 + i * CW) + shift / sx) / k * s + dx; oy = (y0 + t * k) / k * s * (sy / sx) + dy
         pivot = [round(piv[0] + (ox - bx0) / 4, 2), round(piv[1] + (oy - by0) / 4, 2)]
+        ry = 1.0
+        if FIT.get(part):  # 按初始部件的宽度缩放，顶边对齐、水平居中（Gemini 画得比模板高时用）
+            fw, fdy, fh = FIT[part]; sa = np.asarray(st)[..., 3] > 40; sys_, sxs_ = np.nonzero(sa)
+            sw = sxs_.max() - sxs_.min() + 1; scx = (sxs_.min() + sxs_.max() + 1) / 2; stop = sys_.min()
+            na = np.asarray(out)[..., 3] > 40; nys, nxs = np.nonzero(na); nw = nxs.max() - nxs.min() + 1
+            sh_ = sys_.max() - sys_.min() + 1; nh = nys.max() - nys.min() + 1
+            q = fw * sw / nw; qy = min(q, fh * sh_ / nh) if fh else q   # 太高就竖向压扁（Q 版能吃一点压缩）
+            out = out.resize((max(1, round(out.width * q)), max(1, round(out.height * qy))), Image.LANCZOS)
+            na = np.asarray(out)[..., 3] > 40; nys, nxs = np.nonzero(na)
+            cx_ = (nxs.min() + nxs.max() + 1) / 2; ty_ = nys.min()
+            org = (cx_ - scx, ty_ - (stop + fdy))   # 初始部件原点在新图里的位置
+            pivot = [round(piv[0] + org[0] / 4, 2), round(piv[1] + org[1] / 4, 2)]
+            ry = (nys.max() - nys.min() + 1) / sh_
         d = ART + 'Parts/' + pid; os.makedirs(d, exist_ok=True); out.save(d + '/' + part + '.png')
         entry = {'file': part + '.png', 'pivot': pivot}
         for extra in ('hand',):
-            if extra in M['parts'][part]: entry[extra] = M['parts'][part][extra]
+            if extra in M['parts'][part]: h_ = M['parts'][part][extra]; entry[extra] = [round(h_[0] - piv[0] + pivot[0], 2), round((h_[1] - piv[1]) * ry + pivot[1], 2)]  # 手点跟着枢轴平移
         upd = {part: entry}
         if part == 'torso': upd.update({'shoulder': M['shoulder'], 'shoulderF': M['shoulderF']})
         merge_json(pid, upd); print(pid, part, out.size, 'pivot', pivot)
@@ -119,5 +135,6 @@ if __name__ == '__main__':
         while rest:
             if rest[0] == '--adj': i, v = rest[1].split(':'); adj[int(i)] = tuple(float(x) for x in v.split(',')); rest = rest[2:]
             elif rest[0] == '--preview': preview = rest[1]; rest = rest[2:]
+            elif rest[0] == '--fit': v_ = [float(x) for x in rest[1].split(',')] + [0, 0]; FIT[a[2]] = (v_[0], v_[1], v_[2]); rest = rest[2:]
             else: rest = rest[1:]
         cut(a[2], a[3], a[4:9], adj, preview)

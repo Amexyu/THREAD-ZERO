@@ -1,0 +1,17 @@
+{
+ "scale": 4,
+ "leg_near": {
+  "file": "leg_near.png",
+  "pivot": [
+   12.92,
+   6.0
+  ]
+ },
+ "leg_far": {
+  "file": "leg_far.png",
+  "pivot": [
+   12.92,
+   6.0
+  ]
+ }
+}
