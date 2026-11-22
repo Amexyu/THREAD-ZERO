@@ -1,0 +1,21 @@
+零织协议 / THREAD ZERO
+毕业制作 · v0.21
+
+# 制作
+Ame（企划、美术指导、测试）
+
+# 协作
+程序与系统设计：Claude（Anthropic）
+美术素材：Gemini（Google）生成，由制作者挑选、修整后使用
+
+# 字体
+思源黑体 / Noto Sans CJK（SC · JP · KR）：© Adobe，SIL Open Font License 1.1
+Oxanium：© The Oxanium Project Authors，SIL Open Font License 1.1
+
+# 音乐与音效
+（接入后补上来源和授权）
+
+# 引擎
+Unity 6
+
+感谢游玩。

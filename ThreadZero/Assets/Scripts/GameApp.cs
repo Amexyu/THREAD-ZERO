@@ -55,7 +55,8 @@ namespace ThreadZero
             saves = new SaveService(Application.persistentDataPath, JsonUtility.FromJson<GameState>, data => JsonUtility.ToJson(data, true), message => Debug.LogWarning(message),
                 testSave ? "thread-zero-save-test.json" : "thread-zero-save.json");
             daggerReview = DaggerReviewRequested();
-            model = new GameModel(daggerReview?null:saves.Load());
+            GameState loaded = daggerReview ? null : saves.Load();
+            model = new GameModel(loaded);
             if(daggerReview) PrepareDaggerReviewModel();
             combat = new CombatSession(model);
             combat.EnableMovement();
@@ -87,7 +88,7 @@ namespace ThreadZero
             salvageSound = Tones("salvage", new[] { 700f, 470f }, .05f, .015f); bossSound = Tones("boss", new[] { 196f, 196f, 147f }, .11f, .05f);
             if (!saves.Writable) Notify("已有存档暂不可读，本次进度不会覆盖原文件。", 10);
             if(daggerReview) BeginDaggerReviewCapture();
-            else ApplyOffline();
+            else { SetupTitle(loaded != null); if (!TitleBlocking) ApplyOffline(); }   // v0.21 先进标题画面，离线收益等离开标题再算
         }
 
         // v0.20 离线收益：上次存档到现在过了多久，按挂机时的零件收入 × 25% 补给零件（最多算 2 小时），弹「欢迎回来」。
@@ -144,7 +145,7 @@ namespace ThreadZero
             if (bossNow && !bossWas) Play(bossSound);
             bossWas = bossNow;
             // 战斗按不超过 0.05 秒的小步推进；一旦击败敌人就切到行进，下一只敌人不会在行进途中挨打。
-            float budget = paused ? 0 : Mathf.Min(.15f, delta) * speed * slowMo;
+            float budget = paused || TitleBlocking ? 0 : Mathf.Min(.15f, delta) * speed * slowMo;   // v0.21 标题和开场期间战斗暂停
             for (int guard = 0; guard < 64 && budget > .0001f; guard++)
             {
                 budget = Impact.Absorb(budget);   // v0.20 顿帧：重击命中后战斗停一小会儿
@@ -409,6 +410,12 @@ namespace ThreadZero
             if (model == null) return;
             Ui.Begin();
             Event current = Event.current;
+            if (titleOpen)
+            {   // v0.21 标题画面：Esc 关掉上面的弹层
+                if (current.type == EventType.KeyDown && current.keyCode == KeyCode.Escape) { if (titleConfirmNew) titleConfirmNew = false; else if (creditsOpen) creditsOpen = false; else navigation.Close(); current.Use(); }
+                TitleScreen(); return;
+            }
+            if (openingAt >= 0) { OpeningScreen(); return; }
             if (current.type == EventType.KeyDown)
             {
                 if (current.keyCode == KeyCode.Escape && navigation.HasModal) { navigation.Close(); current.Use(); }

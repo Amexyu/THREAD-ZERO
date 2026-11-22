@@ -16,6 +16,8 @@ namespace ThreadZero
     // 默认切到测试存档（tz_test_save = 1），并先备份测试存档；跑完把存档槽和测试存档都还原，不碰正式存档。
     public sealed class TZAutoTest : MonoBehaviour
     {
+        /// v0.21 有剧本在跑：游戏跳过标题画面和开场，直接进行动页。
+        public static bool Running;
         private const string SaveSlotKey = "tz_test_save";
         private const string TestSaveFile = "thread-zero-save-test.json";
         private const string SlotBackupKey = "tz_autotest_slot";   // 跑剧本前的存档槽，跑完（或下次启动时）还原
@@ -43,7 +45,7 @@ namespace ThreadZero
             RestoreSaves();   // 上次剧本没正常结束时留下的备份，先还原
             string path = RequestPath();
             if (string.IsNullOrEmpty(path) || !File.Exists(path)) return;
-            try { pendingText = File.ReadAllText(path, Encoding.UTF8); }
+            try { pendingText = File.ReadAllText(path, Encoding.UTF8); Running = true; }
             catch (Exception e) { Debug.LogWarning("[TZAutoTest] 读不了剧本：" + e.Message); return; }
 #if UNITY_EDITOR
             try { File.Delete(path); } catch (Exception) { }

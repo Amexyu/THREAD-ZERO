@@ -122,9 +122,11 @@ namespace ThreadZero
             Ui.Fill(x + 32, row, w - 64, 1, Ui.Rule);
             Ui.Text(x + 32, row + 14, w - 64, 44, "自动分解不会处理第一次获得的外观和当前回收目标。进度每 30 秒和关键操作后自动保存。", 14, Ui.Mute, TextAnchor.UpperLeft, false, false, true);
             row += 72;
-            if (Ui.Button(x + 32, row, (w - 76) / 2, 52, "立即保存", 0, true, 16))
+            float bw = titleOpen ? (w - 76) / 2 : (w - 88) / 3;   // v0.21 加「回到标题」（标题画面里打开设置时不显示）
+            if (Ui.Button(x + 32, row, bw, 52, "立即保存", 0, true, 16))
             { Save(); Notify(lastSaveOk ? "进度已保存" : "保存暂不可用，原有存档会保留。", 4); }
-            if (Ui.Button(x + 44 + (w - 76) / 2, row, (w - 76) / 2, 52, "行动指南", 0, true, 16)) navigation.Open(GameModal.Help);
+            if (Ui.Button(x + 44 + bw, row, bw, 52, "行动指南", 0, true, 16)) navigation.Open(GameModal.Help);
+            if (!titleOpen && Ui.Button(x + 56 + bw * 2, row, bw, 52, "回到标题", 0, true, 16)) { BackToTitle(); return; }
             Ui.Text(x + 32, y + 652, w - 64, 30, "THREAD ZERO · v0.21    空格 暂停 / 1 2 3 4 切换页面 / Esc 关闭弹窗", 12, Ui.Mute, TextAnchor.MiddleLeft);
         }
 
