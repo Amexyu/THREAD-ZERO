@@ -85,6 +85,7 @@ namespace ThreadZero
         public long savedAt;      // v0.20 上次存档的时间（UTC ticks），算离线收益
         public float scrapRate;   // v0.20 挂机时每秒（游戏时间）的零件收入：击杀给的 + 掉落装备的分解价，慢慢平均
         public List<string> anomalies = new List<string>();
+        public int tips, tipsVersion;   // v0.20 新手提示：看过的按位记（GameApp.Tip）；tipsVersion 0 = 还没做过老存档迁移
     }
 
     public sealed class ImplantDef
@@ -414,6 +415,13 @@ namespace ThreadZero
             state.sinceLegendary = Math.Max(0, Math.Min(Balance.LegendaryPity, state.sinceLegendary));
             if (Catalog.Find(state.recoveryTarget) == null) { state.recoveryTarget = null; state.targetBossMisses = 0; }
             state.targetBossMisses = Math.Max(0, Math.Min(7, state.targetBossMisses));
+            if (state.tipsVersion < 1)
+            {   // v0.20 新手提示上线前的存档：已经走过的阶段对应的提示直接记成看过，老玩家不会突然弹一串入门提示
+                if (state.unlockedRegion >= 1 || state.kills >= 30) state.tips |= 1 << 0 | 1 << 1;   // 刚进游戏、第一次掉装备
+                if (state.unlockedRegion >= 3) state.tips |= 1 << 2 | 1 << 3;                         // 第一次被打倒、第一次进精英关
+                if (state.bosses > 0) state.tips |= 1 << 4;                                           // 回声层开放
+                state.tipsVersion = 1;
+            }
             state.glowMode = Math.Max(0, Math.Min(2, state.glowMode));
             state.shakeMode = Math.Max(0, Math.Min(2, state.shakeMode));
             state.autoSalvage = Math.Max(0, Math.Min(2, state.autoSalvage));

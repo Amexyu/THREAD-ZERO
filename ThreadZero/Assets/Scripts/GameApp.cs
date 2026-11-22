@@ -76,7 +76,7 @@ namespace ThreadZero
                 // v0.16 去掉顶部「掉落了什么 · 查看」提示：掉落本身已经有弹出 → 吸入角色的动画，新物品在背包里有「新」标记。
                 lastDrop = item; SpawnDrop(item);
                 recentDrops.Insert(0, item.uid); if (recentDrops.Count > 5) recentDrops.RemoveAt(5);
-                unseen.Add(item.uid);
+                unseen.Add(item.uid); QueueTip(Tip.Drop);
                 Play((int)item.quality >= 2 ? rareSound : dropSound); Save();
             };
             selectedItem = model.state.items.Last().uid;
@@ -157,7 +157,7 @@ namespace ThreadZero
                     // 被打倒：撤回上一关刷（开着自动推进时，过关后会自动再挑战）。
                     combat.RetreatRequested = false;
                     if (model.InEcho) BeginEchoTransition(Mathf.Max(1, model.state.echoFloor - 3));   // 回声层：退 3 层继续刷
-                    else { StuckHint(); BeginStageTransition(model.RetreatTarget()); }   // 不跨章；在回刷的关倒下就重打这一关
+                    else { StuckHint(); QueueTip(Tip.Defeat); BeginStageTransition(model.RetreatTarget()); }   // 不跨章；在回刷的关倒下就重打这一关
                 }
                 else if (combat.StageCleared)
                 {
@@ -413,6 +413,7 @@ namespace ThreadZero
             Rail();
             GUI.matrix = railMatrix;
             Toast();
+            Tips();   // v0.20 新手提示
             if (testSave) TestSaveBadge();
             Ui.Blocked = false;
             if (modal && navigation.HasModal) Modal();

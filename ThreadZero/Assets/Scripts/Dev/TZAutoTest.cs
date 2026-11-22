@@ -87,6 +87,7 @@ namespace ThreadZero
         private void Awake()
         {
             savedVolume = AudioListener.volume; AudioListener.volume = 0;
+            GameApp.SuppressTips = true;   // v0.20 新手提示默认不弹，免得盖住截图（要测提示的剧本 set GameApp.SuppressTips false）
             Application.runInBackground = true;
             Application.logMessageReceived += OnLog;
             string text = pendingText ?? "";
@@ -119,6 +120,7 @@ namespace ThreadZero
         {
             SilenceAll();
             if (savedVolume >= 0) { AudioListener.volume = savedVolume; savedVolume = -1; }   // 还原自动测试前的音量
+            GameApp.SuppressTips = false;
             Application.logMessageReceived -= OnLog;
             if (!finished)
             {
