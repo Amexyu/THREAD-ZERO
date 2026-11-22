@@ -27,6 +27,22 @@ def key(a):
     r, g, b = a[..., 0], a[..., 1], a[..., 2]; score = np.minimum(r, b) - g
     alpha = np.clip((190 - score) / 110, 0, 1); ex = np.clip(score, 0, None); k = np.clip((score - 8) / 40, 0, 1)
     return np.dstack([r - ex * k, g, b - ex * k, alpha * 255]).clip(0, 255).astype(np.uint8)
+def components(m):
+    """连通块（先膨胀 2 像素把细缝连上）。返回 标号图、每块的 (行切片, 列切片)、每块像素数。"""
+    from PIL import ImageFilter
+    m = np.asarray(Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.MaxFilter(5))) > 0
+    h, w = m.shape; lab = np.zeros((h, w), np.int32); objs, sizes = [], []; n = 0
+    for y0 in range(h):
+        for x0 in np.nonzero(m[y0] & (lab[y0] == 0))[0]:
+            if lab[y0, x0]: continue
+            n += 1; st = [(y0, x0)]; lab[y0, x0] = n; cnt = 0; ys = [y0, y0]; xs = [x0, x0]
+            while st:
+                y, x = st.pop(); cnt += 1
+                ys[0] = min(ys[0], y); ys[1] = max(ys[1], y); xs[0] = min(xs[0], x); xs[1] = max(xs[1], x)
+                for yy, xx in ((y + 1, x), (y - 1, x), (y, x + 1), (y, x - 1)):
+                    if 0 <= yy < h and 0 <= xx < w and m[yy, xx] and not lab[yy, xx]: lab[yy, xx] = n; st.append((yy, xx))
+            objs.append((slice(ys[0], ys[1] + 1), slice(xs[0], xs[1] + 1))); sizes.append(cnt)
+    return lab, objs, sizes
 def merge_json(pid, upd):
     d = ART + 'Parts/' + pid; os.makedirs(d, exist_ok=True); p = d + '/part.json'
     j = json.load(open(p)) if os.path.exists(p) else {'scale': 4}
@@ -34,21 +50,32 @@ def merge_json(pid, upd):
 def cut(part, src, ids, adj, preview):
     l, t, r, b, k = SPEC[part]; st = starter(part); piv = M['parts'][part]['pivot']
     im = Image.open(src).convert('RGB'); sx, sy = im.width / W, im.height / H
+    full = key(np.asarray(im).astype(np.float32))
+    lab, objs, sizes = components(full[::4, ::4, 3] > 40)
     tiles = []
     for i, pid in enumerate(ids):
         if pid == '-': continue
         x0, y0, cw, ch = cell_rect(part, i); dx, dy, s = adj.get(i, (0, 0, 1))
-        # 整格宽（不只留白框）：设计可以比留白框再宽一点
+        # 这一格的东西 = 整张图里中心落在这一格的那些连通块（东西可以伸出格子，邻格伸过来的碎片不要）
         cx0, cx1 = (1 + i * CW) * sx, (1 + (i + 1) * CW) * sx
-        box = im.crop((round(cx0), 0, round(cx1), im.height))
-        a = key(np.asarray(box).astype(np.float32)); rgba = Image.fromarray(a, 'RGBA')
+        a = full.copy(); keep = np.zeros(lab.shape, bool)
+        for li, sl in enumerate(objs, 1):
+            if sl is None: continue
+            mx = (sl[1].start + sl[1].stop) / 2 * 4
+            if cx0 <= mx < cx1 and sizes[li - 1] > 30: keep |= lab == li
+        keep = np.kron(keep, np.ones((4, 4), bool))[:a.shape[0], :a.shape[1]]
+        a[..., 3] = np.where(keep, a[..., 3], 0)
+        # 坐标系仍按格子：裁出 [格左, 格右] 加上伸出去的部分
+        ys_, xs_ = np.nonzero(a[..., 3] > 40)
+        lx = min(int(cx0), xs_.min()) if len(xs_) else int(cx0); rx = max(int(cx1), xs_.max() + 1) if len(xs_) else int(cx1)
+        rgba = Image.fromarray(a[:, lx:rx], 'RGBA'); shift = (cx0 - lx)
         f = 1 / (k * sx) * s; small = rgba.resize((max(1, round(rgba.width * f)), max(1, round(rgba.height * f))), Image.LANCZOS)
         m = np.asarray(small)[..., 3] > 40
         if not m.any(): print('空格', i, pid); continue
         ys, xs = np.nonzero(m); bx0, by0, bx1, by1 = max(0, xs.min() - 8), max(0, ys.min() - 8), min(small.width, xs.max() + 9), min(small.height, ys.max() + 9)
         out = small.crop((bx0, by0, bx1, by1))
         # 初始部件左上角在缩小后格子图里的位置
-        ox = ((x0 + l * k) - (1 + i * CW)) / k * s + dx; oy = (y0 + t * k) / k * s * (sy / sx) + dy
+        ox = ((x0 + l * k) - (1 + i * CW) + shift / sx) / k * s + dx; oy = (y0 + t * k) / k * s * (sy / sx) + dy
         pivot = [round(piv[0] + (ox - bx0) / 4, 2), round(piv[1] + (oy - by0) / 4, 2)]
         d = ART + 'Parts/' + pid; os.makedirs(d, exist_ok=True); out.save(d + '/' + part + '.png')
         entry = {'file': part + '.png', 'pivot': pivot}
