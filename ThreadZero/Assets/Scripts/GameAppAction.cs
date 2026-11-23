@@ -701,7 +701,8 @@ namespace ThreadZero
                 }
                 case Ability.Arc:     // 电弧模块：从角色胸口拉一道电弧光束
                 {
-                    Vector2 c = new Vector2(hx + 40, GroundY - 120);
+                    // 以前写死在「脚底往上 120」，Q 版角色矮，那个高度正好是脸。改成跟着骨骼：近侧肩膀往下、往前一点 = 胸口。
+                    Vector2 c = LayeredRigView.ArmAnchor != Vector2.zero ? LayeredRigView.ArmAnchor + new Vector2(10, 14) : new Vector2(hx + 40, GroundY - 80);
                     WeaponFx.Plain = true; WeaponFx.Fire("coil", clock, c, (aim - c).normalized, aim); WeaponFx.Plain = false;
                     break;
                 }
@@ -930,6 +931,7 @@ namespace ThreadZero
             if (done) Ui.Text(x + 40, y + h - 46, w - 80, 26, "获得称号「零号」", 16, Ui.Alpha(Ui.Orange, a), TextAnchor.MiddleLeft, true);
         }
         /// 测试用（桥接 call TestStageBanner 1）：直接放第几阶段的横幅。
+        public void TestArcFx() { OnAbilityFx(new AbilityEvent(Ability.Arc)); }
         public void TestStageBanner(int stage) { stageShown = Mathf.Clamp(stage, 1, Catalog.AscensionStageAt.Length); stageAt = clock; }
 
         // ---------- 武器技能：动作对时、技能名提示、技能特效 ----------
