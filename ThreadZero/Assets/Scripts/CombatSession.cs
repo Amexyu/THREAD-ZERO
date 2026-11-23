@@ -164,6 +164,10 @@ namespace ThreadZero
             for (float remaining = Math.Min(Math.Max(dt, 0), 2); remaining > .00001f;)
             { float step = Math.Min(.05f, remaining); Step(step); remaining -= step; }
         }
+        /// 第二件同效果装备：再加 SecondCopy 倍（1 件 = 1，2 件 = 1.6）。
+        private float Stack(Effect e) { return 1 + Balance.SecondCopy * (model.EffectCount(e) - 1); }
+        /// 标记中的目标多吃的伤害（标记装备 1 件 +15%，2 件 +24%）。
+        private float MarkFactor { get { return model.Has(Effect.Mark) ? 1 + Balance.MarkBonus * Stack(Effect.Mark) : 1; } }
         private void Emit(Ability ability, float damage = 0) { OnAbility?.Invoke(new AbilityEvent(ability, damage)); }
         private float Mitigate(float damage)
         { Enemy t = Target; return GameModel.Damage(damage, EnemyDefense() + (t != null && t.boss ? 6 : 0)); }
@@ -243,6 +247,7 @@ namespace ThreadZero
             float r = incomeSince / incomeClock; incomeSince = 0; incomeClock = 0;
             model.state.scrapRate = model.state.scrapRate <= 0 ? r : model.state.scrapRate + (r - model.state.scrapRate) * .1f;
         }
+        private float leechPool;
         private void Step(float dt)
         {
             elapsed += dt; TrackIncome(dt);
@@ -270,6 +275,7 @@ namespace ThreadZero
                 return;
             }
             Stats s = model.Total(); health = Math.Min(health, s.health);
+            { float cap = Balance.LeechCap * model.EffectCount(Effect.Leech) * s.health; leechPool = Math.Min(cap * 2, leechPool + cap * dt); }
 
             SpawnFromQueue(dt);
             if (Boss && BossEnemy != null)
@@ -341,7 +347,7 @@ namespace ThreadZero
                 if (droneTimer <= 0)
                 {
                     droneTimer += Balance.DroneInterval; droneFlash = .35f; droneHits++;
-                    lastDroneDamage = Mitigate(s.attack * Balance.DroneDamage) * (markTime > 0 ? Balance.MarkedDroneMultiplier : 1) * (1 + s.effectDamage);
+                    lastDroneDamage = Mitigate(s.attack * Balance.DroneDamage * Stack(Effect.Drone)) * (markTime > 0 ? Balance.MarkedDroneMultiplier : 1) * (1 + s.effectDamage);
                     Emit(Ability.Drone, lastDroneDamage); lastCritical = false;
                     Enemy t = Target; if (t != null) DealDamage(t, lastDroneDamage, s);
                 }
@@ -352,7 +358,7 @@ namespace ThreadZero
                 if (dashTimer <= 0)
                 {
                     dashTimer += Balance.ThrusterInterval; dashFlash = .4f; dashHits++;
-                    lastDashDamage = Mitigate(s.attack * Balance.ThrusterDamage) * (model.IsMelee ? Balance.AssaultMultiplier : 1) * (1 + s.effectDamage);
+                    lastDashDamage = Mitigate(s.attack * Balance.ThrusterDamage * Stack(Effect.Thruster)) * (model.IsMelee ? Balance.AssaultMultiplier : 1) * (1 + s.effectDamage);
                     if (model.IsMelee) combos++;
                     Emit(model.IsMelee ? Ability.Assault : Ability.Dash, lastDashDamage); lastCritical = false;
                     Enemy t = Target;
@@ -383,7 +389,8 @@ namespace ThreadZero
             lastCritical = model.Chance(s.crit) || (model.HasPerk(0, 0) && attackNumber % 5 == 0);   // v0.21 改造板「连击校准」：每第 5 次普攻必暴击
             float damage = Mitigate(s.attack);
             if (lastCritical) damage *= Balance.CritMultiplier + s.critDamage;   // v0.18 暴击伤害词条
-            if (target.health < target.maxHealth * Balance.ExecuteThreshold && model.Has(Effect.Execute)) damage *= Balance.ExecuteMultiplier;
+            if (model.Has(Effect.Execute) && target.health < target.maxHealth * (model.EffectCount(Effect.Execute) > 1 ? Balance.ExecuteThreshold2 : Balance.ExecuteThreshold)) damage *= Balance.ExecuteMultiplier;
+            if (markTime > 0) damage *= MarkFactor;
             if (guardCharge > 0 && model.Has(Effect.Guard))
             { damage += guardCharge; Emit(Ability.GuardRelease, guardCharge); guardCharge = 0; guardFlash = .45f; }
             bool arc = attackNumber % 3 == 0 && model.Has(Effect.Arc);
@@ -472,7 +479,11 @@ namespace ThreadZero
             if (s.focus > 0 && e == Target) damage *= 1 + s.focus;   // v0.21 芯片「聚焦」：只有主目标吃到，范围 / 连锁波及的不算
             if (model.HasPerk(0, 3) && health < s.health * .5f) damage *= 1.25f;   // v0.21 改造板「红线」
             float actual = Math.Min(e.health, damage);
-            health = Math.Min(s.health, health + actual * (Balance.LeechRatio * model.EffectCount(Effect.Leech) + s.leech));   // v0.21 加上芯片「汲取」
+            // 11-23 汲取效果有回复上限（每件每秒最多回最大生命的 LeechCap）：原来按伤害百分比回血，后期输出远高于怪的输出，
+            // 带汲取就等于永远打不死，同章其他武器全打不过（装备对照报告）。芯片「汲取」照旧不封顶。
+            float leech = actual * Balance.LeechRatio * model.EffectCount(Effect.Leech);
+            if (leech > 0) { leech = Math.Min(leech, leechPool); leechPool -= leech; }
+            health = Math.Min(s.health, health + leech + actual * s.leech);
             e.health -= damage; e.hitFlash = .3f;
             if (e.boss && MirrorLeft > 0 && recovery <= 0) Hurt(actual * MirrorRatio, e.x, s);   // 镜面审计官的镜面反射
             lastPlayerDamage = damage; hitFlash = .3f; lastHitX = e.x;

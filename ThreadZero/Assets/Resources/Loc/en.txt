@@ -548,7 +548,7 @@ v0.21 · 毕业制作 · 展览模式	v0.21 · Graduation Project · Exhibition 
 查看	View
 查看产出街区	View source district
 标记	Mark
-标记：定时锁定目标，联动无人机与电弧	Mark: periodically locks a target, boosting Drone and Arc
+标记：定时锁定目标，目标多受伤害，联动无人机与电弧	Mark: periodically locks a target so it takes more damage; boosts Drone and Arc
 核心	Cores
 棚屋里的人都不见了，只剩下衣服	Everyone in the shacks is gone. Only their clothes are left
 棚户下层	Shanty Underlevel

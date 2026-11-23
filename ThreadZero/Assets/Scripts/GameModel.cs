@@ -222,37 +222,37 @@ namespace ThreadZero
         public static readonly float[] Multipliers = Balance.Qualities.Select(q=>q.multiplier).ToArray();
         public static readonly EquipmentBase[] All = {
             new EquipmentBase("w0", "勤务短铳", Slot.Weapon, 0, new Stats(0, 7, 0)),
-            new EquipmentBase("w1", "霓虹切刃", Slot.Weapon, 1, new Stats(0, 6, 0, .08f), Effect.Execute, AttackStyle.Melee),
+            new EquipmentBase("w1", "霓虹切刃", Slot.Weapon, 1, new Stats(0, 7, 0, .08f), Effect.Execute, AttackStyle.Melee),
             new EquipmentBase("w2", "线圈发射器", Slot.Weapon, 2, new Stats(0, 5, 0), Effect.Arc),
-            new EquipmentBase("w3", "逆流手炮", Slot.Weapon, 3, new Stats(6, 6, 0), Effect.Leech),
+            new EquipmentBase("w3", "逆流手炮", Slot.Weapon, 3, new Stats(0, 6, 0), Effect.Leech),
             new EquipmentBase("w4", "重型破拆器", Slot.Weapon, 4, new Stats(0, 10, 0, -.05f), Effect.None, AttackStyle.Melee),
-            new EquipmentBase("h0", "回收员兜帽", Slot.Head, 0, new Stats(10, 0, 2)),
-            new EquipmentBase("h1", "夜行面罩", Slot.Head, 1, new Stats(8, 0, 1, 0, .025f)),
+            new EquipmentBase("h0", "回收员兜帽", Slot.Head, 0, new Stats(12, 0, 2)),
+            new EquipmentBase("h1", "夜行面罩", Slot.Head, 1, new Stats(10, 1, 1, 0, .03f)),
             new EquipmentBase("h2", "信号护目镜", Slot.Head, 2, new Stats(6, 1, 1, 0, 0, 2), Effect.Mark),
             new EquipmentBase("h3", "封闭式头盔", Slot.Head, 3, new Stats(18, 0, 4)),
             new EquipmentBase("h4", "故障猫耳终端", Slot.Head, 4, new Stats(8, 1, 0, .04f)),
-            new EquipmentBase("c0", "防雨勤务夹克", Slot.Coat, 0, new Stats(24, 0, 3)),
-            new EquipmentBase("c1", "反光机能风衣", Slot.Coat, 1, new Stats(18, 0, 2, .04f)),
-            new EquipmentBase("c2", "轻型装甲外套", Slot.Coat, 2, new Stats(30, 0, 5), Effect.Guard),
+            new EquipmentBase("c0", "防雨勤务夹克", Slot.Coat, 0, new Stats(28, 1, 3)),
+            new EquipmentBase("c1", "反光机能风衣", Slot.Coat, 1, new Stats(20, 1, 2, .05f)),
+            new EquipmentBase("c2", "轻型装甲外套", Slot.Coat, 2, new Stats(26, 0, 4), Effect.Guard),
             new EquipmentBase("c3", "逆流束带上衣", Slot.Coat, 3, new Stats(18, 2, 2), Effect.Leech),
-            new EquipmentBase("c4", "白噪研究长衣", Slot.Coat, 4, new Stats(20, 0, 2, 0, 0, 3)),
+            new EquipmentBase("c4", "白噪研究长衣", Slot.Coat, 4, new Stats(22, 1, 2, 0, 0, 3)),
             new EquipmentBase("b0", "折叠回收背包", Slot.Back, 0, new Stats(12, 0, 1, 0, 0, 1), Effect.Drone),
-            new EquipmentBase("b1", "侦察天线模块", Slot.Back, 1, new Stats(8, 1, 0, .03f, 0, 2), Effect.Mark),
+            new EquipmentBase("b1", "侦察天线模块", Slot.Back, 1, new Stats(10, 1, 1, .03f, 0, 2), Effect.Mark),
             new EquipmentBase("b2", "蓄电线圈模块", Slot.Back, 2, new Stats(8, 1, 0), Effect.Arc),
             new EquipmentBase("b3", "折叠防护翼", Slot.Back, 3, new Stats(20, 0, 4), Effect.Guard),
             new EquipmentBase("b4", "轻量推进背架", Slot.Back, 4, new Stats(8, 0, 0, .08f), Effect.Thruster),
             // ---- v0.16 第二章「物流高架」20 件（雨夜货运）。先在回声层掉落，第二章关卡做好后也在第二章掉。----
             new EquipmentBase("w5", "撞杆矛", Slot.Weapon, 0, new Stats(0, 9, 0, -.02f), Effect.None, AttackStyle.Melee),
-            new EquipmentBase("w6", "气动钉枪", Slot.Weapon, 1, new Stats(0, 6, 0, .06f), Effect.Mark),
-            new EquipmentBase("w7", "吊臂钩索", Slot.Weapon, 2, new Stats(8, 9, 1), Effect.Leech, AttackStyle.Melee),
-            new EquipmentBase("w8", "切割锯", Slot.Weapon, 3, new Stats(0, 6, 0, .1f, .02f), Effect.Execute, AttackStyle.Melee),
+            new EquipmentBase("w6", "气动钉枪", Slot.Weapon, 1, new Stats(0, 9.5f, 0, .06f), Effect.Mark),
+            new EquipmentBase("w7", "吊臂钩索", Slot.Weapon, 2, new Stats(0, 9, 0), Effect.Leech, AttackStyle.Melee),
+            new EquipmentBase("w8", "切割锯", Slot.Weapon, 3, new Stats(0, 8, 0, .1f, .02f), Effect.Execute, AttackStyle.Melee),
             new EquipmentBase("w9", "信号弩", Slot.Weapon, 4, new Stats(0, 8, 0, 0, .04f), Effect.Arc),
             new EquipmentBase("h5", "反光雨帽", Slot.Head, 0, new Stats(12, 0, 2, 0, 0, 2)),
             new EquipmentBase("h6", "调度耳麦", Slot.Head, 1, new Stats(6, 1, 1, .05f), Effect.Mark),
             new EquipmentBase("h7", "吊车安全盔", Slot.Head, 2, new Stats(20, 0, 4), Effect.Guard),
             new EquipmentBase("h8", "货柜焊接面罩", Slot.Head, 3, new Stats(16, 0, 5)),
             new EquipmentBase("h9", "雨幕全息面罩", Slot.Head, 4, new Stats(8, 1, 0, 0, .04f, 2), Effect.Mark),
-            new EquipmentBase("c5", "反光雨披", Slot.Coat, 0, new Stats(22, 0, 2, 0, 0, 3)),
+            new EquipmentBase("c5", "反光雨披", Slot.Coat, 0, new Stats(24, 1, 2, 0, 0, 3)),
             new EquipmentBase("c6", "装卸工负重马甲", Slot.Coat, 1, new Stats(26, 1, 3), Effect.Guard),
             new EquipmentBase("c7", "防水潜工夹克", Slot.Coat, 2, new Stats(32, 0, 4)),
             new EquipmentBase("c8", "轨道维修夹克", Slot.Coat, 3, new Stats(20, 2, 2, .03f), Effect.Arc),
@@ -263,11 +263,11 @@ namespace ThreadZero
             new EquipmentBase("b8", "电池组信号塔", Slot.Back, 3, new Stats(10, 1, 0, .03f, 0, 2), Effect.Arc),
             new EquipmentBase("b9", "折叠货梯", Slot.Back, 4, new Stats(16, 0, 2, 0, 0, 3)),
             // ---- v0.16 下装：l0 初始，l1–l4 第一章，l5–l9 第二章。下装偏生命 / 防御，少量攻速和幸运。----
-            new EquipmentBase("l0", "回收员工装裤", Slot.Legs, 0, new Stats(10, 0, 1)),
+            new EquipmentBase("l0", "回收员工装裤", Slot.Legs, 0, new Stats(12, 0, 2)),
             new EquipmentBase("l1", "排污防水裤", Slot.Legs, 1, new Stats(14, 0, 2)),
-            new EquipmentBase("l2", "棚户补丁裤", Slot.Legs, 2, new Stats(10, 0, 1, 0, 0, 2)),
+            new EquipmentBase("l2", "棚户补丁裤", Slot.Legs, 2, new Stats(12, 1, 1, 0, 0, 2)),
             new EquipmentBase("l3", "护膝战术裤", Slot.Legs, 3, new Stats(16, 0, 3)),
-            new EquipmentBase("l4", "管廊液压腿甲", Slot.Legs, 4, new Stats(12, 1, 2, .03f)),
+            new EquipmentBase("l4", "管廊液压腿甲", Slot.Legs, 4, new Stats(12, 1, 1, .03f)),
             new EquipmentBase("l5", "荧光雨裤", Slot.Legs, 0, new Stats(20, 0, 3, 0, 0, 2)),
             new EquipmentBase("l6", "装卸工护腿", Slot.Legs, 1, new Stats(26, 0, 4)),
             new EquipmentBase("l7", "防水潜工长靴裤", Slot.Legs, 2, new Stats(22, 0, 3, .02f)),
@@ -275,16 +275,16 @@ namespace ThreadZero
             new EquipmentBase("l9", "信号员马裤", Slot.Legs, 4, new Stats(16, 1, 2, 0, .02f, 2)),
             // ---- v0.18 第三章 25 件（美术未到：外观借 art 指定的旧装备，武器招式借 mech 指定的旧武器）----
             // v0.20 卡27：第三～五章 15 把武器（w10–w24）都有了自己的图（art = null），招式仍借同类旧武器（mech）。
-            new EquipmentBase("w10", "天线警棍", Slot.Weapon, 0, new Stats(0f, 10.3f, 0f, -0.02f), Effect.Arc, AttackStyle.Melee, null, "w8"),
-            new EquipmentBase("w11", "定向干扰枪", Slot.Weapon, 1, new Stats(0f, 6.9f, 0f, 0.06f), Effect.Mark, AttackStyle.Ranged, null, "w6"),
-            new EquipmentBase("w12", "雷达碟炮", Slot.Weapon, 2, new Stats(9.2f, 10.3f, 1.1f), Effect.None, AttackStyle.Ranged, null, "w3"),
+            new EquipmentBase("w10", "天线警棍", Slot.Weapon, 0, new Stats(0f, 12f, 0f, -0.02f), Effect.Arc, AttackStyle.Melee, null, "w8"),
+            new EquipmentBase("w11", "定向干扰枪", Slot.Weapon, 1, new Stats(0f, 10.5f, 0f, 0.06f), Effect.Mark, AttackStyle.Ranged, null, "w6"),
+            new EquipmentBase("w12", "雷达碟炮", Slot.Weapon, 2, new Stats(0f, 8.5f, 0f), Effect.None, AttackStyle.Ranged, null, "w3"),
             new EquipmentBase("w13", "屏蔽网刃", Slot.Weapon, 3, new Stats(0f, 6.9f, 0f, 0.1f, 0.02f), Effect.Guard, AttackStyle.Melee, null, "w5"),
-            new EquipmentBase("w14", "中继弩枪", Slot.Weapon, 4, new Stats(0f, 9.2f, 0f, 0f, 0.04f), Effect.Arc, AttackStyle.Ranged, null, "w9"),
+            new EquipmentBase("w14", "中继弩枪", Slot.Weapon, 4, new Stats(0f, 11.5f, 0f, 0f, 0.04f), Effect.Arc, AttackStyle.Ranged, null, "w9"),
             new EquipmentBase("h10", "天线耳罩", Slot.Head, 0, new Stats(13.8f, 0f, 2.3f, 0f, 0f, 2), Effect.Mark, AttackStyle.Ranged, null, null),
             new EquipmentBase("h11", "降噪头盔", Slot.Head, 1, new Stats(6.9f, 1.1f, 1.1f, 0.05f), Effect.Guard, AttackStyle.Ranged, null, null),
-            new EquipmentBase("h12", "信号目镜", Slot.Head, 2, new Stats(23, 0f, 4.6f), Effect.Mark, AttackStyle.Ranged, null, null),
+            new EquipmentBase("h12", "信号目镜", Slot.Head, 2, new Stats(18.4f, 0f, 3.5f), Effect.Mark, AttackStyle.Ranged, null, null),
             new EquipmentBase("h13", "屏蔽面罩", Slot.Head, 3, new Stats(18.4f, 0f, 5.8f), Effect.None, AttackStyle.Ranged, null, null),
-            new EquipmentBase("h14", "中继头环", Slot.Head, 4, new Stats(9.2f, 1.1f, 0f, 0f, 0.04f, 2), Effect.None, AttackStyle.Ranged, null, null),
+            new EquipmentBase("h14", "中继头环", Slot.Head, 4, new Stats(16.1f, 2.3f, 1.1f, 0f, 0.05f, 2), Effect.None, AttackStyle.Ranged, null, null),
             new EquipmentBase("c10", "信号员风衣", Slot.Coat, 0, new Stats(25.3f, 0f, 2.3f, 0f, 0f, 3), Effect.Mark, AttackStyle.Ranged, null, null),
             new EquipmentBase("c11", "屏蔽网背心", Slot.Coat, 1, new Stats(29.9f, 1.1f, 3.4f), Effect.Guard, AttackStyle.Ranged, null, null),
             new EquipmentBase("c12", "机房防静电服", Slot.Coat, 2, new Stats(36.8f, 0f, 4.6f), Effect.None, AttackStyle.Ranged, null, null),
@@ -292,7 +292,7 @@ namespace ThreadZero
             new EquipmentBase("c14", "断讯斗篷", Slot.Coat, 4, new Stats(23, 1.1f, 2.3f, 0.04f, 0.02f), Effect.None, AttackStyle.Ranged, null, null),
             new EquipmentBase("b10", "折叠雷达碟", Slot.Back, 0, new Stats(23, 0f, 4.6f), Effect.Mark, AttackStyle.Ranged, null, null),
             new EquipmentBase("b11", "中继电池箱", Slot.Back, 1, new Stats(13.8f, 1.1f, 1.1f, 0.04f), Effect.Arc, AttackStyle.Ranged, null, null),
-            new EquipmentBase("b12", "天线束", Slot.Back, 2, new Stats(11.5f, 1.1f, 0f, 0f, 0f, 2), Effect.Drone, AttackStyle.Ranged, null, null),
+            new EquipmentBase("b12", "天线束", Slot.Back, 2, new Stats(16.1f, 1.1f, 1.1f, 0f, 0f, 2), Effect.Drone, AttackStyle.Ranged, null, null),
             new EquipmentBase("b13", "干扰无人机舱", Slot.Back, 3, new Stats(11.5f, 1.1f, 0f, 0.03f, 0f, 2), Effect.Drone, AttackStyle.Ranged, null, null),
             new EquipmentBase("b14", "屏蔽伞", Slot.Back, 4, new Stats(18.4f, 0f, 2.3f, 0f, 0f, 3), Effect.Guard, AttackStyle.Ranged, null, null),
             new EquipmentBase("l10", "屋顶维修裤", Slot.Legs, 0, new Stats(23, 0f, 3.4f, 0f, 0f, 2), Effect.None, AttackStyle.Ranged, null, null),
@@ -301,17 +301,17 @@ namespace ThreadZero
             new EquipmentBase("l13", "天线兵马裤", Slot.Legs, 3, new Stats(20.7f, 1.1f, 2.3f, 0.03f), Effect.None, AttackStyle.Ranged, null, null),
             new EquipmentBase("l14", "中继护膝", Slot.Legs, 4, new Stats(18.4f, 1.1f, 2.3f, 0f, 0.02f, 2), Effect.None, AttackStyle.Ranged, null, null),
             // ---- v0.18 第四章 25 件（美术未到：外观借 art 指定的旧装备，武器招式借 mech 指定的旧武器）----
-            new EquipmentBase("w15", "镜刃", Slot.Weapon, 0, new Stats(0f, 11.7f, 0f, -0.02f), Effect.Execute, AttackStyle.Melee, null, "w1"),   // v0.20 镜刃招式用匕首的迅切连击（卡27 起用自己的图）
-            new EquipmentBase("w16", "折光步枪", Slot.Weapon, 1, new Stats(0f, 7.8f, 0f, 0.06f), Effect.Mark, AttackStyle.Ranged, null, "w0"),   // v0.20 折光步枪招式用贴脸轰击（卡27 起用自己的图）
-            new EquipmentBase("w17", "审计手炮", Slot.Weapon, 2, new Stats(10.4f, 11.7f, 1.3f), Effect.Leech, AttackStyle.Ranged, null, "w3"),
+            new EquipmentBase("w15", "镜刃", Slot.Weapon, 0, new Stats(0f, 15f, 0f, -0.02f), Effect.Execute, AttackStyle.Melee, null, "w1"),   // v0.20 镜刃招式用匕首的迅切连击（卡27 起用自己的图）
+            new EquipmentBase("w16", "折光步枪", Slot.Weapon, 1, new Stats(0f, 9f, 0f, 0.06f), Effect.Mark, AttackStyle.Ranged, null, "w0"),   // v0.20 折光步枪招式用贴脸轰击（卡27 起用自己的图）
+            new EquipmentBase("w17", "审计手炮", Slot.Weapon, 2, new Stats(0f, 10.5f, 0f), Effect.Leech, AttackStyle.Ranged, null, "w3"),
             new EquipmentBase("w18", "冷却重锤", Slot.Weapon, 3, new Stats(0f, 7.8f, 0f, 0.1f, 0.02f), Effect.None, AttackStyle.Melee, null, "w4"),
-            new EquipmentBase("w19", "光纤钩索", Slot.Weapon, 4, new Stats(0f, 10.4f, 0f, 0f, 0.04f), Effect.Leech, AttackStyle.Melee, null, "w7"),
-            new EquipmentBase("h15", "镜面面罩", Slot.Head, 0, new Stats(15.6f, 0f, 2.6f, 0f, 0f, 2), Effect.None, AttackStyle.Ranged, null, null),
-            new EquipmentBase("h16", "审计耳机", Slot.Head, 1, new Stats(7.8f, 1.3f, 1.3f, 0.05f), Effect.Mark, AttackStyle.Ranged, null, null),
-            new EquipmentBase("h17", "冷光头盔", Slot.Head, 2, new Stats(26, 0f, 5.2f), Effect.Guard, AttackStyle.Ranged, null, null),
-            new EquipmentBase("h18", "晶体护目镜", Slot.Head, 3, new Stats(20.8f, 0f, 6.5f), Effect.Mark, AttackStyle.Ranged, null, null),
-            new EquipmentBase("h19", "上城礼帽", Slot.Head, 4, new Stats(10.4f, 1.3f, 0f, 0f, 0.04f, 2), Effect.None, AttackStyle.Ranged, null, null),
-            new EquipmentBase("c15", "镜面风衣", Slot.Coat, 0, new Stats(28.6f, 0f, 2.6f, 0f, 0f, 3), Effect.None, AttackStyle.Ranged, null, null),
+            new EquipmentBase("w19", "光纤钩索", Slot.Weapon, 4, new Stats(0f, 12.5f, 0f, 0f, 0.04f), Effect.Leech, AttackStyle.Melee, null, "w7"),
+            new EquipmentBase("h15", "镜面面罩", Slot.Head, 0, new Stats(23.4f, 1.3f, 3.9f, 0f, 0f, 2), Effect.None, AttackStyle.Ranged, null, null),
+            new EquipmentBase("h16", "审计耳机", Slot.Head, 1, new Stats(13f, 1.3f, 1.3f, 0.05f), Effect.Mark, AttackStyle.Ranged, null, null),
+            new EquipmentBase("h17", "冷光头盔", Slot.Head, 2, new Stats(20.8f, 0f, 4f), Effect.Guard, AttackStyle.Ranged, null, null),
+            new EquipmentBase("h18", "晶体护目镜", Slot.Head, 3, new Stats(15.6f, 0f, 5.2f), Effect.Mark, AttackStyle.Ranged, null, null),
+            new EquipmentBase("h19", "上城礼帽", Slot.Head, 4, new Stats(20.8f, 2.6f, 1.3f, 0f, 0.05f, 2), Effect.None, AttackStyle.Ranged, null, null),
+            new EquipmentBase("c15", "镜面风衣", Slot.Coat, 0, new Stats(33.8f, 1.3f, 3.9f, 0f, 0f, 3), Effect.None, AttackStyle.Ranged, null, null),
             new EquipmentBase("c16", "审计制服", Slot.Coat, 1, new Stats(33.8f, 1.3f, 3.9f), Effect.Guard, AttackStyle.Ranged, null, null),
             new EquipmentBase("c17", "冷却服", Slot.Coat, 2, new Stats(41.6f, 0f, 5.2f), Effect.Leech, AttackStyle.Ranged, null, null),
             new EquipmentBase("c18", "白金防弹衣", Slot.Coat, 3, new Stats(26, 2.6f, 2.6f, 0.03f), Effect.Guard, AttackStyle.Ranged, null, null),
@@ -327,24 +327,24 @@ namespace ThreadZero
             new EquipmentBase("l18", "白金战术裤", Slot.Legs, 3, new Stats(23.4f, 1.3f, 2.6f, 0.03f), Effect.None, AttackStyle.Ranged, null, null),
             new EquipmentBase("l19", "玻璃纤维靴裤", Slot.Legs, 4, new Stats(20.8f, 1.3f, 2.6f, 0f, 0.02f, 2), Effect.None, AttackStyle.Ranged, null, null),
             // ---- v0.18 第五章 25 件（美术未到：外观借 art 指定的旧装备，武器招式借 mech 指定的旧武器）----
-            new EquipmentBase("w20", "织针刺剑", Slot.Weapon, 0, new Stats(0f, 13, 0f, -0.02f), Effect.Execute, AttackStyle.Melee, null, "w8"),
+            new EquipmentBase("w20", "织针刺剑", Slot.Weapon, 0, new Stats(0f, 16, 0f, -0.02f), Effect.Execute, AttackStyle.Melee, null, "w8"),
             new EquipmentBase("w21", "线缆鞭", Slot.Weapon, 1, new Stats(0f, 8.7f, 0f, 0.06f), Effect.Leech, AttackStyle.Melee, null, "w7"),
-            new EquipmentBase("w22", "协议发射器", Slot.Weapon, 2, new Stats(11.6f, 13, 1.4f), Effect.Arc, AttackStyle.Ranged, null, "w2"),
+            new EquipmentBase("w22", "协议发射器", Slot.Weapon, 2, new Stats(0f, 13, 0f), Effect.Arc, AttackStyle.Ranged, null, "w2"),
             new EquipmentBase("w23", "母线重锤", Slot.Weapon, 3, new Stats(0f, 8.7f, 0f, 0.1f, 0.02f), Effect.None, AttackStyle.Melee, null, "w4"),
-            new EquipmentBase("w24", "零号霰枪", Slot.Weapon, 4, new Stats(0f, 11.6f, 0f, 0f, 0.04f), Effect.None, AttackStyle.Ranged, null, "w0"),
-            new EquipmentBase("h20", "织网面纱", Slot.Head, 0, new Stats(17.4f, 0f, 2.9f, 0f, 0f, 2), Effect.Mark, AttackStyle.Ranged, null, null),
-            new EquipmentBase("h21", "协议头环", Slot.Head, 1, new Stats(8.7f, 1.4f, 1.4f, 0.05f), Effect.None, AttackStyle.Ranged, null, null),
-            new EquipmentBase("h22", "零号目镜", Slot.Head, 2, new Stats(29, 0f, 5.8f), Effect.Mark, AttackStyle.Ranged, null, null),
-            new EquipmentBase("h23", "线缆头盔", Slot.Head, 3, new Stats(23.2f, 0f, 7.2f), Effect.Guard, AttackStyle.Ranged, null, null),
-            new EquipmentBase("h24", "母体冠", Slot.Head, 4, new Stats(11.6f, 1.4f, 0f, 0f, 0.04f, 2), Effect.None, AttackStyle.Ranged, null, null),
+            new EquipmentBase("w24", "零号霰枪", Slot.Weapon, 4, new Stats(0f, 11f, 0f, 0f, 0.04f), Effect.None, AttackStyle.Ranged, null, "w0"),
+            new EquipmentBase("h20", "织网面纱", Slot.Head, 0, new Stats(20.3f, 0f, 3.5f, 0f, 0f, 2), Effect.Mark, AttackStyle.Ranged, null, null),
+            new EquipmentBase("h21", "协议头环", Slot.Head, 1, new Stats(23.2f, 2.9f, 2.9f, 0.05f), Effect.None, AttackStyle.Ranged, null, null),
+            new EquipmentBase("h22", "零号目镜", Slot.Head, 2, new Stats(23.2f, 0f, 4.3f), Effect.Mark, AttackStyle.Ranged, null, null),
+            new EquipmentBase("h23", "线缆头盔", Slot.Head, 3, new Stats(18.6f, 0f, 5.8f), Effect.Guard, AttackStyle.Ranged, null, null),
+            new EquipmentBase("h24", "母体冠", Slot.Head, 4, new Stats(23.2f, 2.9f, 1.4f, 0f, 0.05f, 2), Effect.None, AttackStyle.Ranged, null, null),
             new EquipmentBase("c20", "织网长袍", Slot.Coat, 0, new Stats(31.9f, 0f, 2.9f, 0f, 0f, 3), Effect.Arc, AttackStyle.Ranged, null, null),
             new EquipmentBase("c21", "协议外骨骼", Slot.Coat, 1, new Stats(37.7f, 1.4f, 4.3f), Effect.Guard, AttackStyle.Ranged, null, null),
             new EquipmentBase("c22", "线缆编织甲", Slot.Coat, 2, new Stats(46.4f, 0f, 5.8f), Effect.None, AttackStyle.Ranged, null, null),
             new EquipmentBase("c23", "零号战衣", Slot.Coat, 3, new Stats(29, 2.9f, 2.9f, 0.03f), Effect.Leech, AttackStyle.Ranged, null, null),
             new EquipmentBase("c24", "回收员终装", Slot.Coat, 4, new Stats(29, 1.4f, 2.9f, 0.04f, 0.02f), Effect.None, AttackStyle.Ranged, null, null),
-            new EquipmentBase("b20", "织网纺锤", Slot.Back, 0, new Stats(29, 0f, 5.8f), Effect.Drone, AttackStyle.Ranged, null, null),
+            new EquipmentBase("b20", "织网纺锤", Slot.Back, 0, new Stats(23.2f, 0f, 4.3f), Effect.Drone, AttackStyle.Ranged, null, null),
             new EquipmentBase("b21", "母线线轴", Slot.Back, 1, new Stats(17.4f, 1.4f, 1.4f, 0.04f), Effect.Thruster, AttackStyle.Ranged, null, null),
-            new EquipmentBase("b22", "协议无人机", Slot.Back, 2, new Stats(14.5f, 1.4f, 0f, 0f, 0f, 2), Effect.Drone, AttackStyle.Ranged, null, null),
+            new EquipmentBase("b22", "协议无人机", Slot.Back, 2, new Stats(20.3f, 1.4f, 1.4f, 0f, 0f, 2), Effect.Drone, AttackStyle.Ranged, null, null),
             new EquipmentBase("b23", "零号核心包", Slot.Back, 3, new Stats(14.5f, 1.4f, 0f, 0.03f, 0f, 2), Effect.Arc, AttackStyle.Ranged, null, null),
             new EquipmentBase("b24", "织网之翼", Slot.Back, 4, new Stats(23.2f, 0f, 2.9f, 0f, 0f, 3), Effect.Thruster, AttackStyle.Ranged, null, null),
             new EquipmentBase("l20", "织网绑腿", Slot.Legs, 0, new Stats(29, 0f, 4.3f, 0f, 0f, 2), Effect.None, AttackStyle.Ranged, null, null),
@@ -368,7 +368,7 @@ namespace ThreadZero
         public static readonly string[] TitleNames = { "沉降区回收员", "物流高架装卸长", "信号禁区断讯者", "镜面上城的访客", "零号的织工" };
         public static string[] SetPieces(int set) { return new[] { "w" + set, "h" + set, "c" + set, "b" + set, "l" + set }; }
         /// v0.21 零号深网限定外观：在第几层拿（50 / 100 / 150），以及判断某件是不是。
-        public static readonly int[] DeepNetFloors = { 50, 100, 150 };
+        public static readonly int[] DeepNetFloors = { 50, 75, 100 };   // 11-23 原来 50 / 100 / 150：主线打完再挂 3 小时也只到 73–87 层，后两件几乎没人拿得到
         public static readonly string[] DeepNetLooks = { "h90", "c90", "b90" };
         public static bool IsDeepNet(string id) { return Array.IndexOf(DeepNetLooks, id) >= 0; }
         public static int DeepNetFloorOf(string id) { int i = Array.IndexOf(DeepNetLooks, id); return i >= 0 ? DeepNetFloors[i] : 0; }
@@ -410,7 +410,7 @@ namespace ThreadZero
                 case Effect.Guard: return "护盾：减伤蓄能，强化下一次攻击";
                 case Effect.Execute: return "处决：敌人低血时提高伤害";
                 case Effect.Drone: return "无人机：每 2.4 秒自动射击，标记增伤";
-                case Effect.Mark: return "标记：定时锁定目标，联动无人机与电弧";
+                case Effect.Mark: return "标记：定时锁定目标，目标多受伤害，联动无人机与电弧";
                 case Effect.Thruster: return "推进：每 4 秒突袭，近战武器强化冲击";
                 default: return "无特殊效果"; }
         }

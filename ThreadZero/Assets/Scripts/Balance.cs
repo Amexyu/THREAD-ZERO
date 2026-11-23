@@ -30,11 +30,14 @@ namespace ThreadZero
         public const float ItemLevelGrowth=.08f, AffixLevelGrowth=.06f;
         public const double NormalDropChance=.65, FeaturedBossChance=.35, TargetBossChance=.4;
         public const int RarePity=12, EpicPity=45, LegendaryPity=120, TargetBossGuarantee=8;
-        public const float DroneInterval=2.4f, DroneDamage=.3f, MarkedDroneMultiplier=1.5f;
+        public const float DroneInterval=2.4f, DroneDamage=.4f, MarkedDroneMultiplier=1.5f;
         public const float MarkInterval=3.5f, MarkDuration=4, ArcDamage=.45f, MarkedArcMultiplier=2;   // v0.19 电弧 35% → 45%
-        public const float ThrusterInterval=4, ThrusterDamage=.45f, AssaultMultiplier=1.5f;
-        public const float GuardReduction=.12f, GuardChargeRatio=.8f, LeechRatio=.035f;   // v0.19 吸血 4.5% → 3.5%：后期吸血武器比别的强太多（第五章拿吸血 20 分钟过、拿电弧 2–3 小时）
-        public const float ExecuteThreshold=.3f, ExecuteMultiplier=1.4f;
+        public const float ThrusterInterval=4, ThrusterDamage=.6f, AssaultMultiplier=1.5f;
+        public const float GuardReduction=.08f, GuardChargeRatio=.8f, LeechRatio=.03f, LeechCap=.002f;   // v0.19 吸血 4.5% → 3.5%：后期吸血武器比别的强太多（第五章拿吸血 20 分钟过、拿电弧 2–3 小时）
+        public const float ExecuteThreshold=.3f, ExecuteMultiplier=1.6f;
+        /// 11-23 装备平衡：标记本身让被标记的目标多吃伤害（原来只联动无人机 / 电弧，单穿标记装备没用）；
+        /// 无人机 / 推进 / 处决 / 标记原来穿两件和一件一样，现在第二件再加一截（和电弧、护盾、汲取一样最多算两件）。
+        public const float MarkBonus=.1f, SecondCopy=.6f, ExecuteThreshold2=.4f;
         /// v0.19 变强后再挑战：在墙上倒下后回刷前一关，战力（输出 × 生存的几何平均）涨 4% 或者刷满 5 次，才自动回去再挑战。
         public const float RetryGain = .04f; public const int RetryFarms = 5;
         /// v0.20 离线收益（企划：最多 2 小时、25% 效率、只给零件）：按挂机时的零件收入（击杀 + 掉落的分解价）算，离开不到 1 分钟不算。
@@ -43,10 +46,10 @@ namespace ThreadZero
         public const float SalvageScale = .4f;
         /// v0.20 机械飞升材料「织网碎片」：回声层每过一层 1 个、首领层 5 个、每 25 层里程碑再 20 个；重复打主线首领 2 个。
         public const int ShardsEchoFloor = 1, ShardsEchoBoss = 5, ShardsMilestone = 20, ShardsBossRepeat = 2;
-        public const float WaveRecovery=.04f, BossRecovery=1;
+        public const float WaveRecovery=.2f, BossRecovery=1;
         // v0.9 路段制：每关 5 个路段。1、2、4 是怪群，3 是精英，5 是首领。
         public const int EliteWave=3, BossWave=5;
-        public const float PackHealthShare=.34f, PackPressure=.1f, EliteHealth=1.3f, EliteAttack=1.1f, EliteRecovery=.15f;
+        public const float PackHealthShare=.34f, PackPressure=.1f, EliteHealth=1.3f, EliteAttack=1.1f, EliteRecovery=.3f;
         public const float ArcChain=.5f, ThrusterPierce=.6f;
         public static int PackSize(int region,int wave)
         {

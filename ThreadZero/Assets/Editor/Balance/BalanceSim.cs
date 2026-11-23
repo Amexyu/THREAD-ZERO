@@ -15,10 +15,10 @@ namespace ThreadZero.EditorTools
     /// 自动：数值相关的脚本（关卡、平衡表、模型、战斗、技能）一改，编译完就自动重跑一次。
     /// 手动：菜单 Thread Zero/数值测试/立即运行；或桥接命令 `menu Thread Zero/数值测试/立即运行`。
     [InitializeOnLoad]
-    public static class BalanceSim
+    public static partial class BalanceSim
     {
         // ---------- 设置 ----------
-        private const int Seeds = 6;                 // 几个随机种子（掉落运气不同）；v0.20 4 → 6，后几章种子之间差得多，4 个看不准
+        private static int Seeds = 6;                 // 几个随机种子（掉落运气不同）；v0.20 4 → 6，后几章种子之间差得多，4 个看不准
         private const float MaxHours = 18;           // 每个种子最多模拟多少小时（1× 速度的游戏时间）
         private const float StallHours = 3;          // 这么久没有打过新的一关 = 卡关
         private const float TickSeconds = .25f;      // 每次推进的时间（CombatSession 内部再切成 0.05 秒一小步）
@@ -30,7 +30,7 @@ namespace ThreadZero.EditorTools
         /// 调数值时可以只跑前几章（快）；正式报告用 5。
         private const int UntilChapter = 5;
         /// 打完主线后在回声层再挂几小时（报告“打完主线以后”一节）。调主线数值时设 0 省时间。
-        private const float EchoHours = 3;
+        private static float EchoHours = 3;
         /// v0.20 卡关时去回声层刷一会（真人会这么做，回声层就是为这个准备的）：最前面那一关连着倒 6 次、回声层已开放 → 刷这么多分钟再回来。
         private const float EchoDetourMinutes = 20;
         private const int EchoDetourAfter = 6;
@@ -173,6 +173,7 @@ namespace ThreadZero.EditorTools
                         if (st.first < 0)
                         {
                             st.first = t; lastProgress = t; Snapshot(model, st);
+                            if (captureAt != null && Array.IndexOf(captureAt, region) >= 0) captured[region] = JsonUtility.ToJson(model.state);   // 装备对照：首通这一关时存一份档
                             if (Chapters.Stage(region).kind == StageKind.Boss) run.bossAt[Chapters.ChapterOf(region) - 1] = t;
                             if (region == Chapters.BossRegion(UntilChapter)) { run.finished = true; break; }
                         }
@@ -183,7 +184,7 @@ namespace ThreadZero.EditorTools
                     }
                     if (t - lastProgress > StallHours * 3600) { run.stalled = true; run.stallAt = model.state.unlockedRegion; run.stallSnap = new StageLog(); Snapshot(model, run.stallSnap); run.stallScrap = model.state.scrap; break; }
                 }
-                if (run.finished && EchoHours > 0)
+                if (run.finished && EchoHours > 0 && captureAt == null)
                 {   // 打完主线：和游戏一样进回声层，过一层往上一层，倒下退 3 层
                     int start = model.EchoStartFloor(); model.CatchUpEcho(start); run.echoStart = start;
                     model.state.echoFloor = start; Policy(model); combat.ResetRegion();
@@ -268,8 +269,8 @@ namespace ThreadZero.EditorTools
             double power = s.attack * (1 + s.haste) * (1 + s.crit * (Balance.CritMultiplier - 1 + s.critDamage)) * (1 + .3 * s.effectDamage) * (1 + .3 * s.bossDamage);
             double ehp = s.health * (100 + Math.Max(0, s.defense)) / 100;
             // 词条之外的效果也算进去（真人看得懂“吸血 / 连锁电弧”这些效果，不会只比面板数字）：粗略折成输出 / 生存的倍率
-            double effect = 1 + .25 * m.EffectCount(Effect.Arc) + .08 * m.EffectCount(Effect.Execute) + .15 * m.EffectCount(Effect.Drone) + .1 * m.EffectCount(Effect.Mark) + .05 * m.EffectCount(Effect.Thruster);
-            double survive = 1 + .3 * m.EffectCount(Effect.Leech) + .15 * m.EffectCount(Effect.Guard);
+            double effect = 1 + .25 * m.EffectCount(Effect.Arc) + .08 * m.EffectCount(Effect.Execute) + .15 * m.EffectCount(Effect.Drone) + .1 * m.EffectCount(Effect.Mark) + .1 * m.EffectCount(Effect.Thruster);
+            double survive = 1 + .12 * m.EffectCount(Effect.Leech) + .12 * m.EffectCount(Effect.Guard);   // 11-23 汲取有回复上限以后不再值 30%
             return power * effect * ehp * survive * Splash(m);
         }
         /// v0.20 武器打一群的能力（真人看得出清怪快慢，卡在成群的波次时会换群伤武器）：手炮 / 重锤溅射、撞杆矛穿透、霰弹散射、线圈跳电。
@@ -350,6 +351,13 @@ namespace ThreadZero.EditorTools
         [MenuItem("Thread Zero/数值测试/对照：不买改造板节点")] public static void NoPerks() { Variant("不买改造板节点", () => UsePerks = false); }
         [MenuItem("Thread Zero/数值测试/对照：不领套装奖励")] public static void NoSets() { Variant("不领套装奖励", () => UseSets = false); }
         [MenuItem("Thread Zero/数值测试/对照：全部新系统都不用")] public static void NoNew() { Variant("全部新系统都不用", () => { UseRobots = UsePerks = UseSets = UseChips = false; }); }
+        /// 调数值时用：3 个种子、不挂深网，报告另存到 Logs/BalanceSim/快速.md（约为正式报告三分之一的时间）。
+        [MenuItem("Thread Zero/数值测试/快速（3 个种子，不挂深网）")]
+        public static void Quick()
+        {
+            int seeds = Seeds; float echo = EchoHours; Seeds = 3; EchoHours = 0;
+            try { RunAndReport("快速", Path.Combine(LogDir, "快速.md")); } finally { Seeds = seeds; EchoHours = echo; }
+        }
         private static void Variant(string name, Action off)
         {
             off();

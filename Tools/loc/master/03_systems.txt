@@ -33,7 +33,7 @@
 护盾：减伤蓄能，强化下一次攻击§シールド：被ダメージを軽減して蓄積し、次の攻撃を強化§Shield: blocks damage and charges your next attack§실드: 받는 피해를 줄이며 충전해 다음 공격을 강화
 处决：敌人低血时提高伤害§処刑：体力の少ない敵へのダメージ上昇§Execute: more damage to low-HP enemies§처형: 체력이 낮은 적에게 피해 증가
 无人机：每 2.4 秒自动射击，标记增伤§ドローン：2.4秒ごとに自動射撃、マーク中はダメージ上昇§Drone: fires every 2.4 s, more damage to marked targets§드론: 2.4초마다 자동 사격, 표식 대상에게 피해 증가
-标记：定时锁定目标，联动无人机与电弧§マーク：定期的に標的をロックし、ドローンとアークを強化§Mark: periodically locks a target, boosting Drone and Arc§표식: 주기적으로 대상을 고정하고 드론·아크와 연계
+标记：定时锁定目标，目标多受伤害，联动无人机与电弧§マーク：定期的に標的をロックし、被ダメージ上昇。ドローンとアークも強化§Mark: periodically locks a target so it takes more damage; boosts Drone and Arc§표식: 주기적으로 대상을 고정해 받는 피해 증가, 드론·아크도 강화
 推进：每 4 秒突袭，近战武器强化冲击§推進：4秒ごとに突撃、近接武器なら衝撃強化§Thruster: dash strike every 4 s, stronger with melee weapons§추진: 4초마다 돌격, 근접 무기면 충격 강화
 无特殊效果§特殊効果なし§No special effect§특수 효과 없음
 过载§オーバーロード§Overload§과부하
