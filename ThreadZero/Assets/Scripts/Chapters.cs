@@ -132,16 +132,18 @@ namespace ThreadZero
         private static float Ramp(float[] ramp, int region) { return 1 + ramp[ChapterIndex(region)] * (Math.Max(0, region) % StagesPerChapter); }
         /// v0.19 墙：每章的 x-3、x-6（精英）和 x-7（首领）比前后的关强一截，要在前一关刷一会儿才过得去；其余关平滑。
         /// 血量 × (1 + WallShape × ChapterWall)，攻击乘它的平方根（墙主要是“打不动”，不是“一碰就倒”）。
-        public static readonly float[] WallShape = { 0, 0, 1, 0, .3f, .8f, 1.5f };   // 11-23 x-6 1.2 → .9：每章第 6 关比首领还难（5-6 一关占全章六成时间）
+        public static readonly float[] WallShape = { 0, 0, .5f, 0, .3f, .45f, 1.5f };   // 11-23 x-6 1.2 → .9：每章第 6 关比首领还难（5-6 一关占全章六成时间）
         //   // 首领原来 1.4：后几章首领战老是拖过 3 分钟超时
         public static readonly float[] ChapterWall = { .8f, .5f, .35f, .78f, .35f };   // v0.20 夜间：第四章 .85 → .78、血 3.8 → 3.6（2:41 太慢；.7 / 3.5 又只要 1:00）。第五章墙 .4 → .35（试过 .35–.55）、攻击 3.1 → 3.6：难度从 5-6 墙挪到整章（墙 .45 以上时 5-6 像抛硬币，面板更高的种子也连倒十几次）
         /// x-3 / x-6 精英和 x-7 首领（墙）：回刷时跳过它们。
-        public static bool IsWallStage(int region) { return WallShape[Math.Max(0, region) % StagesPerChapter] >= .8f; }
+        public static bool IsWallStage(int region) { return WallShape[Math.Max(0, region) % StagesPerChapter] >= .4f; }
         /// v0.20 第四、五章首领：墙少放在血量上、多放在攻击上（原来很多种子 4 分钟打不死首领，超时一次就白耗 4 分钟，比被打倒还慢）。
         private static bool LateBoss(int region) { return region % StagesPerChapter == StagesPerChapter - 1 && ChapterOf(region) >= 4; }
         private static float WallHealth(int region) { float w = Wall(region); return LateBoss(region) ? 1 + (w - 1) * .55f : w; }
         private static float WallAttack(int region) { float w = Wall(region); return LateBoss(region) ? 1 + (w - 1) * .5f : (float)Math.Sqrt(w); }
-        public static float Wall(int region) { return 1 + WallShape[Math.Max(0, region) % StagesPerChapter] * ChapterWall[ChapterIndex(region)]; }
+        public static float Wall(int region) { return 1 + WallShape[Math.Max(0, region) % StagesPerChapter] * ChapterWall[ChapterIndex(region)] * (region % StagesPerChapter == StagesPerChapter - 1 ? BossWall[ChapterIndex(region)] : 1); }
+        /// 11-23 首领要比本章的精英关难（用户拍板）：精英关的墙降一档，首领的墙按章再乘这个倍率。
+        public static readonly float[] BossWall = { 1.1f, 1.1f, 1.6f, 1.2f, 2.4f };
         public static float Health(int region, int wave) { return (50 + 10 * wave) * (1 + .16f * region) * HealthScale * ChapterHealth[ChapterIndex(region)] * Ramp(ChapterHealthRamp, region) * WallHealth(region); }
         public static float Attack(int region, int wave) { return (4 + 1.2f * wave) * (1 + .14f * region) * ChapterAttack[ChapterIndex(region)] * Ramp(ChapterAttackRamp, region) * WallAttack(region) * AttackTune; }
         /// 11-23 装备平衡：汲取加了回复上限以后，所有配装都不再能靠吸血硬扛，敌人攻击整体下调来补（数值测试校过）。
