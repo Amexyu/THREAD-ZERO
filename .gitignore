@@ -132,3 +132,13 @@ __pycache__/
 
 # Gemini raw outputs (processed art goes into Resources)
 /Gemini/*/出图/
+
+# ---- THREAD ZERO（11-24）：草稿和系统文件不进仓库 ----
+# Claude 干活时的截图、对比图、动图、临时备份
+Gemini/_tmp/
+# Gemini 下载下来的原图收件箱
+Gemini/_收件箱/
+# 各素材卡的出图原图（进游戏的是缩小处理过的版本，原图留在本机）
+Gemini/*/出图/
+# macOS 自动生成的文件夹信息
+.DS_Store
