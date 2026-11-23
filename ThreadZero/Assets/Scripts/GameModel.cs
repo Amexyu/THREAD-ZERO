@@ -916,9 +916,9 @@ namespace ThreadZero
         /// 原来是“退一关”，倒在 x-4 就去刷 x-3 精英、倒在首领就去刷 x-6 精英——精英一次要打 3～4 分钟还容易倒，数值测试里有种子这样耗了好几个小时。
         public static int FarmStage(int fell)
         {
-            int first = Chapters.FirstRegion(Chapters.ChapterOf(fell)), t = fell - 1;
-            while (t > first && Chapters.IsWallStage(t)) t--;
-            return Math.Max(first, t);
+            // 11-23 用户拍板：只退一关（原来会跳过精英关，倒在首领一下退两关，倒在 x-4 也退两关）。精英关的墙 11-23 已经降过一档，回刷它不再那么容易倒。
+            int first = Chapters.FirstRegion(Chapters.ChapterOf(fell));
+            return Math.Max(first, fell - 1);
         }
         /// 正在倒下那一关的前面回刷（界面提示用）。
         public bool Farming { get { return !InEcho && state.retryRegion >= 0 && state.region < state.retryRegion; } }
