@@ -61,9 +61,20 @@ namespace ThreadZero.EditorTools
             string hash = SourceHash();
             string last = File.Exists(HashFile) ? File.ReadAllText(HashFile).Trim() : "";
             if (hash == last) return;
-            Debug.Log("[数值测试] 数值相关脚本有改动（" + last + " → " + hash + "），自动重跑主线模拟……");
-            RunAndReport("自动（脚本有改动）");
+            Debug.Log("[数值测试] 数值相关脚本有改动（" + last + " → " + hash + "），自动跑快速版（3 个种子、不挂深网）……");
+            AutoQuick(hash);
         }
+        /// 11-24：完整版（6 个种子 + 主线后挂 8 小时深网）一次要卡编辑器 8–10 分钟，编译后自动跑太碍事。
+        /// 自动只跑快速版，报告写到 Logs/BalanceSim/快速.md；完整版只在菜单「立即运行」时跑（写 Docs/数值测试报告.md）。
+        private static void AutoQuick(string hash)
+        {
+            int seeds = Seeds; float echo = EchoHours; Seeds = 3; EchoHours = 0;
+            try { RunAndReport("自动快速（脚本有改动）", Path.Combine(LogDir, "快速.md")); }
+            finally { Seeds = seeds; EchoHours = echo; }
+            Directory.CreateDirectory(LogDir); File.WriteAllText(HashFile, hash);
+        }
+        [MenuItem("Thread Zero/数值测试/自动重跑：开")] public static void AutoOn() { AutoEnabled = true; Debug.Log("[数值测试] 自动重跑：开"); }
+        [MenuItem("Thread Zero/数值测试/自动重跑：关")] public static void AutoOff() { AutoEnabled = false; Debug.Log("[数值测试] 自动重跑：关"); }
         private static string HashFile { get { return Path.Combine(LogDir, "last_hash.txt"); } }
         private static string SourceHash()
         {
@@ -154,7 +165,7 @@ namespace ThreadZero.EditorTools
                         if (region >= model.state.unlockedRegion - 1)
                         {   // 卡在最前面（或回刷的前一关）：连续倒 3 次以上就洗炼，和真人一样
                             if (run.stuckAt != model.state.unlockedRegion) { run.stuckAt = model.state.unlockedRegion; run.stuckCount = 0; }
-                            if (++run.stuckCount >= 3) ReforgeWhenStuck(model, run);
+                            if (++run.stuckCount >= 3 && UseReforge) ReforgeWhenStuck(model, run);
                         }
                         run.Note(t, Catalog.StageCode(region) + (timeout ? " 超时" : " 被打倒") + "（第 " + combat.wave + " 波，用了 " + (t - attemptStart).ToString("F0") + " 秒）");
                         Policy(model);
@@ -292,9 +303,10 @@ namespace ThreadZero.EditorTools
             // v0.22 打完主线：零件的四成拿去深层回收（抽到的和掉落一样参加下面的比较，没用的分解）
             // 零件平时一到手就被升级花光，所以单独记一笔「回收基金」：每次把新到手零件的四成划进去，攒够一次就抽。
             int drawSpent = 0;
-            if (!m.DeepTerminalUnlocked) drawFund = 0;
-            else for (int n = 0; n < 40 && drawFund >= m.TerminalCost(true) && m.state.scrap >= m.TerminalCost(true); n++)
-                { int c = m.TerminalCost(true); if (m.TerminalDraw(true, 0) == null) break; drawFund -= c; drawSpent += c; SimDraws++; }
+            bool deep = UseTerminal && m.DeepTerminalUnlocked, part = UseTerminal && UseSlotRecycle && !m.DeepTerminalUnlocked && m.TerminalUnlocked;
+            if (!deep && !part) drawFund = 0;
+            else for (int n = 0; n < 40 && drawFund >= m.TerminalCost(deep) && m.state.scrap >= m.TerminalCost(deep); n++)
+                { int c = m.TerminalCost(deep); if (m.TerminalDraw(deep, deep ? 0 : WeakestSlot(m)) == null) break; drawFund -= c; drawSpent += c; if (deep) SimDraws++; else SimSlotDraws++; }
             for (int s = 0; s < Catalog.SlotCount; s++)
             {
                 string keep = m.state.equipped[s], best = keep; double current = Score(m), bestScore = current;
@@ -310,18 +322,30 @@ namespace ThreadZero.EditorTools
                 m.state.equipped[s] = best;
             }
             foreach (Item it in m.state.items.ToList()) if (!m.state.equipped.Contains(it.uid)) m.Salvage(it.uid);
-            if (m.DeepTerminalUnlocked) drawFund = Math.Min(m.state.scrap, drawFund + Math.Max(0, m.state.scrap + drawSpent - scrapSeen) * 2 / 5);
+            if (deep || part) drawFund = Math.Min(m.state.scrap, drawFund + (int)(Math.Max(0, m.state.scrap + drawSpent - scrapSeen) * (deep ? .4f : SlotShare)));
             m.state.scrap -= drawFund;   // 基金里的零件先拿开，下面的升级花不到
             try { PolicySpend(m); } finally { m.state.scrap += drawFund; scrapSeen = m.state.scrap; }
         }
-        private static int drawFund, scrapSeen;
+        private static int drawFund, scrapSeen, SimSlotDraws;
+        private const float SlotShare = .25f;
+        /// 部位回收补哪个部位：身上最弱的那件（品质倍率 × 等级系数最低）。
+        private static int WeakestSlot(GameModel m)
+        {
+            int pick = 0; float low = float.MaxValue;
+            for (int s = 0; s < Catalog.SlotCount; s++)
+            {
+                Item it = m.Equipped((Slot)s); float v = it == null ? 0 : Balance.Tier(it.quality).multiplier * Balance.LevelFactor(it.level);
+                if (v < low) { low = v; pick = s; }
+            }
+            return pick;
+        }
         private static void PolicySpend(GameModel m)
         {
             V021Systems(m);
             // v0.22 打完主线：穿着的机密 / 原型，核心够了就突破（主线期间不突破，和以前一样）
-            if (m.MainCleared) for (int s = 0; s < Catalog.SlotCount; s++) { Item it = m.Equipped((Slot)s); while (it != null && m.CanAscend(it) && m.Ascend(it.uid)) { } }
+            if (m.MainCleared && UseAscend) for (int s = 0; s < Catalog.SlotCount; s++) { Item it = m.Equipped((Slot)s); while (it != null && m.CanAscend(it) && m.Ascend(it.uid)) { } }
             // v0.20 机械飞升：织网碎片只有义体能用，够了就升（先升等级最低的那件；也要花零件，但比装备升级便宜得多）
-            for (bool any = true; any;)
+            for (bool any = UseImplants; any;)
             {
                 any = false; int low = -1;
                 for (int i = 0; i < Catalog.Implants.Length; i++) if (m.CanUpgradeImplant(i) && (low < 0 || m.ImplantLevel(i) < m.ImplantLevel(low))) low = i;
@@ -356,6 +380,13 @@ namespace ThreadZero.EditorTools
         private static readonly int[] ChipPreference = { 0, 1, 5, 4, 3, 2 };
         // 对照实验用：关掉某个新系统，看它让主线快了多少（菜单「数值测试 / 对照」）
         private static bool UseSets = true, UsePerks = true, UseRobots = true, UseChips = true;
+        // 11-24 补齐：义体升级、洗炼、突破、回收终端；主线期间用部位回收（默认关，见 Policy）
+        private static bool UseImplants = true, UseReforge = true, UseAscend = true, UseTerminal = true, UseSlotRecycle = false;
+        private static void ResetToggles()
+        {
+            UseSets = UsePerks = UseRobots = UseChips = UseImplants = UseReforge = UseAscend = UseTerminal = true;
+            GameModel.TestNoTalents = GameModel.TestFlatQuality = false;
+        }
         private static void V021Systems(GameModel m)
         {
             if (UseSets) m.ClaimSets();
@@ -377,11 +408,84 @@ namespace ThreadZero.EditorTools
             int seeds = Seeds; float echo = EchoHours; Seeds = 3; EchoHours = 0;
             try { RunAndReport("快速", Path.Combine(LogDir, "快速.md")); } finally { Seeds = seeds; EchoHours = echo; }
         }
+        // ---------- 11-24 提升来源对照：每样东西单独关掉跑一遍，和全开比 ----------
+        private static readonly string[] ToggleNames = { "不用机库", "不买改造板节点", "不领套装奖励", "不升级义体", "卡关时不洗炼", "打完主线不突破", "不用芯片", "不用回收终端", "没有专属词条", "品质倍率全按 1", "主线也用部位回收" };
+        private static readonly Action[] ToggleOffs = {
+            () => UseRobots = false, () => UsePerks = false, () => UseSets = false, () => UseImplants = false, () => UseReforge = false,
+            () => UseAscend = false, () => UseChips = false, () => UseTerminal = false, () => GameModel.TestNoTalents = true, () => GameModel.TestFlatQuality = true,
+            () => UseSlotRecycle = true };
+        public static string ContribPath { get { return Path.Combine(RepoRoot, "Docs/提升来源对照.md"); } }
+        [MenuItem("Thread Zero/数值测试/提升来源对照（逐项关闭，约 1.5 小时）")] public static void Contributions() { ContributionRun(null); }
+        [MenuItem("Thread Zero/数值测试/提升来源对照：只跑部位回收")] public static void ContribSlot() { ContributionRun(new[] { 10 }); }
+        private static void ContributionRun(int[] only)
+        {
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            var rows = new List<string>(); var notes = new List<string>(); List<RunLog> baseRuns = null;
+            for (int k = -1; k < ToggleNames.Length; k++)
+            {
+                if (only != null && k >= 0 && Array.IndexOf(only, k) < 0) continue;
+                string name = k < 0 ? "基线（全部都用）" : ToggleNames[k];
+                ResetToggles(); UseSlotRecycle = false; if (k >= 0) ToggleOffs[k]();
+                var runs = new List<RunLog>();
+                try
+                {
+                    for (int i = 0; i < Seeds; i++)
+                    {
+                        EditorUtility.DisplayProgressBar("提升来源对照", name + "：种子 " + (i + 1) + " / " + Seeds, (float)i / Seeds);
+                        runs.Add(Simulate(101 + i * 17));
+                    }
+                }
+                finally { EditorUtility.ClearProgressBar(); ResetToggles(); UseSlotRecycle = false; }
+                if (k < 0) baseRuns = runs;
+                string note; rows.Add(ContribRow(name, runs, baseRuns, k < 0, out note));
+                if (note != null) notes.Add("- **" + name + "**：" + note);
+                var sb = new StringBuilder();
+                sb.AppendLine("# 提升来源对照（自动生成）"); sb.AppendLine();
+                sb.AppendLine("> 菜单 `Thread Zero/数值测试/提升来源对照`。每一行只关掉一样东西，其余和基线一样；6 个种子的中位数，1× 速度的游戏时间。");
+                sb.AppendLine("> 主线 = 打通 5-7 的总用时；倒下 = 各章第 6 关 / 首领被打倒次数（首通前后合计）；深网和飞升 = 打完主线后挂 3 / 8 小时。");
+                sb.AppendLine("> 生成：" + DateTime.Now.ToString("yyyy-MM-dd HH:mm") + "，已跑 " + (watch.Elapsed.TotalMinutes).ToString("F0") + " 分钟，脚本指纹 " + SourceHash());
+                sb.AppendLine();
+                sb.AppendLine("| 关掉的东西 | 打通 | 主线 | 比基线 | 一 | 二 | 三 | 四 | 五 | 倒下 6关/首领（四章 · 五章） | 深网 3h | 深网 8h | 飞升 8h |");
+                sb.AppendLine("|---|---|---|---|---|---|---|---|---|---|---|---|---|");
+                foreach (string r in rows) sb.AppendLine(r);
+                sb.AppendLine();
+                if (notes.Count > 0) { sb.AppendLine("## 标出来的"); sb.AppendLine(); foreach (string n in notes) sb.AppendLine(n); sb.AppendLine(); }
+                Directory.CreateDirectory(Path.GetDirectoryName(ContribPath));
+                File.WriteAllText(ContribPath, sb.ToString(), new UTF8Encoding(false));
+            }
+            Debug.Log("[数值测试] 提升来源对照完成（" + watch.Elapsed.TotalMinutes.ToString("F0") + " 分钟）：" + ContribPath);
+        }
+        private static string ContribRow(string name, List<RunLog> runs, List<RunLog> baseRuns, bool isBase, out string note)
+        {
+            note = null;
+            Func<List<RunLog>, float> total = rs => Median(rs.Select(r => r.bossAt[Chapters.ChapterCount - 1]));
+            Func<List<RunLog>, int, float> chap = (rs, c) => Median(rs.Select(r => r.bossAt[c - 1] < 0 || (c > 1 && r.bossAt[c - 2] < 0) ? -1 : r.bossAt[c - 1] - (c == 1 ? 0 : r.bossAt[c - 2])));
+            Func<List<RunLog>, int, float> deep = (rs, h) => Median(rs.Select(r => r.echoMarks.Count >= h ? (float)r.echoMarks[h - 1] : -1));
+            Func<List<RunLog>, int, float> asc = (rs, h) => Median(rs.Select(r => r.echoAsc.Count >= h ? (float)r.echoAsc[h - 1] : -1));
+            Func<List<RunLog>, int, int, float> deaths = (rs, c, st) => Median(rs.Select(r => (float)r.stages[Chapters.FirstRegion(c) + st].defeats));
+            int done = runs.Count(r => r.finished);
+            float t = total(runs), bt = baseRuns == null ? -1 : total(baseRuns), ratio = t > 0 && bt > 0 ? t / bt : -1;
+            Func<float, string> hm = v => v < 0 ? "—" : H(v);
+            Func<float, string> n0 = v => v < 0 ? "—" : v.ToString("F0");
+            string row = "| " + name + " | " + done + "/" + runs.Count + " | " + hm(t) + " | " + (isBase ? "—" : ratio < 0 ? "—" : (ratio >= 1 ? "+" : "") + ((ratio - 1) * 100).ToString("F0") + "%")
+                + " | " + string.Join(" | ", Enumerable.Range(1, Chapters.ChapterCount).Select(c => hm(chap(runs, c))))
+                + " | " + n0(deaths(runs, 4, 5)) + "/" + n0(deaths(runs, 4, 6)) + " · " + n0(deaths(runs, 5, 5)) + "/" + n0(deaths(runs, 5, 6))
+                + " | " + n0(deep(runs, 3)) + " | " + n0(deep(runs, 8)) + " | " + (asc(runs, 8) < 0 ? "—" : asc(runs, 8).ToString("F0") + "%") + " |";
+            if (!isBase && baseRuns != null)
+            {
+                float d8 = deep(runs, 8), b8 = deep(baseRuns, 8), a8 = asc(runs, 8), ba8 = asc(baseRuns, 8);
+                if (done < runs.Count) note = "有 " + (runs.Count - done) + " 个种子 18 小时内没打通主线——关掉它就卡死了，太关键";
+                else if (ratio >= 2) note = "关掉后主线慢了 " + ((ratio - 1) * 100).ToString("F0") + "%（超过一倍），太强";
+                else if (ratio >= 0 && ratio < 1.03f && Math.Abs(d8 - b8) <= 4 && Math.Abs(a8 - ba8) <= 2) note = "关掉后主线只差 " + ((ratio - 1) * 100).ToString("F0") + "%，深网 8 小时差 " + (d8 - b8).ToString("F0") + " 层——几乎没用";
+                else if (ratio >= 0 && ratio < .97f) note = "关掉后主线反而快了 " + ((1 - ratio) * 100).ToString("F0") + "%（模拟玩家用它反而吃亏，或者噪声）";
+            }
+            return row;
+        }
         private static void Variant(string name, Action off)
         {
             off();
             try { RunAndReport("对照：" + name, Path.Combine(LogDir, "对照_" + name + ".md")); }
-            finally { UseSets = UsePerks = UseRobots = UseChips = true; }
+            finally { ResetToggles(); }
         }
         private static void V021Robots(GameModel m)
         {

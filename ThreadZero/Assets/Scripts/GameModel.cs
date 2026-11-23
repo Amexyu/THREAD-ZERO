@@ -670,7 +670,7 @@ namespace ThreadZero
         public static Stats ItemStats(Item item)
         {
             Stats s = Catalog.Find(item.baseId).stats.Copy();
-            float factor = Balance.Tier(item.quality).multiplier * Balance.LevelFactor(item.level);
+            float factor = (TestFlatQuality ? 1 : Balance.Tier(item.quality).multiplier) * Balance.LevelFactor(item.level);
             s.health *= factor; s.attack *= factor; s.defense *= factor;
             foreach (Affix a in item.affixes)
             {
@@ -684,7 +684,9 @@ namespace ThreadZero
         }
         /// 测试用（F6）：攻击、生命 ×10，并且不会被打倒。不写进存档。
         public static bool TestPower;
-        [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)] private static void ResetTestPower() { TestPower = false; }
+        /// 11-24 数值对照用（只在编辑器的模拟里打开）：专属词条不生效；品质倍率全部按 1。
+        public static bool TestNoTalents, TestFlatQuality;
+        [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)] private static void ResetTestPower() { TestPower = TestNoTalents = TestFlatQuality = false; }
         private static Stats Scaled(Stats a, float k)
         {
             var c = new Stats(a.health * k, a.attack * k, a.defense * k, a.haste * k, a.crit * k, a.luck * k);
@@ -809,6 +811,7 @@ namespace ThreadZero
         /// 11-23 身上有几件带这种专属词条的装备（最多算 Balance.TalentStack 件）。
         public int TalentCount(int talent)
         {
+            if (TestNoTalents) return 0;
             int n = 0;
             for (int i = 0; i < Catalog.SlotCount; i++) { Item it = Equipped((Slot)i); if (it != null && (it.talent == talent || it.talent2 == talent)) n++; }
             return Math.Min(Balance.TalentStack, n);
