@@ -61,6 +61,7 @@ namespace ThreadZero
         public List<Affix> affixes = new List<Affix>();
         public List<Chip> chips = new List<Chip>();   // v0.21 植入的芯片（最多 Balance.ChipSlots[品质] 块）
         public int mod;                               // v0.21 改装件：0 = 没装，其余 = (int)Effect
+        public int talent;                            // 11-23 专属词条：0 = 没有，1–4 见 Balance.Talents（机密、原型各带一条）
     }
 
     [Serializable]
@@ -218,6 +219,8 @@ namespace ThreadZero
         public static string ChapterNumber(int chapter) { return "一二三四五六七八九"[Math.Max(0, Math.Min(8, chapter - 1))].ToString(); }
         public static readonly string[] BossNamesByChapter = { "闸门看守", "总调度吊臂", "断讯监视者", "镜面审计官", "织网母体" };
         public static string BossName(int chapter) { return BossNamesByChapter[Math.Max(0, Math.Min(BossNamesByChapter.Length - 1, chapter - 1))]; }
+        public static readonly string[] TalentNames = { "", "击杀回复", "连击", "先手", "背水" };
+        public static readonly string[] TalentTexts = { "", "击杀敌人回复 1.5% 最大生命", "每第 4 次普攻追加 40% 攻击的伤害", "对满血的敌人伤害 +25%", "生命低于 40% 时受到的伤害 −12%" };
         public static readonly string[] StatNames = { "生命", "攻击", "防御", "攻速", "暴击", "幸运", "暴击伤害", "特效伤害", "首领伤害", "零件回收" };
         public static readonly float[] Multipliers = Balance.Qualities.Select(q=>q.multiplier).ToArray();
         public static readonly EquipmentBase[] All = {
@@ -515,6 +518,9 @@ namespace ThreadZero
             // v0.20 修：训练等级读档时原来夹在 20（早期的训练上限），现在上限是 Balance.TrainingCap（9999），
             //       练过 20 级的存档每次打开游戏都会被打回 20 级（数值模拟打到 5-7 时训练 110～150 级）。保底计数也改成跟常量走。
             state.scrap = Math.Max(0, state.scrap); state.training = Math.Max(0, Math.Min(Balance.TrainingCap, state.training));
+            // 11-23 老存档里的机密 / 原型装备补一条专属词条（按 uid 定，读几次都一样）
+            foreach (Item it in state.items) if (it != null && it.talent == 0 && (int)it.quality >= (int)Quality.Legendary && !string.IsNullOrEmpty(it.uid))
+            { int h = 0; foreach (char ch in it.uid) h = h * 31 + ch; it.talent = 1 + (int)((uint)h % Balance.Talents); }
             state.sinceRare = Math.Max(0, Math.Min(Balance.RarePity, state.sinceRare));
             state.sinceEpic = Math.Max(0, Math.Min(Balance.EpicPity, state.sinceEpic));
             state.sinceLegendary = Math.Max(0, Math.Min(Balance.LegendaryPity, state.sinceLegendary));
@@ -649,9 +655,11 @@ namespace ThreadZero
             for (int i = 0; i < tier.affixCount && pool.Count > 0; i++)
             {
                 int p = rng.Next(pool.Count), stat = pool[p]; pool.RemoveAt(p);
+                if (Balance.EconomyStat(stat)) pool.RemoveAll(Balance.EconomyStat);   // 经济词条一件最多一条
                 float value = Balance.AffixValue(stat, quality, item.level, (float)rng.NextDouble());
                 item.affixes.Add(new Affix { stat = stat, value = value });
             }
+            if ((int)quality >= (int)Quality.Legendary) item.talent = 1 + rng.Next(Balance.Talents);
             return item;
         }
         public static Stats ItemStats(Item item)
@@ -793,6 +801,13 @@ namespace ThreadZero
             state.chipGift = true; state.chipBag.Add(new Chip { kind = 0, tier = 1 }); state.modBag[(int)Effect.Mark]++; return true;
         }
         public bool Has(Effect effect) { return EffectCount(effect) > 0; }
+        /// 11-23 身上有几件带这种专属词条的装备（最多算 Balance.TalentStack 件）。
+        public int TalentCount(int talent)
+        {
+            int n = 0;
+            for (int i = 0; i < Catalog.SlotCount; i++) { Item it = Equipped((Slot)i); if (it != null && it.talent == talent) n++; }
+            return Math.Min(Balance.TalentStack, n);
+        }
         public bool IsMelee
         { get { Item weapon = Equipped(Slot.Weapon); return weapon != null && Catalog.Find(weapon.baseId).attackStyle == AttackStyle.Melee; } }
         public string LoadoutSummary
@@ -1005,6 +1020,7 @@ namespace ThreadZero
             var pool = new List<int>();
             int top = (int)quality >= (int)Quality.Rare && SpecialAffixesUnlocked ? Balance.AffixStats : Balance.BasicStats;
             for (int stat = 0; stat < top; stat++) if (item == null || !item.affixes.Any(a => a.stat == stat)) pool.Add(stat);
+            if (item != null && item.affixes.Any(a => Balance.EconomyStat(a.stat))) pool.RemoveAll(Balance.EconomyStat);
             return pool;
         }
         // ---------- v0.18 洗炼：锁住想留的词条，其余全部重抽 ----------
@@ -1020,10 +1036,12 @@ namespace ThreadZero
             var keep = new List<int>();
             for (int i = 0; i < item.affixes.Count; i++) if ((item.affixLocks & (1 << i)) != 0) keep.Add(item.affixes[i].stat);
             var pool = AffixPool(item.quality, null).Where(st => !keep.Contains(st)).ToList();
+            if (keep.Any(Balance.EconomyStat)) pool.RemoveAll(Balance.EconomyStat);
             for (int i = 0; i < item.affixes.Count; i++)
             {
                 if ((item.affixLocks & (1 << i)) != 0 || pool.Count == 0) continue;
                 int p = rng.Next(pool.Count), stat = pool[p]; pool.RemoveAt(p);
+                if (Balance.EconomyStat(stat)) pool.RemoveAll(Balance.EconomyStat);
                 item.affixes[i].stat = stat;
                 item.affixes[i].value = Balance.AffixValue(stat, item.quality, item.level, (float)rng.NextDouble());
             }

@@ -183,6 +183,7 @@ namespace ThreadZero
         private bool Hurt(float attack, float fromX, Stats s)
         {
             float raw = GameModel.Damage(attack, s.defense) * (1 - s.reduction);   // v0.21 芯片「缓冲」、改造板「复合装甲」
+            if (health < s.health * Balance.TalentBrinkAt) raw *= 1 - Balance.TalentBrink * model.TalentCount(4);   // 11-23 专属词条「背水」
             float blocked = raw * Balance.GuardReduction * model.EffectCount(Effect.Guard);
             float damage = raw - blocked;
             if (GameModel.TestPower) damage = 0;

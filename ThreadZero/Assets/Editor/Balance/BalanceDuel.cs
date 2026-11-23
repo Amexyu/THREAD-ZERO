@@ -88,7 +88,7 @@ namespace ThreadZero.EditorTools
                     {
                         Item it = model.Create(id, old.quality, old.level);
                         it.affixes = old.affixes.Select(a => new Affix { stat = a.stat, value = a.value }).ToList();
-                        it.chips = old.chips; it.mod = old.mod;
+                        it.chips = old.chips; it.mod = old.mod; it.talent = old.talent;
                         state.items.Add(it); state.equipped[slot] = it.uid;
                     }
                     model.ChangeRegion(region);

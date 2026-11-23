@@ -115,6 +115,7 @@ namespace ThreadZero
                 if (selected) Ui.Frame(x - 4, y - 4, tileW + 8, tileH + 8, 3, Ui.Orange);
                 Ui.Fill(x, y, tileW, tileH, hover ? Ui.Tile2 : Ui.Tile);
                 PaperDollView.DrawEquipmentIcon(b, Ui.R(x + (tileW - 74) / 2, y + 18, 74, 74));
+                Ui.QualityCard(x, y, tileW, tileH, item.quality);
                 LevelTag(item, x, y);
                 if (model.state.equipped.Contains(item.uid)) { Ui.Fill(x + tileW - 50, y, 50, 20, Ui.Panel); Ui.Text(x + tileW - 50, y, 50, 20, "穿戴中", 11, Ui.Ink, TextAnchor.MiddleCenter, true); }
                 Ui.FitText(x + 2, y + 96, tileW - 4, 22, b.name, 12, quality, TextAnchor.MiddleCenter, true);
@@ -256,6 +257,11 @@ namespace ThreadZero
                 bool isLocked = (item.affixLocks & (1 << i)) != 0;
                 if (Ui.Button(1270, y + 4, 70, 32, isLocked ? "已锁" : "锁定", isLocked ? 2 : 0, true, 13)) { model.ToggleLock(item, i); Save(); }
                 Ui.Text(920, y, 200, 40, "+" + Value(affix.stat, affix.value), 22, Ui.Ink, TextAnchor.MiddleLeft, true, true);
+                {   // 11-23 成色：这条抽到了随机范围的哪儿
+                    float roll = Balance.AffixRoll(affix, item.level); bool great = roll >= Balance.GreatRoll;
+                    Ui.Fill(1090, y + 18, 110, 4, Ui.Hair); Ui.Fill(1090, y + 18, 110 * Mathf.Max(.05f, roll), 4, great ? Ui.Orange : QualityVisual.Ink(item.quality));
+                    Ui.Text(1206, y, 60, 40, Mathf.RoundToInt(roll * 100) + "%", 13, great ? Ui.OrangeInk : Ui.Mute, TextAnchor.MiddleLeft, true, true);
+                }
                 Ui.Fill(772, y + 40, 772, 1, Ui.Hair);
                 if (Ui.Button(1348, y + 4, 196, 32, model.RecalibrateUnlocked ? "重校 · 零件 " + rerollCost : "重校 · 第二章开放", 0, model.CanReroll(item, i), 13))
                 { if (model.Reroll(item.uid, i)) { combat.ClampHealth(); Save(); Play(equipSound); } }

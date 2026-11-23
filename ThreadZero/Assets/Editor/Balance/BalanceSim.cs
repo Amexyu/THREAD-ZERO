@@ -269,8 +269,8 @@ namespace ThreadZero.EditorTools
             double power = s.attack * (1 + s.haste) * (1 + s.crit * (Balance.CritMultiplier - 1 + s.critDamage)) * (1 + .3 * s.effectDamage) * (1 + .3 * s.bossDamage);
             double ehp = s.health * (100 + Math.Max(0, s.defense)) / 100;
             // 词条之外的效果也算进去（真人看得懂“吸血 / 连锁电弧”这些效果，不会只比面板数字）：粗略折成输出 / 生存的倍率
-            double effect = 1 + .25 * m.EffectCount(Effect.Arc) + .08 * m.EffectCount(Effect.Execute) + .15 * m.EffectCount(Effect.Drone) + .1 * m.EffectCount(Effect.Mark) + .1 * m.EffectCount(Effect.Thruster);
-            double survive = 1 + .12 * m.EffectCount(Effect.Leech) + .12 * m.EffectCount(Effect.Guard);   // 11-23 汲取有回复上限以后不再值 30%
+            double effect = 1 + .25 * m.EffectCount(Effect.Arc) + .08 * m.EffectCount(Effect.Execute) + .15 * m.EffectCount(Effect.Drone) + .1 * m.EffectCount(Effect.Mark) + .1 * m.EffectCount(Effect.Thruster) + .08 * m.TalentCount(2) + .06 * m.TalentCount(3);
+            double survive = 1 + .12 * m.EffectCount(Effect.Leech) + .12 * m.EffectCount(Effect.Guard) + .06 * m.TalentCount(1) + .05 * m.TalentCount(4);   // 11-23 汲取有回复上限以后不再值 30%
             return power * effect * ehp * survive * Splash(m);
         }
         /// v0.20 武器打一群的能力（真人看得出清怪快慢，卡在成群的波次时会换群伤武器）：手炮 / 重锤溅射、撞杆矛穿透、霰弹散射、线圈跳电。

@@ -833,6 +833,7 @@ namespace ThreadZero
             }
             if (mechStage >= 4) Motes(b, tint);   // v0.20 飞升完成：身体后面往上飘的光点
             if (mechStage >= 2 && mechFins != null) Blit(b.pack * T(finsAt), mechStage >= 4 && mechFinsZero != null ? mechFinsZero : mechFins, false, tint);   // v0.20 飞升第二阶段：散热鳍画在背包后面，从背包左边露出来
+            ArmorEdges(b, tint);   // 11-23 防具的品质光边：画在整个人后面，只露出轮廓外的一圈
             Blit(b.pack, pack, false, tint); GearScan(b.pack, pack, false, qBack, tint);
             Blit(b.legF, legF, false, tint); GearScan(b.legF, legF, false, qLegs, tint);
             if (mechStage >= 4) Trace(b.legF, TraceLeg, .06f, .44f, new Color(1, 1, 1, tint.a * .55f));   // 远侧腿也有一道（压暗，被近侧腿挡住一半）

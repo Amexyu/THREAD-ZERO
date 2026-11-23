@@ -9,3 +9,14 @@ re:(\d) / 5 套§{1} / 5 セット§{1} / 5 sets§{1} / 5 세트
 测试存档 · F8 切回正式 · F9 清空重开§テストセーブ・F8 で正式に戻す・F9 で消去してやり直し§Test save · F8 back to real save · F9 wipe and restart§테스트 세이브 · F8 정식 복귀 · F9 지우고 다시 시작
 re:(\d+) 件  →  \+(\d+) 零件§{1}件  →  パーツ +{2}§{1} items  →  +{2} parts§{1}개  →  부품 +{2}
 re:排序：(.+)§並び順：{1}§Sort: {1}§정렬: {1}
+击杀回复§撃破回復§Kill Heal§처치 회복
+连击§連撃§Combo§연타
+先手§先手§Opener§선제
+背水§背水§Last Stand§배수진
+击杀敌人回复 1.5% 最大生命§敵を倒すと最大体力の1.5%を回復§Killing an enemy heals 1.5% of max HP§적 처치 시 최대 체력의 1.5% 회복
+每第 4 次普攻追加 40% 攻击的伤害§通常攻撃4回ごとに攻撃力40%の追加ダメージ§Every 4th basic attack deals +40% Attack as bonus damage§일반 공격 4회마다 공격력 40%의 추가 피해
+对满血的敌人伤害 +25%§体力満タンの敵へのダメージ+25%§+25% damage to enemies at full HP§체력이 가득 찬 적에게 피해 +25%
+生命低于 40% 时受到的伤害 −12%§体力40%未満のとき被ダメージ−12%§Take 12% less damage below 40% HP§체력 40% 미만일 때 받는 피해 −12%
+re:^专属 · (.+)$§専用 · {1}§Unique · {1}§전용 · {1}
+re:^掉落 · (.+)$§ドロップ · {1}§Drop · {1}§획득 · {1}
+re:^◆ 标记的属性含随机词条，共 (\d+) 条；短条是成色，★ 是极品$§◆ はランダム特性つき（全{1}件）。短いバーは出来、★は極上§◆ marks rolled stats ({1} total). The bar shows roll quality; ★ is a top roll§◆ 표시는 무작위 옵션 포함(총 {1}개). 막대는 품질, ★는 최상급

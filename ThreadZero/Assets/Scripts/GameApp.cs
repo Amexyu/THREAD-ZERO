@@ -79,6 +79,11 @@ namespace ThreadZero
                 if (TryAutoSalvage(item, fresh)) { Save(); return; }
                 // v0.16 去掉顶部「掉落了什么 · 查看」提示：掉落本身已经有弹出 → 吸入角色的动画，新物品在背包里有「新」标记。
                 lastDrop = item; SpawnDrop(item);
+                if ((int)item.quality >= (int)Quality.Legendary)
+                {   // 11-23 机密、原型掉落：停一下、震一下，底下出一条带「查看」的提示
+                    Impact.Stop(.06f); Impact.Shake(clock, (int)item.quality >= 5 ? 7 : 4, .28f); Sfx("unlock", .6f, .3f);
+                    Notify("掉落 · " + Catalog.QualityNames[(int)item.quality], 5, item.uid);
+                }
                 recentDrops.Insert(0, item.uid); if (recentDrops.Count > 5) recentDrops.RemoveAt(5);
                 unseen.Add(item.uid); QueueTip(Tip.Drop);
                 Play((int)item.quality >= 2 ? rareSound : dropSound); Save();
@@ -293,9 +298,10 @@ namespace ThreadZero
         // 右上角常驻小标签，提醒现在用的是测试存档。
         private void TestSaveBadge()
         {
-            const float w = 300;
+            const string label = "测试存档 · F8 切回正式 · F9 清空重开";
+            float w = Mathf.Min(520, Ui.Width(label, 13, true) + 28);   // 11-23 宽度跟着文字走：英文 / 日文比 300 长，原来伸出屏幕右边
             Ui.Fill(1600 - w - 16, 8, w, 26, Ui.Alpha(Ui.Orange, .92f));
-            Ui.Text(1600 - w - 16, 8, w, 26, "测试存档 · F8 切回正式 · F9 清空重开", 13, Ui.OnAccent, TextAnchor.MiddleCenter, true);
+            Ui.FitText(1600 - w - 16, 8, w, 26, label, 13, Ui.OnAccent, TextAnchor.MiddleCenter, true);
         }
         private void OnApplicationPause(bool value) { if (value) Save(); }
         // 测试用：F2 依次换上第一、二章的整套外观（不用等掉落）：h0c1 → A → B → C → D → 循环。
@@ -318,6 +324,17 @@ namespace ThreadZero
         private void TestAddItem(string id, int level) { Item item = model.Create(id, Quality.Rare, level); model.state.items.Add(item); model.Unlock(id); }
         private void TestEquip(string id) { Item item = model.Create(id, Quality.Rare, 30); model.state.items.Add(item); model.Unlock(id); model.Equip(item.uid); }
         /// 测试用：五个部位都换成同款、指定品质和等级的装备（看装备光效）。没穿的部位用初始装备那一款。
+        /// 测试：掉一件指定品质的装备（走正式的掉落流程：光柱、停顿、提示）。
+        public void TestDrop(int q) { Item it = model.Create("h" + (model.Chapter - 1) * 5, (Quality)Mathf.Clamp(q, 0, 5), 20); model.state.items.Add(it); model.Unlock(it.baseId); combat.OnDrop(it, true); }
+        /// 测试：选中身上某个部位的装备（整备页 / 工坊右边显示它）。
+        public void TestSelect(int slot) { Item it = model.Equipped((Slot)slot); if (it != null) selectedItem = it.uid; }
+        /// 测试：往仓库里塞一批各品质的装备，看卡片分档和排版。
+        public void TestBag(int n)
+        {
+            string[] ids = { "w3", "h4", "c8", "b1", "l7", "w17", "h18", "c23", "b20", "l24" };
+            for (int i = 0; i < n; i++) { Item it = model.Create(ids[i % ids.Length], (Quality)(i % 6), 20 + i % 9); model.state.items.Add(it); model.Unlock(it.baseId); }
+            model.state.scrap = 123456;
+        }
         private void TestGearQuality(int q, int level)
         {
             for (int s = 0; s < 5; s++)
@@ -501,22 +518,24 @@ namespace ThreadZero
         private void Toast()
         {
             if (clock >= toastUntil || string.IsNullOrEmpty(toast)) return;
-            float slide = Mathf.Clamp01((clock - toastFrom) / .18f), y = (navigation.Screen == GameScreen.Action ? 712 : 812) - (1 - slide) * 14;   // 行动页放到地面下方，不挡头顶血条和首领血条
+            float slide = Mathf.Clamp01((clock - toastFrom) / .18f), y = (navigation.Screen == GameScreen.Action ? 692 : 836) - (1 - slide) * 14;   // 11-23 其它页 812 → 836：原来正好盖住仓库最下面一排装备的名字   // 行动页放到地面下方，不挡头顶血条和首领血条
             Item item = FindItem(toastItem);
             if (item != null)
             {
                 EquipmentBase b = Catalog.Find(item.baseId); Color quality = QualityVisual.Colors[(int)item.quality];
-                float width = Mathf.Max(Ui.Width(b.name, 17, true), Ui.Width(toast, 13, true)) + 190, x = 800 - width / 2;
-                Ui.Fill(x, y, width, 64, Ui.Ink);
-                Ui.ItemTile(x + 8, y + 8, 48, 48, b, item.quality, true, false, 3, false);
-                Ui.Text(x + 70, y + 9, width - 170, 20, toast, 13, quality, TextAnchor.MiddleLeft, true);
-                Ui.Text(x + 70, y + 31, width - 170, 24, b.name, 17, Ui.Panel, TextAnchor.MiddleLeft, true);
-                if (Ui.Button(x + width - 96, y + 8, 88, 48, "查看", 3, true, 15)) OpenItem(item);
+                // 11-23 压成一行（高 48）：原来两行高 64，在行动页会压到下面「最近回收」那一栏
+                float tw0 = Ui.Width(toast, 13, true), nw = Ui.Width(b.name, 16, true), width = tw0 + nw + 190, x = 800 - width / 2;
+                Ui.Fill(x, y, width, 48, Ui.Ink); Ui.Fill(x, y + 45, width, 3, quality);
+                Ui.ItemTile(x + 6, y + 5, 38, 38, b, item.quality, false, false, 2, false);
+                Ui.Text(x + 56, y, tw0 + 4, 45, toast, 13, quality, TextAnchor.MiddleLeft, true);
+                Ui.Text(x + 56 + tw0 + 14, y, nw + 4, 45, b.name, 16, Ui.Panel, TextAnchor.MiddleLeft, true);
+                if (Ui.Button(x + width - 92, y + 6, 84, 33, "查看", 3, true, 14)) OpenItem(item);
             }
             else
             {
                 float tw = Ui.Width(toast, 15, true); bool two = tw + 56 > 760;   // v0.20 长提示（卡关提示）换成两行
-                float width = Mathf.Min(760, tw + 56), h = two ? 74 : 52, x = 800 - width / 2;
+                float width = Mathf.Min(760, tw + 56), h = two ? Mathf.Max(74, Ui.Height(toast, 15, width - 40, true) + 22) : 52, x = 800 - width / 2;   // 11-23 译文三行时框跟着变高
+                if (y + h > 896) y = 896 - h;
                 Ui.Fill(x, y, width, h, Ui.Ink); Ui.Fill(x, y, 6, h, Ui.Orange);
                 Ui.Text(x + 24, y + (two ? 9 : 0), width - 40, two ? h - 14 : 52, toast, 15, Ui.Panel, two ? TextAnchor.UpperLeft : TextAnchor.MiddleLeft, true, false, two);
             }

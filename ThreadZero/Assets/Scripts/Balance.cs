@@ -60,6 +60,13 @@ namespace ThreadZero
         // 特殊词条只出在「特装」及以上，随等级涨得很慢（每级 +1%），有总上限。
         public static readonly float[] AffixBases={12,3,2,.04f,.025f,2, .08f,.07f,.06f,.06f};
         public const int BasicStats=6, AffixStats=10;
+        /// 11-23 专属词条（机密、原型装备各带一条，不随机数值、不能洗）：1 击杀回复 2 连击 3 先手 4 背水。同一种最多算 3 件。
+        ///   击杀回复：击杀敌人回复最大生命的 1.5%；连击：每第 4 次普攻追加 40% 攻击的伤害；
+        ///   先手：对满血的敌人伤害 +25%；背水：生命低于 40% 时受到的伤害 −12%。
+        public const int Talents=4, TalentStack=3;
+        public const float TalentKillHeal=.015f, TalentCombo=.4f, TalentOpener=.25f, TalentBrink=.12f, TalentBrinkAt=.4f; public const int TalentComboEvery=4;
+        /// 经济词条（幸运、零件回收）战斗里没用：一件装备上最多出一条。
+        public static bool EconomyStat(int stat) { return stat==5 || stat==9; }
         public static bool SpecialStat(int stat) { return stat>=BasicStats; }
         public const float CritDamageCap=1.5f, EffectDamageCap=2f, BossDamageCap=1.5f, ScrapBonusCap=1f;
         // v0.21 芯片与改装件：精英 / 首领 / 深网首领层掉芯片的概率，首领掉改装件的概率，制作一件改装件要的核心；受到伤害减免的总上限（芯片 + 改造板）
@@ -78,12 +85,12 @@ namespace ThreadZero
         // 词条数值只看等级（affixMin/Max 各档相同），不再按品质放大。
         public static readonly QualityTier[] Qualities={
             new QualityTier("量产", "9CABB8", 1,    0,.85f,1.15f,0,   0,  0),
-            new QualityTier("改良", "6BD494", 1.04f,1,.85f,1.15f,0,   0,  0),
-            new QualityTier("特装", "59A6FF", 1.08f,2,.85f,1.15f,.18f,3.2f,0),
-            new QualityTier("军规", "BF80FF", 1.12f,3,.85f,1.15f,.32f,2.8f,1),
-            new QualityTier("机密", "FFC24D", 1.16f,4,.85f,1.15f,.5f, 2.4f,3),
+            new QualityTier("改良", "6BD494", 1.05f,1,.85f,1.15f,0,   0,  0),
+            new QualityTier("特装", "59A6FF", 1.11f,2,.85f,1.15f,.18f,3.2f,0),
+            new QualityTier("军规", "BF80FF", 1.18f,3,.85f,1.15f,.32f,2.8f,1),
+            new QualityTier("机密", "FFC24D", 1.26f,4,.85f,1.15f,.5f, 2.4f,3),
             // 第六档。不进普通掉落：只来自首领的极低概率，或把「机密」装备用核心突破。
-            new QualityTier("原型", "FF4D5E", 1.20f,5,.85f,1.15f,.5f, 2.4f,4)
+            new QualityTier("原型", "FF4D5E", 1.35f,5,.85f,1.15f,.5f, 2.4f,4)
         };
         public static QualityTier Tier(Quality quality)
         {
@@ -113,6 +120,14 @@ namespace ThreadZero
             return AffixBases[stat]*(q.affixMin+(q.affixMax-q.affixMin)*Math.Max(0,Math.Min(1,roll)))
                 *(SpecialStat(stat) ? SpecialLevelFactor(level) : Soft(level,AffixLevelGrowth));
         }
+        /// 11-23 词条成色：这条词条在随机范围（85%–115%）里抽到了哪儿，0 = 最低，1 = 最高。界面上画成一小段条。
+        public static float AffixRoll(Affix a,int level)
+        {
+            if(a==null || a.stat<0 || a.stat>=AffixBases.Length) return 0;
+            float unit=AffixBases[a.stat]*AffixFactor(a.stat,level); if(unit<=0) return 0;
+            return Math.Max(0,Math.Min(1,(a.value/unit-.85f)/.3f));
+        }
+        public const float GreatRoll=.85f;
         public static int TrainingCost(int level) { return 20+level*15; }
         public static float EnemyHealth(int region,int wave) { return (48+wave*12+region*65)*(wave==5?2.3f:1); }
         public static float EnemyAttack(int region,int wave) { return (5+region*6+wave*1.5f)*(wave==5?1.35f:1); }

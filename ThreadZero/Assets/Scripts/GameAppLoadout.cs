@@ -80,7 +80,7 @@ namespace ThreadZero
                 Ui.Text(bx, 802, 88, 26, "Lv." + model.state.board[bi], 18, Ui.Ink, TextAnchor.MiddleLeft, true, true);
             }
             if (Ui.Button(420, 788, 100, 36, "改造板 ›", 1, true, 14)) { workshopTab = 1; Go(GameScreen.Workshop); }
-            Ui.Text(128, 840, 400, 30, "改造板：火力加攻击、机体加生命、回收加零件和幸运；后面的章节还能解锁改变打法的节点。", 12, Ui.Mute, TextAnchor.MiddleLeft, false, false, true);
+            Ui.WrapText(128, 836, 400, 40, "改造板：火力加攻击、机体加生命、回收加零件和幸运；后面的章节还能解锁改变打法的节点。", 12, Ui.Mute, TextAnchor.MiddleLeft);
         }
 
         // v0.16 机械飞升：5 个义体槽竖排在角色左边。已装 = 橙色块；悬停显示名字和效果。
@@ -184,23 +184,32 @@ namespace ThreadZero
         private void LoadoutInventory()
         {
             float x = 548;
+            string scrap = model.state.scrap.ToString();
+            // 11-23 标签一排和右边的零件数原来各画各的：装备多了（数量三位数）或换成英文 / 日文，最后一个标签会压到「零件 1933」上。
+            // 先量出零件数占多宽，剩下的宽度分给 6 个标签；放不下就按比例收窄（字用 FitText 缩）。
+            float scrapW = Ui.Width(scrap, 26, true, true) + Ui.Width("零件", 14, false) + 20, tabsRoom = 1140 - scrapW - 548 - 12, natural = 0;
+            for (int f = -1; f < Catalog.SlotCount; f++)
+            {
+                int s0 = f; string c0 = model.state.items.Count(item => s0 < 0 || (int)Catalog.Find(item.baseId).slot == s0).ToString();
+                natural += Ui.Width(f < 0 ? "全部" : Catalog.SlotNames[f], 15, true) + Ui.Width(c0, 17, true, true) + 30 + 4;
+            }
+            float squeeze = Mathf.Min(1, tabsRoom / Mathf.Max(1, natural));
             for (int f = -1; f < Catalog.SlotCount; f++)
             {
                 int slot = f;
                 string label = f < 0 ? "全部" : Catalog.SlotNames[f];
                 string count = model.state.items.Count(item => slot < 0 || (int)Catalog.Find(item.baseId).slot == slot).ToString();
-                float labelWidth = Ui.Width(label, 15, true), width = labelWidth + Ui.Width(count, 17, true, true) + 30;   // 五个部位 + 全部，收紧一点给零件数留位置
+                float labelWidth = Ui.Width(label, 15, true) * squeeze, countWidth = Ui.Width(count, 17, true, true) * squeeze, width = labelWidth + countWidth + 30 * squeeze;
                 bool on = slotFilter == f, hover = Ui.Hover(x, 20, width, 44);
                 Color fill = on ? Ui.Ink : hover ? Ui.Rule : Ui.Panel, text = on ? Ui.Panel : Ui.Ink;
                 Ui.Fill(x, 20, width, 44, fill); Ui.Frame(x, 20, width, 44, 2, Ui.Ink);
-                Ui.Text(x + 10, 20, labelWidth + 4, 44, label, 15, text, TextAnchor.MiddleLeft, true);
-                Ui.Text(x + 10 + labelWidth + 8, 20, 60, 44, count, 17, on ? Ui.MuteOnInk : Ui.Mute, TextAnchor.MiddleLeft, true, true);
+                Ui.FitText(x + 10 * squeeze, 20, labelWidth + 2, 44, label, 15, text, TextAnchor.MiddleLeft, true);
+                Ui.FitText(x + 10 * squeeze + labelWidth + 8 * squeeze, 20, countWidth + 2, 44, count, 17, on ? Ui.MuteOnInk : Ui.Mute, TextAnchor.MiddleLeft, true, true);
                 if (Ui.Click(x, 20, width, 44)) { slotFilter = f; inventoryScroll = 0; }
                 x += width + 4;
             }
-            string scrap = model.state.scrap.ToString();
-            Ui.Text(960, 20, 180, 44, scrap, 26, Ui.Ink, TextAnchor.MiddleRight, true, true);
-            Ui.Text(960, 20, 180 - Ui.Width(scrap, 26, true, true) - 8, 44, "零件", 14, Ui.Mute, TextAnchor.MiddleRight);
+            Ui.Text(1140 - scrapW, 20, scrapW, 44, scrap, 26, Ui.Ink, TextAnchor.MiddleRight, true, true);
+            Ui.Text(1140 - scrapW, 20, scrapW - Ui.Width(scrap, 26, true, true) - 8, 44, "零件", 14, Ui.Mute, TextAnchor.MiddleRight);
 
             float viewY = InventoryToolbar();
             inventoryQuery.slot = slotFilter;
@@ -227,6 +236,7 @@ namespace ThreadZero
                 if (selected) Ui.Frame(tx - 4, ty - 4, tileW + 8, tileH + 8, 3, Ui.Orange);
                 Ui.Fill(tx, ty, tileW, tileH, hover ? Ui.Tile2 : Ui.Tile);
                 PaperDollView.DrawEquipmentIcon(b, Ui.R(tx + (tileW - 74) / 2, ty + 18, 74, 74));
+                Ui.QualityCard(tx, ty, tileW, tileH, item.quality);
                 LevelTag(item, tx, ty);   // v0.20 到当前等级上限的显示「MAX」
                 if (equipped) { Ui.Fill(tx + tileW - 50, ty, 50, 20, Ui.Panel); Ui.Text(tx + tileW - 50, ty, 50, 20, "穿戴中", 11, Ui.Ink, TextAnchor.MiddleCenter, true); }
                 else if (unseen.Contains(item.uid)) { Ui.Fill(tx + tileW - 26, ty, 26, 20, Ui.Orange); Ui.Text(tx + tileW - 26, ty, 26, 20, "新", 11, Ui.OnAccent, TextAnchor.MiddleCenter, true); }
@@ -265,15 +275,22 @@ namespace ThreadZero
             // v0.20 特殊词条（暴击伤害等 4 项，橙色）也列出来：原来只列 6 项基础属性，洗出来的特殊词条在整备页看不到、也比不了。
             // 行数多了（最多 10 行）就把行距从 42 压到 36，免得顶到下面的固定效果框和按钮。
             int rows = 0; for (int i = 0; i < Balance.AffixStats; i++) if (Mathf.Abs(mine[i]) >= .0001f || Mathf.Abs(old[i]) >= .0001f) rows++;
-            float rowH = rows > 8 ? 36 : 42;   // 9 行 × 42 时下面那句「◆ 标记的属性…」会压到「穿戴装备」按钮
+            // 11-23 行高按剩下的高度算：下面还有专属词条（机密起）、固定效果框和一行说明，行数多时自动压扁，不再靠写死的 36 / 42。
+            float below = (item.talent > 0 ? 40 : 0) + 14 + 88 + 30;
+            float rowH = Mathf.Clamp(Mathf.Floor((700 - 204 - below) / Mathf.Max(1, rows)), 28, 42);
             for (int i = 0; i < Balance.AffixStats; i++)
             {
                 if (Mathf.Abs(mine[i]) < .0001f && Mathf.Abs(old[i]) < .0001f) continue;
                 int stat = i; bool rolled = item.affixes.Any(affix => affix.stat == stat), special = i >= Balance.BasicStats;
                 float delta = mine[i] - old[i]; bool flat = equippedNow || Mathf.Abs(delta) < .0001f;
-                Ui.Text(1176, y, 70, rowH, Catalog.StatNames[i], 15, special ? Ui.OrangeInk : Ui.Body, TextAnchor.MiddleLeft, special);
-                if (rolled) Ui.Text(1176 + Catalog.StatNames[i].Length * 16 + 6, y, 30, rowH, "◆", 11, qualityInk, TextAnchor.MiddleLeft);
-                Ui.Text(1272, y, 180, rowH, Value(i, mine[i]), rowH < 42 ? 22 : 26, Ui.Ink, TextAnchor.MiddleLeft, true, true);
+                Ui.FitText(1176, y, 78, rowH, Catalog.StatNames[i], 15, special ? Ui.OrangeInk : Ui.Body, TextAnchor.MiddleLeft, special);
+                if (rolled)
+                {   // 词条成色：名字下面一小段条，抽到范围的前 15% 标星
+                    float roll = Balance.AffixRoll(item.affixes.First(affix => affix.stat == stat), item.level); bool great = roll >= Balance.GreatRoll;
+                    Ui.Text(1176 + Mathf.Min(78, Ui.Width(Catalog.StatNames[i], 15, special)) + 3, y, 30, rowH, great ? "★" : "◆", great ? 13 : 11, great ? Ui.Orange : qualityInk, TextAnchor.MiddleLeft);
+                    Ui.Fill(1176, y + rowH - 6, 64, 3, Ui.Hair); Ui.Fill(1176, y + rowH - 6, 64 * Mathf.Max(.06f, roll), 3, great ? Ui.Orange : qualityInk);
+                }
+                Ui.Text(1272, y, 180, rowH, Value(i, mine[i]), rowH < 36 ? 20 : rowH < 42 ? 22 : 26, Ui.Ink, TextAnchor.MiddleLeft, true, true);
                 if (flat) Ui.Text(1452, y, 100, rowH, "—", 18, Ui.Mute, TextAnchor.MiddleRight, true, true);
                 else
                 {
@@ -284,6 +301,15 @@ namespace ThreadZero
                 y += rowH;
             }
 
+            if (item.talent > 0)
+            {   // 11-23 专属词条（机密、原型各带一条）
+                y += 8; Ui.Fill(1176, y, 376, 30, Ui.Ink); Ui.Fill(1176, y, 5, 30, quality);
+                string tn = "专属 · " + Catalog.TalentNames[item.talent];
+                Ui.Text(1190, y, 120, 30, tn, 14, quality, TextAnchor.MiddleLeft, true);
+                float tnw = Ui.Width(tn, 14, true) + 14;
+                Ui.FitText(1190 + tnw, y, 376 - 20 - tnw, 30, Catalog.TalentTexts[item.talent], 13, Ui.Panel, TextAnchor.MiddleLeft);
+                y += 30 - 6;
+            }
             string effectName, effectText; SplitEffect(b.effect, out effectName, out effectText);
             y += 14;
             Ui.Frame(1176, y, 376, 88, 2, Ui.Ink);
@@ -295,7 +321,7 @@ namespace ThreadZero
             if (item.mod > 0) extras.Add("改装：" + Catalog.EffectShort((Effect)item.mod));
             if (item.chips != null) foreach (Chip c in item.chips) extras.Add(Catalog.ChipLabel(c) + " " + Catalog.ChipEffectText(c, item.level));
             if (extras.Count > 0) Ui.Text(1176, y + 96, 376, 22, string.Join(" · ", extras), 12, Ui.OrangeInk, TextAnchor.MiddleLeft, true);
-            else if (item.affixes.Count > 0) Ui.Text(1176, y + 96, 376, 22, "◆ 标记的属性含随机词条，共 " + item.affixes.Count + " 条", 12, Ui.Mute, TextAnchor.MiddleLeft);
+            else if (item.affixes.Count > 0) Ui.FitText(1176, y + 96, 376, 22, "◆ 标记的属性含随机词条，共 " + item.affixes.Count + " 条；短条是成色，★ 是极品", 12, Ui.Mute, TextAnchor.MiddleLeft);
 
             if (Ui.Button(1176, 706, 376, 60, equippedNow ? "已穿戴" : "穿戴装备", 1, !equippedNow, 20))
             { model.Equip(item.uid); combat.SyncLoadout(); animationState.Clear(); Save(); Play(equipSound); Notify("已穿戴 " + b.name); }

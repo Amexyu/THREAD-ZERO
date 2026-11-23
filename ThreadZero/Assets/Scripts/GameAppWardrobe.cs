@@ -13,8 +13,8 @@ namespace ThreadZero
             Ui.Fill(128, 20, 440, 696, Ui.Stage);
             Ui.Text(330, 6, 240, 250, owned.ToString(), 220, Ui.Ghost, TextAnchor.UpperRight, true, true);
             Ui.Fill(128, 648, 440, 68, Ui.Floor); Ui.Fill(128, 646, 440, 3, Ui.Ink);
-            Ui.Text(146, 30, 200, 44, "衣柜", 34, Ui.Ink, TextAnchor.MiddleLeft, true);
-            Ui.Text(147, 76, 300, 20, "穿搭预览 · 只改变样子", 13, Ui.Mute, TextAnchor.MiddleLeft);
+            Ui.FitText(146, 30, 170, 44, "衣柜", 34, Ui.Ink, TextAnchor.MiddleLeft, true);   // 11-23 日文「ワードローブ」原来压到右边的大数字上
+            Ui.FitText(147, 76, 190, 20, "穿搭预览 · 只改变样子", 13, Ui.Mute, TextAnchor.MiddleLeft);
             PreviewHero(348, 662, 600, 128, 110, 440, 560);
             Ui.Frame(128, 20, 440, 696, 2, Ui.Ink);
 
@@ -100,7 +100,7 @@ namespace ThreadZero
                 string reach = Catalog.IsGroupWeapon(chosen.id) ? "群伤" : "单体"; float rx = 612 + regionWidth + 10 + effectWidth + 10, rw = Ui.Width(reach, 14, true) + 28;
                 Ui.Frame(rx, 488, rw, 32, 2, Ui.Ink); Ui.Text(rx, 488, rw, 32, reach, 14, Ui.Ink, TextAnchor.MiddleCenter, true);
             }
-            Ui.Text(612, 536, 540, 56, chosen.effect == Effect.None ? "这款外观对应的装备只提供属性，没有固定模块。" : "对应装备 · " + effectText, 15, Ui.Body, TextAnchor.UpperLeft, false, false, true);
+            Ui.Text(612, 536, 540, 56, chosen.effect == Effect.None ? "这款外观对应的装备只提供属性，没有固定模块。" : Loc.Tr("对应装备 ·") + " " + Loc.Tr(Catalog.EffectName(chosen.effect))   /* 11-23 整句翻译：原来只拼冒号后半句，译文表里没有半句，日 / 英 / 韩显示成中文 */, 15, Ui.Body, TextAnchor.UpperLeft, false, false, true);
             Ui.Text(612, 726, 540, 46, "外观只改变样子。属性和模块来自「整备」里实际穿戴的装备，分解装备不会丢失已收藏的外观。武器外观只能套在同类武器上（近战 / 远程）。", 13, Ui.Mute, TextAnchor.UpperLeft, false, false, true);
             bool fits = model.LookFits(chosen);   // v0.20 武器外观只能套在同类武器上
             if (Ui.Button(612, 792, 240, 60, !unlocked ? "尚未收藏" : wearing ? "当前外观" : !fits ? (chosen.attackStyle == AttackStyle.Melee ? "需装备近战武器" : "需装备远程武器") : "应用外观", 1, unlocked && !wearing && fits, 19))

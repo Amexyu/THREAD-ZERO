@@ -62,7 +62,6 @@ re:(.+) 升到 Lv (\d+) · 飞升度 (\d+)%	{1} reached Lv {2} · Ascension {3}%
 re:机械飞升进入「(.+)」· 回到行动页看看	Mechanical Ascension reached "{1}" · Check the Action page
 re:击败第 (\d) 章的首领后装上。	Installed after beating the Chapter {1} boss.
 re:显示 (\d+) / (\d+) 件 · 同值优先等级、品质、最近获得	Showing {1} / {2} · Ties sorted by level, quality, newest
-re:◆ 标记的属性含随机词条，共 (\d+) 条	Stats marked ◆ include random stats ({1} total)
 re:分解 · \+(\d+) 零件（外观保留）	Salvage · +{1} parts (look kept)
 re:(\d+) 件  →  \+(\d+)	{1} items  →  +{2}
 re:已分解 (\d+) 件，获得 (\d+) 个零件。	Salvaged {1} items for {2} parts.
@@ -113,6 +112,9 @@ re:第([一二三四五])章	Ch. {1}
 re:(\d) / 5 套	{1} / 5 sets
 re:(\d+) 件  →  \+(\d+) 零件	{1} items  →  +{2} parts
 re:排序：(.+)	Sort: {1}
+re:^专属 · (.+)$	Unique · {1}
+re:^掉落 · (.+)$	Drop · {1}
+re:^◆ 标记的属性含随机词条，共 (\d+) 条；短条是成色，★ 是极品$	◆ marks rolled stats ({1} total). The bar shows roll quality; ★ is a top roll
 Ame（企划、美术指导、测试）	Ame (design, art direction, testing)
 DEEP NET / 零号深网	DEEP NET
 Kenney（www.kenney.nl）：Interface Sounds、Sci-fi Sounds、Impact Sounds，CC0	Kenney (www.kenney.nl): Interface Sounds, Sci-fi Sounds, Impact Sounds, CC0
@@ -190,6 +192,7 @@ v0.21 · 毕业制作 · 展览模式	v0.21 · Graduation Project · Exhibition 
 信号禁区之上，是从来不下雨的镜面上城	Above the Dead Zone is Mirror Uptown, where it never rains
 信号禁区断讯者	Dead Zone Silencer
 修好后撤回上一关补给，变强后自动再挑战	After repairs you'll fall back a stage to resupply, then retry automatically once you're stronger
+先手	Opener
 光纤钩索	Fiber-Optic Hook Line
 全功率绞盘：攻击 +12	Full-Power Winch: Attack +12
 全域调度：暴击再 +6%	Total Dispatch: Crit +6% more
@@ -219,6 +222,8 @@ v0.21 · 毕业制作 · 展览模式	v0.21 · Graduation Project · Exhibition 
 冷却重锤	Coolant Maul
 冷核心脏	Cold-Core Heart
 减弱	Reduced
+击杀回复	Kill Heal
+击杀敌人回复 1.5% 最大生命	Killing an enemy heals 1.5% of max HP
 击败 1-7 闸门看守后开放	Unlocks after defeating the Gatekeeper at 1-7
 击败敌人后，回收到的装备会出现在这里	Gear you recover from defeated enemies shows up here
 分拣仓	Sorting Bay
@@ -344,6 +349,7 @@ v0.21 · 毕业制作 · 展览模式	v0.21 · Graduation Project · Exhibition 
 审计长廊的镜面卫兵只认通行证	The Mirror Guards of the Audit Gallery only recognize passes
 对应装备 ·	Matching gear ·
 对比当前穿戴	Compared to equipped
+对满血的敌人伤害 +25%	+25% damage to enemies at full HP
 封闭式头盔	Sealed Helmet
 小时	h
 尚未收藏	Not collected yet
@@ -579,6 +585,7 @@ v0.21 · 毕业制作 · 展览模式	v0.21 · Graduation Project · Exhibition 
 每关一次：被打倒时一半概率留 20% 生命继续	Once per stage: 50% chance to survive a knockdown with 20% HP
 每波冲锋怪 +50%；零件 ×1.5	+50% chargers per wave; parts ×1.5
 每秒攻击	Attacks/s
+每第 4 次普攻追加 40% 攻击的伤害	Every 4th basic attack deals +40% Attack as bonus damage
 每第 5 次普攻必定暴击	Every 5th basic attack is a guaranteed crit
 每级攻击 +1.5	Attack +1.5 per level
 每级生命 +8	HP +8 per level
@@ -622,6 +629,7 @@ v0.21 · 毕业制作 · 展览模式	v0.21 · Graduation Project · Exhibition 
 玻璃纤维靴裤	Fiberglass Boot Pants
 生命	HP
 生命 +	HP +
+生命低于 40% 时受到的伤害 −12%	Take 12% less damage below 40% HP
 生命低于一半时伤害 +25%	+25% damage while below half HP
 用当前进度作起点	Use current progress
 用预设：第三章开头	Use preset: start of Chapter 3
@@ -721,6 +729,7 @@ v0.21 · 毕业制作 · 展览模式	v0.21 · Graduation Project · Exhibition 
 聚焦	Focus
 肺换成了机械的，双手也是。回收员第一次可以不戴维生面罩睡觉。	The lungs are mechanical now, and so are both hands. For the first time, the Recycler can sleep without a life-support mask.
 背包中	In bag
+背水	Last Stand
 背部	Back
 脊	SPN
 脊柱	Spine
@@ -803,6 +812,7 @@ v0.21 · 毕业制作 · 展览模式	v0.21 · Graduation Project · Exhibition 
 进入零号深网	Entering Deep Net Zero
 进度已保存	Progress saved
 远程	ranged
+连击	Combo
 连击校准	Combo Calibration
 连锁放电	Chain Discharge
 迷你集装箱背架	Mini Container Frame

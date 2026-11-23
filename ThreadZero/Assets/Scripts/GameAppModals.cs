@@ -36,7 +36,7 @@ namespace ThreadZero
             int minutes = (int)(offlineAway / 60), hours = minutes / 60;
             string away = hours > 0 ? hours + " 小时 " + (minutes % 60) + " 分" : minutes + " 分钟";
             Ui.Text(x + 40, y + 96, w - 80, 30, "你离开了 " + away, 18, Ui.Ink, TextAnchor.MiddleLeft, true);
-            Ui.Text(x + 40, y + 136, w - 80, 56, "回收无人机带回了 " + offlineGain + " 零件", 30, Ui.Orange, TextAnchor.MiddleLeft, true);
+            Ui.FitText(x + 40, y + 136, w - 80, 56, "回收无人机带回了 " + offlineGain + " 零件", 30, Ui.Orange, TextAnchor.MiddleLeft, true);
             string rule = "离线按挂机收益的 " + Mathf.RoundToInt(Balance.OfflineEfficiency * 100) + "% 算，最多算 " + Mathf.RoundToInt(model.OfflineMax / 3600) + " 小时"
                 + (offlineAway > model.OfflineMax ? "（这次超出的部分没算）" : "") + "。挂着游戏收益是离线的 4 倍。";
             Ui.Text(x + 40, y + 204, w - 80, 48, rule, 14, Ui.Alpha(Ui.Ink, .7f), TextAnchor.UpperLeft, false, false, true);
@@ -156,7 +156,7 @@ namespace ThreadZero
                 float top = y + 90 + i * 108;
                 Ui.Text(x + 32, top, 60, 36, "0" + (i + 1), 28, Ui.Orange, TextAnchor.MiddleLeft, true, true);
                 Ui.Text(x + 92, top, w - 124, 36, titles[i], 18, Ui.Ink, TextAnchor.MiddleLeft, true);
-                Ui.Text(x + 92, top + 36, w - 124, 66, body[i], 14, Ui.Body, TextAnchor.UpperLeft, false, false, true);
+                Ui.WrapText(x + 92, top + 36, w - 124, 68, body[i], 14, Ui.Body);   // 11-23 译文四五行时原来会压到下一节
             }
         }
     }

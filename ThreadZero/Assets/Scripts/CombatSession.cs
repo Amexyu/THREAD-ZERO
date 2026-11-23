@@ -391,6 +391,7 @@ namespace ThreadZero
             if (lastCritical) damage *= Balance.CritMultiplier + s.critDamage;   // v0.18 暴击伤害词条
             if (model.Has(Effect.Execute) && target.health < target.maxHealth * (model.EffectCount(Effect.Execute) > 1 ? Balance.ExecuteThreshold2 : Balance.ExecuteThreshold)) damage *= Balance.ExecuteMultiplier;
             if (markTime > 0) damage *= MarkFactor;
+            { int cb = model.TalentCount(2); if (cb > 0 && attackNumber % Balance.TalentComboEvery == 0) damage += Mitigate(s.attack * Balance.TalentCombo * cb); }   // 11-23 专属词条「连击」
             if (guardCharge > 0 && model.Has(Effect.Guard))
             { damage += guardCharge; Emit(Ability.GuardRelease, guardCharge); guardCharge = 0; guardFlash = .45f; }
             bool arc = attackNumber % 3 == 0 && model.Has(Effect.Arc);
@@ -478,6 +479,7 @@ namespace ThreadZero
             if (e.boss || e.elite) damage *= 1 + s.bossDamage;   // v0.18 首领伤害词条（对精英也生效）
             if (s.focus > 0 && e == Target) damage *= 1 + s.focus;   // v0.21 芯片「聚焦」：只有主目标吃到，范围 / 连锁波及的不算
             if (model.HasPerk(0, 3) && health < s.health * .5f) damage *= 1.25f;   // v0.21 改造板「红线」
+            if (e.health >= e.maxHealth) damage *= 1 + Balance.TalentOpener * model.TalentCount(3);   // 11-23 专属词条「先手」
             float actual = Math.Min(e.health, damage);
             // 11-23 汲取效果有回复上限（每件每秒最多回最大生命的 LeechCap）：原来按伤害百分比回血，后期输出远高于怪的输出，
             // 带汲取就等于永远打不死，同章其他武器全打不过（装备对照报告）。芯片「汲取」照旧不封顶。
@@ -490,6 +492,7 @@ namespace ThreadZero
             OnDamage?.Invoke(damage, lastCritical, e.x);
             if (e.health > 0) return false;
             e.health = 0; e.deadAt = elapsed; lastKillX = e.x; packShifts++;
+            { int kh = model.TalentCount(1); if (kh > 0 && recovery <= 0) health = Math.Min(s.health, health + s.health * Balance.TalentKillHeal * kh); }   // 11-23 专属词条「击杀回复」
             Reward(e);
             return true;
         }

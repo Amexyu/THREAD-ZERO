@@ -535,7 +535,7 @@ namespace ThreadZero
             Ui.Text(128, 12, 120, 80, CodeLabel(code), model.InEcho ? 40 : 52, Ui.Ink, TextAnchor.MiddleLeft, true, true);
             Ui.Text(250, 22, 240, 18, model.InEcho ? "DEEP NET / 零号深网" : "CHAPTER " + model.Chapter + " / 第" + "一二三四五"[model.Chapter - 1] + "章", 13, Ui.Mute, TextAnchor.MiddleLeft, true, true);
             // 机械飞升进度：5 格，一件义体一格
-            Ui.Text(420, 20, 44, 22, "飞升", 13, model.state.implants.Count > 0 ? Ui.Orange : Ui.Mute, TextAnchor.MiddleLeft, true);
+            Ui.FitText(416, 20, 36, 22, "飞升", 13, model.state.implants.Count > 0 ? Ui.Orange : Ui.Mute, TextAnchor.MiddleLeft, true);
             for (int i = 0; i < Catalog.AscensionTotal; i++)
             {   // v0.20 一格 = 一件义体，按等级从下往上填（10 级填满）
                 int lv = model.ImplantLevel(i); Ui.Fill(456 + i * 20, 24, 16, 14, Ui.Rule);
@@ -726,7 +726,21 @@ namespace ThreadZero
         private sealed class DropFx { public Item item; public EquipmentBase b; public float from, wx, side; }
         private readonly List<DropFx> dropFx = new List<DropFx>();
         private const float DropPop = .5f, DropFly = .38f, DropFlash = .3f;
-        private static float DropRest(Quality q) { return .2f + (int)q * .1f; }
+        private static float DropRest(Quality q) { return .2f + (int)q * .1f + ((int)q >= 4 ? .5f : (int)q == 3 ? .2f : 0); }   // 11-23 军规起多停一会，给光柱时间
+        /// 11-23 军规起掉落时一道品质色光柱（机密、原型更高更亮，原型外面再一圈）。strength 0–1 控制淡入淡出。光效「关」不画。
+        private void DropBeam(float gx, float top, Quality quality, float strength)
+        {
+            int q = (int)quality; if (q < 3 || model.state.glowMode == 0 || strength <= 0) return;
+            Color qc = QualityVisual.Colors[q]; float hgt = q >= 5 ? 420 : q == 4 ? 340 : 220, k = strength * (model.state.glowMode == 1 ? .6f : 1);
+            for (int i = 0; i < 6; i++)
+            {   // 从下往上分 6 段淡出
+                float y1 = top - hgt * i / 6f, seg = hgt / 6f, fade = 1 - i / 6f;
+                Ui.Fill(gx - 18, y1 - seg, 36, seg, Ui.Alpha(qc, .10f * fade * k));
+                Ui.Fill(gx - 7, y1 - seg, 14, seg, Ui.Alpha(qc, .28f * fade * k));
+                Ui.Fill(gx - 2, y1 - seg, 4, seg, Ui.Alpha(Color.white, .6f * fade * k));
+                if (q >= 5) Ui.Fill(gx - 34, y1 - seg, 68, seg, Ui.Alpha(qc, .06f * fade * k));
+            }
+        }
         private float droneGulp = -10;   // 最近一次吸进东西的时刻：无人机鼓一下、灯闪一下
         private void SpawnDrop(Item item)
         {
@@ -749,12 +763,14 @@ namespace ThreadZero
                     float u = t / DropPop, x = Mathf.Lerp(DropScreenX(d.wx), gx, u);
                     float y = groundTop - 4 * u * (1 - u) * 110 - 70 * (1 - u) * (1 - u);
                     Ui.Fill(gx - 16, GroundY - 3, 32, 3, Ui.Alpha(Ui.Ink, .18f * u));
+                    DropBeam(gx, GroundY, d.item.quality, u * u);
                     Ui.ItemTile(x - W / 2, y, W, H, d.b, d.item.quality, true, false, 3, false);
                 }
                 else if (t < DropPop + rest)
                 {   // 落地停一下：轻微上下浮动 + 品质色底光
                     float u = (t - DropPop) / rest, bob = Mathf.Sin(u * Mathf.PI) * 5;
                     Ui.Fill(gx - 18, GroundY - 3, 36, 3, Ui.Alpha(qc, .55f));
+                    DropBeam(gx, GroundY, d.item.quality, Mathf.Clamp01((1 - u) * 3));
                     if (model.state.glowMode > 0 && (int)d.item.quality >= 2)
                         QualityVisual.Halo(Ui.P(gx, groundTop + H / 2 - bob), 46 * Ui.K, qc, model.state.glowMode == 1 ? .25f : .5f);
                     Ui.ItemTile(gx - W / 2, groundTop - bob, W, H, d.b, d.item.quality, true, false, 3, false);

@@ -7,6 +7,7 @@ namespace ThreadZero
     ///   军规起：绕着武器转的光点（军规 1 / 机密 3 / 原型 4）；
     ///   机密起：攻击时武器拖品质色残影，每隔几秒一道光从握把扫到尖端；
     ///           头 / 外套 / 背包 / 下装是机密、原型的，每隔几秒一道扫光从头扫到脚（只扫到这几件，其余部位不亮）。
+    ///   11-23：防具从特装起也有一圈品质色光边（比武器淡，见 ArmorEdges）。
     ///   刀光、起手闪光、连击火花、冲刺残影的颜色按武器品质走（这部分不算光效，设置里关了也照样换色）。
     ///   设置里的「光效」：关 = 上面的光都不画；低 = 只有不动的光边；全 = 全部。
     public static partial class LayeredRigView
@@ -190,6 +191,26 @@ namespace ThreadZero
         }
 
         /// 机密、原型的头 / 外套 / 背包 / 下装：每 5.2 秒一道扫光从头顶扫到脚底（几件一起扫，看起来是同一道光）。
+        /// 11-23 防具的品质光边（特装起，比武器的淡）：每个部位按自己那件的品质，在整个人后面画一圈品质色轮廓。
+        /// 光效「低」只画一圈、不呼吸；「关」不画。
+        private static void ArmorEdges(Bones b, Color tint)
+        {
+            if (fxMode == 0) return;
+            ArmorEdge(b.pack, pack, false, qBack, tint); ArmorEdge(b.legF, legF, false, qLegs, tint); ArmorEdge(b.legN, legN, false, qLegs, tint);
+            ArmorEdge(b.armF, armFar ?? arm, armFar == null, qCoat, tint); ArmorEdge(b.torso, torso, false, qCoat, tint); ArmorEdge(b.armN, arm, false, qCoat, tint);
+            ArmorEdge(b.head, head, false, qHead, tint);
+        }
+        private static void ArmorEdge(Matrix4x4 bone, Part part, bool mirror, int q, Color tint)
+        {
+            if (q < 2 || part == null) return;
+            float a = EdgeAlpha[q] * (fxMode == 2 ? GearPulse(q) : .8f) * tint.a * .6f;
+            int rings = fxMode == 2 && q >= 4 ? 2 : 1;
+            for (int ring = 0; ring < rings; ring++)
+            {
+                float r = ring == 0 ? 1.3f : 2.6f; Color c = QC(q, ring == 0 ? a * .5f : a * .22f);
+                for (int i = 0; i < 8; i++) { float ang = i * Mathf.PI / 4; Blit(bone * T(Mathf.Cos(ang) * r, Mathf.Sin(ang) * r), part, mirror, c, flat); }
+            }
+        }
         private static void GearScan(Matrix4x4 bone, Part part, bool mirror, int q, Color tint)
         {
             if (fxMode < 2 || q < 4 || part == null) return;

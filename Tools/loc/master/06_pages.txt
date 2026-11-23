@@ -99,7 +99,6 @@ re:显示 (\d+) / (\d+) 件 · 同值优先等级、品质、最近获得§{1} /
 对比当前穿戴§現在の装備と比較§Compared to equipped§현재 착용과 비교
 MODULE / 固定效果§MODULE / 固定効果§MODULE / Fixed Effect§MODULE / 고정 효과
 改装：§改装：§Mod:§개조:
-re:◆ 标记的属性含随机词条，共 (\d+) 条§◆ の付いた能力はランダム能力を含む（全{1}つ）§Stats marked ◆ include random stats ({1} total)§◆ 표시 능력치는 랜덤 능력치 포함 (총 {1}개)
 穿戴装备§装備する§Equip§착용
 已穿戴§装備中§Equipped§착용 중
 仅使用外观§見た目だけ使う§Use look only§외형만 사용

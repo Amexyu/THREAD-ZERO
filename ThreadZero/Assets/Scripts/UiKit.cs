@@ -195,6 +195,20 @@ namespace ThreadZero
             float tw = Width(value, size, bold, numeric);
             Text(x, y, w, h, value, tw > w ? Mathf.Max(9, size * w / tw) : size, color, anchor, bold, numeric);
         }
+        /// 11-23 多行文字的高度（逻辑像素）：按宽度 w 自动换行后占多高。
+        public static float Height(string value, float size, float w, bool bold = false)
+        {
+            if (string.IsNullOrEmpty(value)) return 0;
+            value = Loc.Tr(value);
+            return Style(false, Pixels(size), bold, TextAnchor.UpperLeft, true).CalcHeight(new GUIContent(value), w * K) / K;
+        }
+        /// 11-23 多行文字：换行后比 h 高就把字号一点点缩到放得下（最小 9）。译文比中文长很多的说明文字用这个。
+        public static void WrapText(float x, float y, float w, float h, string value, float size, Color color, TextAnchor anchor = TextAnchor.UpperLeft, bool bold = false)
+        {
+            if (string.IsNullOrEmpty(value)) return;
+            float s = size; while (s > 9 && Height(value, s, w, bold) > h + .5f) s -= .5f;
+            Text(x, y, w, h, value, s, color, anchor, bold, false, true);
+        }
         public static void ShadowText(float x, float y, float w, float h, string value, float size, Color color,
             TextAnchor anchor = TextAnchor.UpperLeft, bool bold = false, bool numeric = false, float strength = .6f)
         {
@@ -242,12 +256,34 @@ namespace ThreadZero
         }
 
         // 装备格：近黑底 + 图标 + 底部品质色条。返回是否悬停，点击由调用方处理。
+        /// 11-23 装备卡片按品质分档（画在图标上面、文字下面）：
+        ///   特装：底部一层很淡的品质色；军规：再加一圈细边框；机密：边框加粗 + 四角标 + 每隔几秒一道斜光扫过；原型：边框呼吸 + 扫光更勤。
+        public static void QualityCard(float x, float y, float w, float h, Quality quality)
+        {
+            int q = (int)quality; if (q < 2) return;
+            Color c = QualityVisual.Colors[q]; float now = Time.unscaledTime;
+            float gh = h * .34f;
+            for (int i = 0; i < 4; i++) FillRaw(x, y + h - gh * (i + 1) / 4f, w, gh / 4f, Alpha(c, (q >= 4 ? .13f : .08f) * (1 - i / 4f)));
+            if (q < 3) return;
+            float pulse = q >= 5 ? .7f + .3f * Mathf.Sin(now * 3.2f) : 1, t = q >= 4 ? 2 : 1;
+            Color line = Alpha(c, (q >= 4 ? .9f : .55f) * pulse);
+            FillRaw(x, y, w, t, line); FillRaw(x, y + t, t, h - t, line); FillRaw(x + w - t, y + t, t, h - t, line);
+            if (q < 4) return;
+            float n = Mathf.Min(w, h) * .16f;   // 四角标
+            FillRaw(x, y, n, 4, c); FillRaw(x, y, 4, n, c); FillRaw(x + w - n, y, n, 4, c); FillRaw(x + w - 4, y, 4, n, c);
+            float period = q >= 5 ? 2.2f : 3.6f, ph = Mathf.Repeat(now + (x * .013f + y * .007f), period) / .55f;   // 斜光：各张卡错开一点
+            if (ph < 1)
+            {
+                float sw = w * .22f, sx = x - sw + (w + sw) * ph, x0 = Mathf.Max(x, sx), x1 = Mathf.Min(x + w, sx + sw);
+                if (x1 > x0) { FillRaw(x0, y, x1 - x0, h, new Color(1, 1, 1, .1f)); float m0 = Mathf.Max(x, sx + sw * .35f), m1 = Mathf.Min(x + w, sx + sw * .65f); if (m1 > m0) FillRaw(m0, y, m1 - m0, h, new Color(1, 1, 1, .12f)); }
+            }
+        }
         public static void ItemTile(float x, float y, float w, float h, EquipmentBase item, Quality quality, bool showQuality, bool dim, float pad, bool hover)
         {
             Fill(x, y, w, h, hover ? Tile2 : Tile);
             float side = Mathf.Min(w, h - (showQuality ? 4 : 0)) - pad * 2;
             if (item != null) PaperDollView.DrawEquipmentIcon(item, R(x + (w - side) / 2, y + (h - (showQuality ? 4 : 0) - side) / 2, side, side), dim);
-            if (showQuality) Fill(x, y + h - 4, w, 4, QualityVisual.Colors[(int)quality]);
+            if (showQuality) { if (!dim) QualityCard(x, y, w, h, quality); Fill(x, y + h - 4, w, 4, QualityVisual.Colors[(int)quality]); }
         }
 
         public static void IconAction(float cx, float cy, Color color, Color background)
