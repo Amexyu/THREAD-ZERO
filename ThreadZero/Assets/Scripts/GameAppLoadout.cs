@@ -288,7 +288,7 @@ namespace ThreadZero
                 {   // 词条成色：名字下面一小段条，抽到范围的前 15% 标星
                     float roll = Balance.AffixRoll(item.affixes.First(affix => affix.stat == stat), item.level); bool great = roll >= Balance.GreatRoll;
                     Ui.Text(1176 + Mathf.Min(78, Ui.Width(Catalog.StatNames[i], 15, special)) + 3, y, 30, rowH, great ? "★" : "◆", great ? 13 : 11, great ? Ui.Orange : qualityInk, TextAnchor.MiddleLeft);
-                    Ui.Fill(1176, y + rowH - 6, 64, 3, Ui.Hair); Ui.Fill(1176, y + rowH - 6, 64 * Mathf.Max(.06f, roll), 3, great ? Ui.Orange : qualityInk);
+                    Ui.Fill(1176, y + rowH - 8, 72, 4, Ui.Alpha(Ui.Ink, .55f)); Ui.Fill(1176, y + rowH - 8, 72 * Mathf.Max(.06f, roll), 4, great ? Ui.Orange : quality);
                 }
                 Ui.Text(1272, y, 180, rowH, Value(i, mine[i]), rowH < 36 ? 20 : rowH < 42 ? 22 : 26, Ui.Ink, TextAnchor.MiddleLeft, true, true);
                 if (flat) Ui.Text(1452, y, 100, rowH, "—", 18, Ui.Mute, TextAnchor.MiddleRight, true, true);

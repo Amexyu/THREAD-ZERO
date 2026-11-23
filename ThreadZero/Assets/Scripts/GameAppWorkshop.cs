@@ -259,7 +259,7 @@ namespace ThreadZero
                 Ui.Text(920, y, 200, 40, "+" + Value(affix.stat, affix.value), 22, Ui.Ink, TextAnchor.MiddleLeft, true, true);
                 {   // 11-23 成色：这条抽到了随机范围的哪儿
                     float roll = Balance.AffixRoll(affix, item.level); bool great = roll >= Balance.GreatRoll;
-                    Ui.Fill(1090, y + 18, 110, 4, Ui.Hair); Ui.Fill(1090, y + 18, 110 * Mathf.Max(.05f, roll), 4, great ? Ui.Orange : QualityVisual.Ink(item.quality));
+                    Ui.Fill(1090, y + 18, 110, 4, Ui.Alpha(Ui.Ink, .55f)); Ui.Fill(1090, y + 18, 110 * Mathf.Max(.05f, roll), 4, great ? Ui.Orange : QualityVisual.Colors[(int)item.quality]);
                     Ui.Text(1206, y, 60, 40, Mathf.RoundToInt(roll * 100) + "%", 13, great ? Ui.OrangeInk : Ui.Mute, TextAnchor.MiddleLeft, true, true);
                 }
                 Ui.Fill(772, y + 40, 772, 1, Ui.Hair);
