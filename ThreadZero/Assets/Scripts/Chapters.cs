@@ -65,7 +65,7 @@ namespace ThreadZero
             new StageDef("3-3", StageKind.Elite,  9,  new WaveDef(5,2,2), new WaveDef(6,3,2), new WaveDef(3,1,1,2)),
             new StageDef("3-4", StageKind.Normal, 9,  new WaveDef(6,3,2), new WaveDef(6,3,3), new WaveDef(7,3,3)),
             new StageDef("3-5", StageKind.Normal, 10, new WaveDef(6,3,2), new WaveDef(7,3,3), new WaveDef(12,0,2)),
-            new StageDef("3-6", StageKind.Elite,  10, new WaveDef(6,3,3), new WaveDef(7,3,3), new WaveDef(4,1,1,2)),   // 3 只精英那版在模拟里是一堵墙（卡 1.5 小时），改回 2 只
+            new StageDef("3-6", StageKind.Elite,  10, new WaveDef(6,3,2), new WaveDef(6,3,3), new WaveDef(4,1,1,2)),   // 3 只精英那版在模拟里是一堵墙（卡 1.5 小时），改回 2 只
             new StageDef("3-7", StageKind.Boss,   11, new WaveDef(0,0,0)),
         };
         // v0.18 第四章「镜面上城」：从不下雨的上层城区，镜面玻璃和冷光。首领「镜面审计官」（镜面反射）。场景套 12=A 镜面街区 13=B 空中花园 14=C 冷却中枢 15=D 审计之庭。
@@ -126,7 +126,7 @@ namespace ThreadZero
         // 第三章起：入口只比上一章末尾强一点（约 1.2 倍），章内每关血量 +4~5%、攻击 +2% 慢慢加码（再多后期装备的成长跟不上，章末会撞墙）；进新章那一下跳得多一点，靠刷前两关的新一档装备跟上——角色在章内成长很快，这样难度跟得上，又不会在章节入口撞墙。
         // v0.21 数值重测：改造板节点、套装奖励、机库、芯片加进模拟后主线只要 2:20（目标 7:00），第二章起加码。
         // 第一次全加 12–25%：第三～五章还是几乎不倒、每关却要磨 2–5 分钟——新系统主要加的是生存（前排机器人、护盾回路、复合装甲、义体），所以后几章主要加攻击、血少加。
-        public static readonly float[] ChapterHealth = { 1, Chapter2Health * 1.3f, 2.6f * 1.2f, 3.6f * 1.15f, 5f * 1.2f }, ChapterAttack = { 1, Chapter2Attack * 1.2f, 1.6f * 2f, 2.55f * 1.9f, 3.6f * 3f };   // v0.20 第五章原来 3.6 / 2.65：带着第四章 4-6 墙练出来的装备进第五章，整章 18 分钟就穿了（目标 2:15）   // 后期少堆血、多给攻击：一关别打超过两分半，难度来自“会不会倒”而不是“磨多久”   // 第五章：装备档次只比第四章高 11%，怪的本章倍率也只能比第四章高一点（关卡序号本身已经让怪涨了 25%）
+        public static readonly float[] ChapterHealth = { 1, Chapter2Health * 1.3f, 2.6f * 1.2f, 3.6f * 1.15f, 5f * 1.2f }, ChapterAttack = { 1, Chapter2Attack * 1.08f, 1.6f * 2f, 2.55f * 1.9f, 3.6f * 3f };   // v0.20 第五章原来 3.6 / 2.65：带着第四章 4-6 墙练出来的装备进第五章，整章 18 分钟就穿了（目标 2:15）   // 后期少堆血、多给攻击：一关别打超过两分半，难度来自“会不会倒”而不是“磨多久”   // 第五章：装备档次只比第四章高 11%，怪的本章倍率也只能比第四章高一点（关卡序号本身已经让怪涨了 25%）
         public static readonly float[] ChapterHealthRamp = { 0, 0, .05f, .04f, .04f }, ChapterAttackRamp = { 0, 0, .02f, .02f, .02f };
         private static int ChapterIndex(int region) { return Math.Max(0, Math.Min(ChapterHealth.Length - 1, ChapterOf(region) - 1)); }
         private static float Ramp(float[] ramp, int region) { return 1 + ramp[ChapterIndex(region)] * (Math.Max(0, region) % StagesPerChapter); }
@@ -143,11 +143,11 @@ namespace ThreadZero
         private static float WallAttack(int region) { float w = Wall(region); return LateBoss(region) ? 1 + (w - 1) * .5f : (float)Math.Sqrt(w); }
         public static float Wall(int region) { return 1 + WallShape[Math.Max(0, region) % StagesPerChapter] * ChapterWall[ChapterIndex(region)] * (region % StagesPerChapter == StagesPerChapter - 1 ? BossWall[ChapterIndex(region)] : 1); }
         /// 11-23 首领要比本章的精英关难（用户拍板）：精英关的墙降一档，首领的墙按章再乘这个倍率。
-        public static readonly float[] BossWall = { 1.1f, 1.1f, 1.6f, 1.2f, 2.4f };
+        public static readonly float[] BossWall = { 1f, .95f, 1.45f, 1.1f, 2.3f };
         public static float Health(int region, int wave) { return (50 + 10 * wave) * (1 + .16f * region) * HealthScale * ChapterHealth[ChapterIndex(region)] * Ramp(ChapterHealthRamp, region) * WallHealth(region); }
         public static float Attack(int region, int wave) { return (4 + 1.2f * wave) * (1 + .14f * region) * ChapterAttack[ChapterIndex(region)] * Ramp(ChapterAttackRamp, region) * WallAttack(region) * AttackTune; }
         /// 11-23 装备平衡：汲取加了回复上限以后，所有配装都不再能靠吸血硬扛，敌人攻击整体下调来补（数值测试校过）。
-        public const float AttackTune = .74f;
+        public const float AttackTune = .7f;
         public static float Defense(int region) { return region * 3; }
 
         // ---------- v0.16 无尽回声层 ----------
