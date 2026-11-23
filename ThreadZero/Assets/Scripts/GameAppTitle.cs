@@ -103,16 +103,8 @@ namespace ThreadZero
             if (TitleRow(ref y, ref row, t, "制作人员", false, null, null)) { creditsOpen = true; creditsScroll = Vector2.zero; }
             if (!ExhibitMode && TitleRow(ref y, ref row, t, "退出游戏", false, null, null)) Application.Quit();
 
-            // ---- 底边：语言（名字本身不翻译）、版本 ----
-            float ba = Mathf.Clamp01((t - 1.1f) / .5f), lx = 104;
-            for (int i = 0; i < Loc.Names.Length; i++)
-            {
-                bool cur = lang == i; float lw = Ui.Width(Loc.Names[i], 15, cur) + 8; bool hov = Ui.Hover(lx - 6, 832, lw + 12, 36);
-                Ui.Text(lx, 834, lw, 30, Loc.Names[i], 15, Ui.Alpha(cur ? Ui.Panel : hov ? Ui.Panel : Ui.MuteOnInk, ba * (cur || hov ? 1 : .75f)), TextAnchor.MiddleLeft, cur);
-                if (cur) Ui.Fill(lx, 864, lw - 8, 2, Ui.Alpha(Ui.Orange, ba));
-                if (!cur && Ui.Click(lx - 6, 832, lw + 12, 36)) { Loc.Set((Loc.Lang)i); if (Ui.Clicked != null) Ui.Clicked(); }
-                lx += lw + 22;
-            }
+            // ---- 底边：版本（v0.22 语言切换收回设置里）----
+            float ba = Mathf.Clamp01((t - 1.1f) / .5f);
             Ui.Text(1068, 836, 500, 26, ExhibitMode ? "v0.22 · 毕业制作 · 展览模式" : "v0.22 · 毕业制作", 12, Ui.Alpha(Ui.MuteOnInk, .7f * ba), TextAnchor.MiddleRight);
             Ui.Blocked = exhibitPanel || exhibitExitPanel;
             if (titleConfirmNew) NewGamePanel();

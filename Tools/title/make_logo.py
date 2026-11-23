@@ -19,13 +19,24 @@ def make(lang):
     w, h = W * SS, H * SS
     rng = random.Random(7)
     font = ImageFont.truetype(os.path.join(FONTS, font_file), size * SS)
-    zero_font = ImageFont.truetype(os.path.join(FONTS, 'Oxanium-Bold.ttf'), int(size * SS * (1.3 if lang != 'en' else 1.12)))
 
-    # ---- 针眼「0」和字的位置 ----
+    # ---- 先量字有多高，针眼「0」做成和字一样高、上下对齐（英文的 0 本来就和大写字母等高）----
     base = int(h * .5)
+    probe = Image.new('L', (w, h), 0); pd = ImageDraw.Draw(probe)
+    x = 0
+    for ch in text:
+        pd.text((x, base), ch, font=font, fill=255, anchor='lm'); x += pd.textlength(ch, font=font) + track * SS
+    pb = probe.getbbox(); top, bottom = pb[1], pb[3]
+    zsize = size * SS
+    for _ in range(3):                                   # 字号和外框高度不是严格成正比，量两三次就准了
+        zf = ImageFont.truetype(os.path.join(FONTS, 'Oxanium-Bold.ttf'), int(zsize))
+        zl, zt, zr, zbm = zf.getbbox('0', anchor='ls')
+        zsize *= (bottom - top) / max(1, zbm - zt)
+    zero_font = ImageFont.truetype(os.path.join(FONTS, 'Oxanium-Bold.ttf'), int(zsize))
+    zl, zt, zr, zbm = zero_font.getbbox('0', anchor='ls')
     zmask = Image.new('L', (w, h), 0); zd = ImageDraw.Draw(zmask)
     zx = 120 * SS
-    zd.text((zx, base), '0', font=zero_font, fill=255, anchor='lm')
+    zd.text((zx - zl, bottom - zbm), '0', font=zero_font, fill=255, anchor='ls')
     zb = zmask.getbbox()
     tmask = Image.new('L', (w, h), 0); td = ImageDraw.Draw(tmask)
     x = zb[2] + 46 * SS
@@ -82,8 +93,11 @@ def make(lang):
     return img.resize((W, H), Image.LANCZOS)
 
 if __name__ == '__main__':
-    os.makedirs(OUT, exist_ok=True)
+    # 不带参数：写进游戏资源；带一个目录：只往那个目录出预览图（不动游戏里的）
+    preview = sys.argv[1] if len(sys.argv) > 1 else None
+    if not preview: os.makedirs(OUT, exist_ok=True)
     for lang in NAMES:
-        im = make(lang); p = os.path.join(OUT, 'logo_' + lang + '.png'); im.save(p); print(p, im.size)
-        if len(sys.argv) > 1:
-            bg = Image.new('RGB', (W, H), (22, 30, 36)); bg.paste(im, (0, 0), im); bg.save(os.path.join(sys.argv[1], 'logo_' + lang + '.jpg'), quality=90)
+        im = make(lang)
+        if preview: im.save(os.path.join(preview, 'logo_' + lang + '.png'))
+        else: im.save(os.path.join(OUT, 'logo_' + lang + '.png'))
+        print(lang, im.size)
