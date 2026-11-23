@@ -48,57 +48,119 @@ namespace ThreadZero
         private void TitleScreen()
         {
             if (!titleArtTried) { titleArtTried = true; titleArt = Resources.Load<Texture2D>("Art/V16/Title/title"); }
-            float t = clock - titleAt, fade = Mathf.Clamp01(t / .9f);
+            float t = clock - titleAt, fade = Mathf.Clamp01(t / .9f), now = Time.unscaledTime;
             Ui.FillScreen(Ui.Hex(0x101317));
-            if (titleArt != null) GUI.DrawTexture(Ui.R(0, 0, 1600, 900), titleArt, ScaleMode.ScaleAndCrop);
+            if (titleArt != null)
+            {   // v0.22 背景慢慢漂（放大 4%，来回各十几像素），不再是一张死图
+                float dx = Mathf.Sin(now * .11f) * 14, dy = Mathf.Sin(now * .083f + 1.3f) * 8;
+                GUI.DrawTexture(Ui.R(-32 + dx, -18 + dy, 1664, 936), titleArt, ScaleMode.ScaleAndCrop);
+            }
             else TitleThreads(t);
-            for (int i = 0; i < 32; i++) Ui.Fill(i * 24, 0, 24, 900, new Color(.06f, .07f, .09f, .9f * Mathf.Pow(1 - i / 32f, 1.5f)));   // 左边压暗，放标题和菜单
+            TitleRain(now);
+            for (int i = 0; i < 36; i++) Ui.Fill(i * 24, 0, 24, 900, new Color(.05f, .06f, .08f, .88f * Mathf.Pow(1 - i / 36f, 1.6f)));   // 左边压暗，放标题和菜单
+            for (int i = 0; i < 8; i++) Ui.Fill(0, 820 + i * 10, 1600, 10, new Color(.05f, .06f, .08f, .5f * (i + 1) / 8f));            // 底边压暗，放语言和版本
             Ui.FillScreen(new Color(0, 0, 0, 1 - fade));
             bool sub = titleConfirmNew || creditsOpen || navigation.HasModal || exhibitPanel || exhibitExitPanel;
             Ui.Blocked = sub;
 
-            Ui.FitText(92, 128, 760, 130, "零织协议", 104, Ui.Panel, TextAnchor.MiddleLeft, true);
-            Ui.Text(98, 252, 800, 52, "THREAD ZERO", 42, Ui.Orange, TextAnchor.MiddleLeft, true, true);
-            Ui.Fill(100, 312, 380, 4, Ui.Orange);
-            Ui.FitText(100, 324, 560, 26, "回收、改造、穿上它——直到第零号接上整张网。", 15, Ui.MuteOnInk, TextAnchor.MiddleLeft);
+            // ---- 标志：线缆织成的字（Tools/title/make_logo.py 生成，四种语言各一张）----
+            int lang = (int)Loc.Get();
+            Texture2D logo = TitleLogo(lang);
+            float la = Mathf.Clamp01((t - .25f) / .7f), slide = (1 - Mathf.SmoothStep(0, 1, la)) * -26;
+            if (logo != null)
+            {
+                Color old = GUI.color; GUI.color = new Color(1, 1, 1, la);
+                GUI.DrawTexture(Ui.R(34 + slide, 84, 800, 220), logo, ScaleMode.StretchToFill, true);
+                GUI.color = old;
+                // 三股线上各有一小段光从屏幕左边流进针眼
+                float[] rows = LogoRows[Mathf.Clamp(lang, 0, LogoRows.Length - 1)];
+                for (int r = 0; r < 3; r++)
+                {
+                    float u = Mathf.Repeat(now * .32f + r * .37f, 1.6f); if (u > 1) continue;
+                    float gx = Mathf.Lerp(-30, 96, u), ga = Mathf.Sin(u * Mathf.PI) * la;
+                    Ui.Fill(gx, 84 + rows[r] - 1.5f, 26, 3, new Color(.82f, 1, .96f, .85f * ga));
+                }
+            }
+            else Ui.FitText(92, 128, 760, 130, "零织协议", 104, Ui.Alpha(Ui.Panel, la), TextAnchor.MiddleLeft, true);
+            float sy = 84 + LogoBottom[Mathf.Clamp(lang, 0, 3)] + 24;
+            if (lang != 2) { Ui.Text(104, sy, 600, 36, "T H R E A D   Z E R O", 22, Ui.Alpha(Ui.Orange, la), TextAnchor.MiddleLeft, true, true); sy += 36; }
+            Ui.FitText(104, sy, 620, 26, "回收、改造、穿上它——直到第零号接上整张网。", 15, Ui.Alpha(Ui.MuteOnInk, la), TextAnchor.MiddleLeft);
 
-            float y = 384;
+            // ---- 菜单：一列文字，第一项最大，带这个存档的进度 ----
+            float y = 430; int row = 0;
+            string record = hasSave ? (model.InEcho ? "零号深网 · 第 " + model.state.echoFloor + " 层" : Catalog.StageCode(model.state.region) + " " + Catalog.RegionNames[model.state.region]) : null;
+            string record2 = hasSave ? "机械飞升 " + Mathf.RoundToInt(model.Ascension * 100) + "% · 零号深网最高 " + model.state.echoBest + " 层 · 外观 " + model.state.collection.Count + " / " + Catalog.All.Length : null;
             if (ExhibitMode)
             {   // v0.21 展览模式：只留开始、设置、制作人员
-                if (TitleButton(ref y, "开始体验", 1)) { if (hasSave) CloseTitle(); else StartOpening(); }
+                if (TitleRow(ref y, ref row, t, "开始体验", true, null, null)) { if (hasSave) CloseTitle(); else StartOpening(); }
             }
             else
             {
-                if (hasSave && TitleButton(ref y, "继续", 1)) CloseTitle();
-                if (TitleButton(ref y, hasSave ? "新游戏" : "开始", hasSave ? 0 : 1)) { if (hasSave) titleConfirmNew = true; else StartOpening(); }
+                if (hasSave && TitleRow(ref y, ref row, t, "继续", true, record, record2)) CloseTitle();
+                if (TitleRow(ref y, ref row, t, hasSave ? "新游戏" : "开始", !hasSave, null, null)) { if (hasSave) titleConfirmNew = true; else StartOpening(); }
             }
-            if (TitleButton(ref y, "设置", 0)) navigation.Open(GameModal.Settings);
-            if (TitleButton(ref y, "制作人员", 0)) { creditsOpen = true; creditsScroll = Vector2.zero; }
-            if (!ExhibitMode && TitleButton(ref y, "退出游戏", 0)) Application.Quit();
-            y += 12;
-            for (int i = 0; i < Loc.Names.Length; i++)   // 语言（名字本身不翻译）
-                if (Ui.Button(100 + i * 92, y, 86, 40, Loc.Names[i], (int)Loc.Get() == i ? 2 : 0, true, 13)) Loc.Set((Loc.Lang)i);
+            if (TitleRow(ref y, ref row, t, "设置", false, null, null)) navigation.Open(GameModal.Settings);
+            if (TitleRow(ref y, ref row, t, "制作人员", false, null, null)) { creditsOpen = true; creditsScroll = Vector2.zero; }
+            if (!ExhibitMode && TitleRow(ref y, ref row, t, "退出游戏", false, null, null)) Application.Quit();
 
-            if (hasSave)
-            {   // 右下：这个存档的记录
-                string record = "机械飞升 " + Mathf.RoundToInt(model.Ascension * 100) + "% · 零号深网最高 " + model.state.echoBest + " 层 · 外观 " + model.state.collection.Count + " / " + Catalog.All.Length;
-                string where = model.InEcho ? "零号深网 · 第 " + model.state.echoFloor + " 层" : Catalog.StageCode(model.state.region) + " " + Catalog.RegionNames[model.state.region];
-                float rw = Mathf.Max(Ui.Width(record, 14), Ui.Width(where, 18, true)) + 48;
-                Ui.Fill(1568 - rw, 770, rw, 82, new Color(.06f, .07f, .09f, .78f)); Ui.Fill(1568 - rw, 770, 4, 82, Ui.Orange);
-                Ui.Text(1568 - rw + 24, 778, rw - 36, 34, where, 18, Ui.Panel, TextAnchor.MiddleLeft, true);
-                Ui.Text(1568 - rw + 24, 812, rw - 36, 30, record, 14, Ui.MuteOnInk, TextAnchor.MiddleLeft);
+            // ---- 底边：语言（名字本身不翻译）、版本 ----
+            float ba = Mathf.Clamp01((t - 1.1f) / .5f), lx = 104;
+            for (int i = 0; i < Loc.Names.Length; i++)
+            {
+                bool cur = lang == i; float lw = Ui.Width(Loc.Names[i], 15, cur) + 8; bool hov = Ui.Hover(lx - 6, 832, lw + 12, 36);
+                Ui.Text(lx, 834, lw, 30, Loc.Names[i], 15, Ui.Alpha(cur ? Ui.Panel : hov ? Ui.Panel : Ui.MuteOnInk, ba * (cur || hov ? 1 : .75f)), TextAnchor.MiddleLeft, cur);
+                if (cur) Ui.Fill(lx, 864, lw - 8, 2, Ui.Alpha(Ui.Orange, ba));
+                if (!cur && Ui.Click(lx - 6, 832, lw + 12, 36)) { Loc.Set((Loc.Lang)i); if (Ui.Clicked != null) Ui.Clicked(); }
+                lx += lw + 22;
             }
-            Ui.Text(100, 852, 600, 24, ExhibitMode ? "v0.21 · 毕业制作 · 展览模式" : "v0.21 · 毕业制作", 12, Ui.Alpha(Ui.MuteOnInk, .8f), TextAnchor.MiddleLeft);
+            Ui.Text(1068, 836, 500, 26, ExhibitMode ? "v0.22 · 毕业制作 · 展览模式" : "v0.22 · 毕业制作", 12, Ui.Alpha(Ui.MuteOnInk, .7f * ba), TextAnchor.MiddleRight);
             Ui.Blocked = exhibitPanel || exhibitExitPanel;
             if (titleConfirmNew) NewGamePanel();
             else if (creditsOpen) CreditsPanel();
             else if (navigation.HasModal) Modal();
             Ui.Blocked = false;
         }
-        private bool TitleButton(ref float y, string label, int style)
+        // 标志里三股线的高度（从图的上沿算，按 800×220 的画法）：中文、日文、英文、韩文
+        private static readonly float[][] LogoRows = { new[] { 94f, 120f, 146.5f }, new[] { 98.5f, 116f, 133.5f }, new[] { 93.5f, 106.5f, 120f }, new[] { 102.5f, 115.5f, 129f } };
+        private static readonly float[] LogoBottom = { 178, 155, 136, 146 };   // 字的下沿（同上）
+        private static readonly string[] LogoFiles = { "logo_zh", "logo_ja", "logo_en", "logo_ko" };
+        private readonly Texture2D[] titleLogos = new Texture2D[4]; private readonly bool[] titleLogoTried = new bool[4];
+        private Texture2D TitleLogo(int lang)
         {
-            bool hit = Ui.Button(100, y, 380, 56, label, style, true, 19);
-            y += 66; return hit;
+            lang = Mathf.Clamp(lang, 0, 3);
+            if (!titleLogoTried[lang]) { titleLogoTried[lang] = true; titleLogos[lang] = Resources.Load<Texture2D>("Art/V16/Title/" + LogoFiles[lang]); }
+            return titleLogos[lang];
+        }
+        /// 菜单的一行。main：最大的那一项（橙色竖条 + 大字，下面可以带两行说明）；其余是小一号的字，鼠标移上去往右挪一点、前面长出一小段线。
+        private bool TitleRow(ref float y, ref int row, float t, string label, bool main, string note, string note2)
+        {
+            float a = Mathf.Clamp01((t - .6f - row * .09f) / .4f), h = main ? (note != null ? 96 : 64) : 46, w = 520;
+            bool hover = a > .9f && Ui.Hover(100, y, w, h);
+            if (main)
+            {
+                Ui.Fill(100, y + 6, hover ? 10 : 6, note != null ? 84 : 52, Ui.Alpha(Ui.Orange, a));
+                Ui.Text(126 + (hover ? 4 : 0), y, w - 30, 56, label, 34, Ui.Alpha(hover ? Ui.Orange : Ui.Panel, a), TextAnchor.MiddleLeft, true);
+                if (note != null) Ui.FitText(128, y + 52, w - 30, 22, note, 15, Ui.Alpha(Ui.Panel, a * .9f), TextAnchor.MiddleLeft, true);
+                if (note2 != null) Ui.FitText(128, y + 72, w - 30, 20, note2, 12, Ui.Alpha(Ui.MuteOnInk, a), TextAnchor.MiddleLeft);
+            }
+            else
+            {
+                if (hover) Ui.Fill(100, y + h / 2 - 1, 18, 2, new Color(.27f, .9f, .82f, a));
+                Ui.Text(hover ? 128 : 104, y, w - 30, h, label, 21, Ui.Alpha(hover ? Ui.Panel : Ui.MuteOnInk, a), TextAnchor.MiddleLeft, hover);
+            }
+            bool hit = a > .9f && Ui.Click(100, y, w, h);
+            if (hit && Ui.Clicked != null) Ui.Clicked();
+            y += h + (main ? 14 : 2); row++; return hit;
+        }
+        /// 雨：70 根斜着往下掉的细线，位置和速度按序号定死（不用随机数，免得每帧跳）。
+        private void TitleRain(float now)
+        {
+            for (int i = 0; i < 70; i++)
+            {
+                float h1 = Mathf.Repeat(i * .6180339f, 1), h2 = Mathf.Repeat(i * .3819660f + .17f, 1);
+                float speed = 760 + 520 * h2, len = 22 + 36 * h2, yy = Mathf.Repeat(now * speed + h1 * 3100, 1000) - 60, xx = 60 + h1 * 1700 - yy * .16f;
+                Ui.Stroke(xx, yy, xx - len * .16f, yy + len, 1.4f, new Color(.72f, .88f, 1, .07f + .11f * h2));
+            }
         }
         /// 没有标题图时的背景：几根慢慢摆动的青绿织线。
         private void TitleThreads(float t)

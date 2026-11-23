@@ -138,6 +138,8 @@ TITLE / 称号	TITLE
 UPGRADE / 升级	UPGRADE
 v0.21 · 毕业制作	v0.21 · Graduation Project
 v0.21 · 毕业制作 · 展览模式	v0.21 · Graduation Project · Exhibition Mode
+v0.22 · 毕业制作	v0.22 · Graduation Project
+v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition Mode
 · 单体	· Single target
 · 回收目标产地	· Recovery target source
 · 空	· Empty

@@ -138,7 +138,9 @@ re:新手提示 · (\d+) / (\d+)§ヒント・{1} / {2}§Tip · {1} / {2}§팁 �
 退出游戏§ゲーム終了§Quit§게임 종료
 re:机械飞升 (\d+)% · 零号深网最高 (\d+) 层 · 外观 (\d+) / (\d+)§機械昇華 {1}%・零号深網 最高 {2} 層・見た目 {3} / {4}§Ascension {1}% · Deep Net best F{2} · Looks {3} / {4}§기계 승화 {1}% · 제로 딥넷 최고 {2}층 · 외형 {3} / {4}
 v0.21 · 毕业制作 · 展览模式§v0.21・卒業制作・展示モード§v0.21 · Graduation Project · Exhibition Mode§v0.21 · 졸업 작품 · 전시 모드
+v0.22 · 毕业制作 · 展览模式§v0.22・卒業制作・展示モード§v0.22 · Graduation Project · Exhibition Mode§v0.22 · 졸업 작품 · 전시 모드
 v0.21 · 毕业制作§v0.21・卒業制作§v0.21 · Graduation Project§v0.21 · 졸업 작품
+v0.22 · 毕业制作§v0.22・卒業制作§v0.22 · Graduation Project§v0.22 · 졸업 작품
 开始新游戏？§はじめから始める？§Start a new game?§새 게임을 시작할까요?
 现在的进度会清空，从第一章重新开始。原存档会先复制一份留在存档文件夹里（文件名带 archived 和时间），不会真的丢。§現在の進行は消去され、第一章からやり直しになる。元のセーブデータは先にセーブフォルダへ複製される（ファイル名に archived と日時が付く）ので、本当に失われることはない。§Your current progress will be cleared and you'll start over from Chapter 1. A copy of the old save is kept in the save folder first (its name includes "archived" and the time), so nothing is truly lost.§현재 진행은 지워지고 1장부터 다시 시작한다. 원래 세이브 데이터는 먼저 세이브 폴더에 복사해 두니(파일 이름에 archived와 시각이 붙는다) 정말로 사라지지는 않는다.
 清空并开始§消去して始める§Clear and start§지우고 시작
