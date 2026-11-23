@@ -364,6 +364,27 @@ namespace ThreadZero
             Save();
         }
 
+        /// v0.22 开发用：F10 给测试存档全套装备（每种一件、90 级），看光效和外观。再按一次换下一档品质：
+        /// 零号 → 原型 → 机密 → 军规 → 特装 → 改良 → 量产 → 回到零号。同时放开全部章节、衣柜全解锁、给够零件和核心。只在测试存档里能用。
+        private int allGearQuality = -1;
+        private void GrantAllGear()
+        {
+            if (!testSave) { Notify("F10 只在测试存档里能用（先按 F8 切到测试存档）", 2.5f); return; }
+            allGearQuality = allGearQuality <= 0 ? 6 : allGearQuality - 1;
+            Quality q = (Quality)allGearQuality;
+            string[] worn = new string[Catalog.SlotCount];
+            for (int i = 0; i < Catalog.SlotCount; i++) { Item it = model.Equipped((Slot)i); worn[i] = it != null ? it.baseId : Catalog.StarterIds[i]; }
+            model.state.items.Clear();
+            foreach (EquipmentBase b in Catalog.All)
+            {
+                Item item = model.Create(b.id, q, 90); model.state.items.Add(item); model.Unlock(b.id);
+                if (worn[(int)b.slot] == b.id) model.Equip(item.uid);
+            }
+            model.state.unlockedRegion = Catalog.LastRegion; model.state.bossMask = 31; model.state.bosses = Mathf.Max(model.state.bosses, 5);
+            model.state.scrap = Mathf.Max(model.state.scrap, 999999); model.state.cores = Mathf.Max(model.state.cores, 999);
+            unseen.Clear(); selectedItem = model.Equipped(Slot.Weapon).uid; combat.ClampHealth(); Save();
+            Notify("测试：全套装备 · " + Catalog.QualityNames[allGearQuality] + " · " + model.state.items.Count + " 件（再按 F10 换下一档品质）", 4);
+        }
         private void GrantTestOutfit()
         {
             string[] set = TestOutfits[testOutfit++ % TestOutfits.Length];
@@ -455,6 +476,7 @@ namespace ThreadZero
                 else if (navigation.Screen == GameScreen.Action && !navigation.HasModal && current.keyCode == KeyCode.F4) { PreviewTransition(); current.Use(); }
                 else if (current.keyCode == KeyCode.F6) { GameModel.TestPower = !GameModel.TestPower; combat.ClampHealth(); if (GameModel.TestPower) combat.health = model.Total().health; Notify(GameModel.TestPower ? "测试：无敌 + 攻击 ×10（再按 F6 关闭）" : "测试模式已关闭", 2.5f); current.Use(); }
                 else if (current.keyCode == KeyCode.F7) { TestNextAscension(); current.Use(); }
+                else if (current.keyCode == KeyCode.F10) { GrantAllGear(); current.Use(); }
                 else if (current.keyCode == KeyCode.F8) { SwitchSaveSlot(); current.Use(); }
                 else if (current.keyCode == KeyCode.F9 && testSave) { saves.Delete(); RestartGame(); current.Use(); }
                 else if (current.keyCode == KeyCode.F5) { model.state.unlockedRegion = Catalog.LastRegion; Save(); Notify("测试：" + Chapters.ChapterCount + " 章 " + (Catalog.LastRegion + 1) + " 关已全部解锁（点关卡名打开地图切章）", 2.5f); current.Use(); }
