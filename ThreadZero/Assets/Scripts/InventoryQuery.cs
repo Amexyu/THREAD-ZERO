@@ -12,13 +12,13 @@ namespace ThreadZero
     {
         // v0.20 等级上限默认改成 Balance.MaxItemLevel（300）：原来写死 100，回声层 60 层以后掉的 100 级以上装备、工坊升到 100 级以上的装备
         //       在整备页的背包里直接被筛掉了（没开筛选也一样），看不到也穿不上。
-        public int slot = -1, qualityMask = 63, minLevel = 1, maxLevel = Balance.MaxItemLevel, affix = -1, effect = -1;
+        public int slot = -1, qualityMask = 127, minLevel = 1, maxLevel = Balance.MaxItemLevel, affix = -1, effect = -1;
         public string search = "";
         public InventoryStatus status;
         public InventorySort sort;
         public bool descending = true;
 
-        public int ActiveCount { get { return (qualityMask != 63 ? 1 : 0) + (minLevel != 1 || maxLevel != Balance.MaxItemLevel ? 1 : 0)
+        public int ActiveCount { get { return (qualityMask != 127 ? 1 : 0) + (minLevel != 1 || maxLevel != Balance.MaxItemLevel ? 1 : 0)
             + (affix >= 0 ? 1 : 0) + (effect >= 0 ? 1 : 0) + (status != InventoryStatus.All ? 1 : 0) + (!string.IsNullOrWhiteSpace(search) ? 1 : 0); } }
 
         public List<Item> Apply(GameState state)

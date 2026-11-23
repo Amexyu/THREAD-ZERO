@@ -516,7 +516,7 @@ namespace ThreadZero
                         OnMessage?.Invoke("零号深网第 " + floor + " 层：拿到深网限定「" + Catalog.Find(look.baseId).name + "」（原型），已收进衣柜");
                     }
                 }
-                model.state.shards += Boss ? Balance.ShardsEchoBoss : Balance.ShardsEchoFloor;   // v0.20 机械飞升材料：回声层每过一层都给（首领层多给）
+                model.state.shards += Balance.EchoShards(floor, Boss);   // v0.20 机械飞升材料：回声层每过一层都给（首领层多给）
                 if (Boss) health = Math.Min(s.health, health + s.health * Balance.BossRecovery);
                 OnFloorCleared?.Invoke(floor, best);
                 OnCheckpoint?.Invoke();

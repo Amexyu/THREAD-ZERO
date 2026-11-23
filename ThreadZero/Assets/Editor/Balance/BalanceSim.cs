@@ -30,7 +30,8 @@ namespace ThreadZero.EditorTools
         /// 调数值时可以只跑前几章（快）；正式报告用 5。
         private const int UntilChapter = 5;
         /// 打完主线后在回声层再挂几小时（报告“打完主线以后”一节）。调主线数值时设 0 省时间。
-        private static float EchoHours = 3;
+        private static float EchoHours = 8;
+        private static int SimDraws;
         /// v0.20 卡关时去回声层刷一会（真人会这么做，回声层就是为这个准备的）：最前面那一关连着倒 6 次、回声层已开放 → 刷这么多分钟再回来。
         private const float EchoDetourMinutes = 20;
         private const int EchoDetourAfter = 6;
@@ -104,7 +105,7 @@ namespace ThreadZero.EditorTools
             public int seed; public StageLog[] stages; public float time; public bool stalled; public int stallAt = -1; public bool finished;
             public int stuckAt = -1, stuckCount, reforges, reforgeScrap;   // 卡关计数（按最前面那一关算）和洗炼统计
             public int echoDetours; public float echoDetourTime;           // v0.20 卡关时去回声层刷了几次、一共多久
-            public int echoStart; public readonly List<int> echoMarks = new List<int>(); public readonly List<int> echoAsc = new List<int>();   // v0.20 每小时的飞升度（%）
+            public int echoStart, echoZero, echoDraws; public readonly List<int> echoMarks = new List<int>(); public readonly List<int> echoAsc = new List<int>();   // v0.20 每小时的飞升度（%）
             public StageLog stallSnap; public int stallScrap;   // 卡关时的身板和手里的零件   // 打完主线后：从第几层开始、每小时的最高层
             public float[] bossAt = new float[Chapters.ChapterCount];
             public readonly List<string> events = new List<string>();   // 最近的换关记录（卡关时写进报告）
@@ -185,17 +186,20 @@ namespace ThreadZero.EditorTools
                     if (t - lastProgress > StallHours * 3600) { run.stalled = true; run.stallAt = model.state.unlockedRegion; run.stallSnap = new StageLog(); Snapshot(model, run.stallSnap); run.stallScrap = model.state.scrap; break; }
                 }
                 if (run.finished && EchoHours > 0 && captureAt == null)
-                {   // 打完主线：和游戏一样进回声层，过一层往上一层，倒下退 3 层
-                    int start = model.EchoStartFloor(); model.CatchUpEcho(start); run.echoStart = start;
+                {   // 打完主线：和游戏一样进回声层，过一层往上一层，倒下退 1 层
+                    int start = model.EchoStartFloor(); model.CatchUpEcho(start); run.echoStart = start; int draws0 = SimDraws;
                     model.state.echoFloor = start; Policy(model); combat.ResetRegion();
-                    float end = t + EchoHours * 3600, mark = t + 3600;
+                    float end = t + EchoHours * 3600, mark = t + 3600, tidy = t;
                     while (t < end)
                     {
                         combat.Tick(TickSeconds); t += TickSeconds;
-                        if (combat.RetreatRequested) { combat.RetreatRequested = false; Policy(model); model.state.echoFloor = Math.Max(1, model.state.echoFloor - 3); combat.ResetRegion(); t += .6f; }
-                        else if (combat.StageCleared) { t += .5f; Policy(model); model.state.echoFloor++; combat.ResetRegion(); t += .45f; }
+                        if (combat.RetreatRequested) { combat.RetreatRequested = false; Policy(model); tidy = t; model.state.echoFloor = Math.Max(1, model.state.echoFloor - 1); combat.ResetRegion(); t += .6f; }
+                        // v0.22 过层快的时候不用每层都整理一遍装备（真人也不会），一分钟一次；不然 8 小时深网要算半个多小时
+                        else if (combat.StageCleared) { t += .5f; if (t - tidy >= 60) { Policy(model); tidy = t; } model.state.echoFloor++; combat.ResetRegion(); t += .45f; }
                         if (t >= mark) { run.echoMarks.Add(model.state.echoBest); run.echoAsc.Add((int)Math.Round(model.Ascension * 100)); mark += 3600; }
                     }
+                    run.echoZero = model.state.equipped.Count(u => { Item it = model.state.items.FirstOrDefault(x => x.uid == u); return it != null && it.quality == Quality.Zero; });
+                    run.echoDraws = SimDraws - draws0;
                     model.state.echoFloor = 0;
                 }
                 run.time = t; return run;
@@ -212,7 +216,7 @@ namespace ThreadZero.EditorTools
             while (t < end)
             {
                 combat.Tick(TickSeconds); t += TickSeconds;
-                if (combat.RetreatRequested) { combat.RetreatRequested = false; Policy(model); model.state.echoFloor = Math.Max(1, model.state.echoFloor - 3); combat.ResetRegion(); t += .6f; }
+                if (combat.RetreatRequested) { combat.RetreatRequested = false; Policy(model); model.state.echoFloor = Math.Max(1, model.state.echoFloor - 1); combat.ResetRegion(); t += .6f; }
                 else if (combat.StageCleared) { t += .5f; Policy(model); model.state.echoFloor++; combat.ResetRegion(); t += .45f; }
             }
             model.state.echoFloor = 0; Policy(model); combat.ResetRegion();
@@ -285,6 +289,12 @@ namespace ThreadZero.EditorTools
         /// 零件每次买“每个零件涨分最多”的一项（升级某件已穿装备 / 训练），买到买不起为止。卡关时会洗炼（见 ReforgeWhenStuck）。不刷回声层、不突破。
         private static void Policy(GameModel m)
         {
+            // v0.22 打完主线：零件的四成拿去深层回收（抽到的和掉落一样参加下面的比较，没用的分解）
+            // 零件平时一到手就被升级花光，所以单独记一笔「回收基金」：每次把新到手零件的四成划进去，攒够一次就抽。
+            int drawSpent = 0;
+            if (!m.DeepTerminalUnlocked) drawFund = 0;
+            else for (int n = 0; n < 40 && drawFund >= m.TerminalCost(true) && m.state.scrap >= m.TerminalCost(true); n++)
+                { int c = m.TerminalCost(true); if (m.TerminalDraw(true, 0) == null) break; drawFund -= c; drawSpent += c; SimDraws++; }
             for (int s = 0; s < Catalog.SlotCount; s++)
             {
                 string keep = m.state.equipped[s], best = keep; double current = Score(m), bestScore = current;
@@ -300,7 +310,16 @@ namespace ThreadZero.EditorTools
                 m.state.equipped[s] = best;
             }
             foreach (Item it in m.state.items.ToList()) if (!m.state.equipped.Contains(it.uid)) m.Salvage(it.uid);
+            if (m.DeepTerminalUnlocked) drawFund = Math.Min(m.state.scrap, drawFund + Math.Max(0, m.state.scrap + drawSpent - scrapSeen) * 2 / 5);
+            m.state.scrap -= drawFund;   // 基金里的零件先拿开，下面的升级花不到
+            try { PolicySpend(m); } finally { m.state.scrap += drawFund; scrapSeen = m.state.scrap; }
+        }
+        private static int drawFund, scrapSeen;
+        private static void PolicySpend(GameModel m)
+        {
             V021Systems(m);
+            // v0.22 打完主线：穿着的机密 / 原型，核心够了就突破（主线期间不突破，和以前一样）
+            if (m.MainCleared) for (int s = 0; s < Catalog.SlotCount; s++) { Item it = m.Equipped((Slot)s); while (it != null && m.CanAscend(it) && m.Ascend(it.uid)) { } }
             // v0.20 机械飞升：织网碎片只有义体能用，够了就升（先升等级最低的那件；也要花零件，但比装备升级便宜得多）
             for (bool any = true; any;)
             {
@@ -543,9 +562,9 @@ namespace ThreadZero.EditorTools
             {
                 sb.AppendLine("## 打完主线以后：零号深网");
                 sb.AppendLine();
-                sb.AppendLine("打完 5-7 接着挂 " + EchoHours + " 小时：从第几层开始，之后每小时的最高层（第 48 层 ≈ 5-7 的强度，之后每层敌人约 +4%、掉落约 +1.2 级）。");
+                sb.AppendLine("打完 5-7 接着挂 " + EchoHours + " 小时：从第几层开始，之后每小时的最高层（第 48 层 ≈ 5-7 的强度，之后每层敌人生命约 +2.7%、攻击约 +1.8%、掉落约 +1.2 级）。");
                 sb.AppendLine();
-                foreach (RunLog x in runs.Where(x => x.finished)) sb.AppendLine("- 种子 " + x.seed + "：从第 " + x.echoStart + " 层 → " + string.Join(" → ", x.echoMarks.Select((f, i) => (i + 1) + " 小时 " + f + " 层" + (i < x.echoAsc.Count ? "（飞升 " + x.echoAsc[i] + "%）" : ""))));
+                foreach (RunLog x in runs.Where(x => x.finished)) sb.AppendLine("- 种子 " + x.seed + "：从第 " + x.echoStart + " 层 → " + string.Join(" → ", x.echoMarks.Select((f, i) => (i + 1) + " 小时 " + f + " 层" + (i < x.echoAsc.Count ? "（飞升 " + x.echoAsc[i] + "%）" : ""))) + "；最后身上零号 " + x.echoZero + " 件，深层回收 " + x.echoDraws + " 次");
                 sb.AppendLine();
             }
             sb.AppendLine("## 各种子明细");

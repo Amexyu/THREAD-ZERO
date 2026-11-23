@@ -14,7 +14,7 @@ namespace ThreadZero
     {
         private static int fxMode, qWeapon = -1, qHead = -1, qCoat = -1, qBack = -1, qLegs = -1;
         private static readonly int[] gearMods = new int[5];   // v0.21 各部位装的改装件（(int)Effect，0 = 没有）
-        private static readonly float[] EdgeAlpha = { 0, 0, .34f, .48f, .6f, .7f };   // 按品质：量产 改良 特装 军规 机密 原型
+        private static readonly float[] EdgeAlpha = { 0, 0, .34f, .48f, .6f, .7f, .8f };   // 按品质：量产 改良 特装 军规 机密 原型 零号
         private const float ScanPeriod = 5.2f, ScanTime = 1.3f, SweepPeriod = 3.4f, SweepTime = .5f;
         /// 测试用：≥ 0 时光效的时钟停在这个值（截图对准扫光）；平时 -1。
         public static float GearFreeze = -1;
@@ -135,7 +135,7 @@ namespace ThreadZero
                 default: return new Color(1, .55f, .15f);
             }
         }
-        private static Color QC(int q, float a) { Color c = QualityVisual.Colors[Mathf.Clamp(q, 0, 5)]; c.a = Mathf.Clamp01(a); return c; }
+        private static Color QC(int q, float a) { Color c = QualityVisual.Colors[Mathf.Clamp(q, 0, QualityVisual.Colors.Length - 1)]; c.a = Mathf.Clamp01(a); return c; }
 
         /// 刀光、起手闪光、连击火花用的颜色：量产 / 改良还是原来的颜色，特装起换成武器的品质色。
         private static Color GearColor(Color orig) { return qWeapon >= 2 ? QualityVisual.Colors[qWeapon] : orig; }

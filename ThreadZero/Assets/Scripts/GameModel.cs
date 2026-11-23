@@ -5,7 +5,7 @@ using System.Linq;
 namespace ThreadZero
 {
     public enum Slot { Weapon, Head, Coat, Back, Legs }   // v0.16 加下装（Legs）
-    public enum Quality { Common, Uncommon, Rare, Epic, Legendary, Prototype }
+    public enum Quality { Common, Uncommon, Rare, Epic, Legendary, Prototype, Zero }
     // Append values to preserve v1 serialized enum numbers.
     public enum Effect { None, Arc, Leech, Guard, Execute, Drone, Mark, Thruster }
     public enum AttackStyle { Ranged, Melee }
@@ -61,6 +61,7 @@ namespace ThreadZero
         public List<Affix> affixes = new List<Affix>();
         public List<Chip> chips = new List<Chip>();   // v0.21 植入的芯片（最多 Balance.ChipSlots[品质] 块）
         public int mod;                               // v0.21 改装件：0 = 没装，其余 = (int)Effect
+        public int talent2;                           // v0.22 「零号」的第二条专属词条（和第一条不同），其余品质 0
         public int talent;                            // 11-23 专属词条：0 = 没有，1–4 见 Balance.Talents（机密、原型各带一条）
     }
 
@@ -75,6 +76,7 @@ namespace ThreadZero
         public int region, unlockedRegion, scrap, training, kills, bosses, bossMask;   // bossMask：每章首领首通一位
         public int retryRegion = -1, retryFarms, retryStreak; public float retryPower;   // v0.19 变强后再挑战：倒在哪一关、倒下时的战力、回刷了几次、在这一关连着倒了几次
         public int sinceRare, sinceEpic, sinceLegendary;
+        public int terminalPity;                      // v0.22 深层回收：连着多少次没出机密以上
         public string recoveryTarget;
         public int targetBossMisses;
         public int glowMode = 2;
@@ -499,7 +501,7 @@ namespace ThreadZero
             foreach (Item item in state.items)
             {
                 if (item == null || Catalog.Find(item.baseId) == null || string.IsNullOrEmpty(item.uid) || !ids.Add(item.uid)
-                    || item.level < 1 || item.level > Balance.MaxItemLevel || (int)item.quality < 0 || (int)item.quality > 5 || item.affixes == null)
+                    || item.level < 1 || item.level > Balance.MaxItemLevel || (int)item.quality < 0 || (int)item.quality > 6 || item.affixes == null)
                     throw new InvalidOperationException("装备数据无效");
                 var affixIds = new HashSet<int>();
                 foreach (Affix a in item.affixes)
@@ -521,6 +523,8 @@ namespace ThreadZero
             // 11-23 老存档里的机密 / 原型装备补一条专属词条（按 uid 定，读几次都一样）
             foreach (Item it in state.items) if (it != null && it.talent == 0 && (int)it.quality >= (int)Quality.Legendary && !string.IsNullOrEmpty(it.uid))
             { int h = 0; foreach (char ch in it.uid) h = h * 31 + ch; it.talent = 1 + (int)((uint)h % Balance.Talents); }
+            foreach (Item it in state.items) if (it != null && (it.talent2 < 0 || it.talent2 > Balance.Talents || it.talent2 == it.talent || it.quality != Quality.Zero)) it.talent2 = 0;
+            state.terminalPity = Math.Max(0, Math.Min(Balance.TerminalDeepPity, state.terminalPity));
             state.sinceRare = Math.Max(0, Math.Min(Balance.RarePity, state.sinceRare));
             state.sinceEpic = Math.Max(0, Math.Min(Balance.EpicPity, state.sinceEpic));
             state.sinceLegendary = Math.Max(0, Math.Min(Balance.LegendaryPity, state.sinceLegendary));
@@ -660,6 +664,7 @@ namespace ThreadZero
                 item.affixes.Add(new Affix { stat = stat, value = value });
             }
             if ((int)quality >= (int)Quality.Legendary) item.talent = 1 + rng.Next(Balance.Talents);
+            if (quality == Quality.Zero) item.talent2 = SecondTalent(item.talent);
             return item;
         }
         public static Stats ItemStats(Item item)
@@ -805,7 +810,7 @@ namespace ThreadZero
         public int TalentCount(int talent)
         {
             int n = 0;
-            for (int i = 0; i < Catalog.SlotCount; i++) { Item it = Equipped((Slot)i); if (it != null && it.talent == talent) n++; }
+            for (int i = 0; i < Catalog.SlotCount; i++) { Item it = Equipped((Slot)i); if (it != null && (it.talent == talent || it.talent2 == talent)) n++; }
             return Math.Min(Balance.TalentStack, n);
         }
         public bool IsMelee
@@ -998,14 +1003,22 @@ namespace ThreadZero
         }
         // 突破：用核心把「机密」装备提升为「原型」，并补上第五条词条。
         // v0.16 门槛：8 个核心 + 装备先升到当前等级上限（许可等级）。
-        public bool CanAscend(Item item) { return AscendUnlocked && item != null && item.quality == Quality.Legendary && state.cores >= Balance.AscendCores && item.level >= AscendLevel; }
+        /// v0.22 第二次突破：打完主线后，「原型」再花核心变成「零号」，多一条专属词条。
+        public bool CanAscend(Item item) { return item != null && AscendOpen(item) && state.cores >= AscendCost(item) && item.level >= AscendLevel; }
+        public bool AscendOpen(Item item) { return item.quality == Quality.Legendary ? AscendUnlocked : item.quality == Quality.Prototype && MainCleared; }
+        public int AscendCost(Item item) { return item != null && item.quality == Quality.Prototype ? Balance.ZeroCores : Balance.AscendCores; }
+        public bool MainCleared { get { return BossCleared(5); } }
+        /// 第二条专属词条：和第一条不一样的随机一种。
+        private int SecondTalent(int first) { int t = 1 + rng.Next(Balance.Talents - 1); return t >= first ? t + 1 : t; }
         /// 突破前要先把装备升到的等级。v0.19：许可打完第一个首领就放开到 300，原来“升到许可上限”变成升不到，改成 30 级。
         public int AscendLevel { get { return Math.Min(License, Balance.MaxLicense); } }
         public bool Ascend(string uid)
         {
             Item item = state.items.FirstOrDefault(x => x.uid == uid);
             if (!CanAscend(item)) return false;
-            state.cores -= Balance.AscendCores; item.quality = Quality.Prototype;
+            state.cores -= AscendCost(item);
+            if (item.quality == Quality.Prototype) { item.quality = Quality.Zero; if (item.talent == 0) item.talent = 1 + rng.Next(Balance.Talents); item.talent2 = SecondTalent(item.talent); return true; }
+            item.quality = Quality.Prototype;
             List<int> pool = AffixPool(item.quality, item);
             if (pool.Count > 0 && item.affixes.Count < Balance.Tier(Quality.Prototype).affixCount)
             {
@@ -1153,6 +1166,7 @@ namespace ThreadZero
             if (!boss && !certain && !Chance(Balance.NormalDropChance)) return null;
             Quality q = RollQuality(minQuality);
             if (boss && forceId != null && Chance(Balance.PrototypeBossChance)) q = Quality.Prototype;
+            if (boss && InEcho && state.echoFloor >= Balance.ZeroFromFloor && Chance(Balance.ZeroBossChance)) q = Quality.Zero;   // v0.22
             string[] pool = Catalog.DropPool(InEcho, DropChapter);
             string baseId = forceId ?? pool[rng.Next(pool.Length)];
             // 定向回收：精英和首领的掉落有机会（并有保底）换成回收目标；只换模板，不影响数量、等级、品质保底。
@@ -1181,6 +1195,46 @@ namespace ThreadZero
             state.sinceEpic = selected >= 3 ? 0 : state.sinceEpic + 1;
             state.sinceLegendary = selected >= 4 ? 0 : state.sinceLegendary + 1;
             return (Quality)selected;
+        }
+        // ---------- v0.22 回收终端：花零件抽装备 ----------
+        public bool TerminalUnlocked { get { return state.unlockedRegion >= Chapters.FirstRegion(3); } }
+        public bool DeepTerminalUnlocked { get { return MainCleared; } }
+        /// 抽到的装备等级：主线打到哪、深网打到哪，取高的那个（段内中间值）。
+        public int TerminalLevel
+        {
+            get
+            {
+                int main = Chapters.DropLevel(Math.Min(Chapters.LastRegion, state.unlockedRegion), false, false, .5);
+                return state.echoBest > 0 && MainCleared ? Math.Max(main, Chapters.EchoDropLevel(state.echoBest, false, false, .5)) : main;
+            }
+        }
+        public int TerminalCost(bool deep) { return (deep ? Balance.TerminalDeepPrice : Balance.TerminalSlotPrice) * TerminalLevel; }
+        public bool CanTerminal(bool deep, int times = 1) { return (deep ? DeepTerminalUnlocked : TerminalUnlocked) && state.scrap >= TerminalCost(deep) * times; }
+        /// 抽一件。slot：部位回收指定的部位（深层回收不看）。零件不够或没开放返回 null。
+        public Item TerminalDraw(bool deep, int slot)
+        {
+            if (!CanTerminal(deep)) return null;
+            int level = TerminalLevel, chapter = Math.Max(1, Math.Min(5, Chapters.ChapterOf(Math.Min(Chapters.LastRegion, state.unlockedRegion))));
+            state.scrap -= TerminalCost(deep);
+            Quality q;
+            if (deep)
+            {
+                double roll = rng.NextDouble() * Balance.TerminalDeepWeights.Sum(); int sel = 2;
+                for (int i = 0; i < Balance.TerminalDeepWeights.Length; i++) { roll -= Balance.TerminalDeepWeights[i]; if (roll < 0) { sel = i; break; } }
+                if (state.terminalPity >= Balance.TerminalDeepPity - 1) sel = Math.Max(sel, 4);
+                state.terminalPity = sel >= 4 ? 0 : state.terminalPity + 1;
+                q = (Quality)sel;
+            }
+            else q = RollQuality(Quality.Common);
+            // 模板：已开放的各章里选；部位回收只要指定部位，并且有六成机会直接给图鉴里还没有的。
+            List<string> pool = new List<string>();
+            for (int ch = 1; ch <= chapter; ch++) foreach (string id in Catalog.DropPool(false, ch)) if (!pool.Contains(id) && (deep || (int)Catalog.Find(id).slot == slot)) pool.Add(id);
+            if (pool.Count == 0) { state.scrap += TerminalCost(deep); return null; }
+            List<string> fresh = pool.Where(id => !state.collection.Contains(id)).ToList();
+            List<string> late = pool.Where(id => Catalog.DropPool(false, chapter).Contains(id)).ToList();
+            string baseId = fresh.Count > 0 && Chance(Balance.TerminalNewChance) ? fresh[rng.Next(fresh.Count)] : late.Count > 0 ? late[rng.Next(late.Count)] : pool[rng.Next(pool.Count)];
+            Item item = Create(baseId, q, level);
+            state.items.Add(item); Unlock(item.baseId); return item;
         }
         public static float Damage(float attack, float defense) { return Math.Max(1, attack * 100 / (100 + Math.Max(0, defense))); }
     }

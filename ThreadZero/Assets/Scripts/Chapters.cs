@@ -155,7 +155,7 @@ namespace ThreadZero
         // v0.19 起强度和掉落沿主线走（见 EchoRegion）。
         // v0.19 回声层接上主线：第 F 层的强度 = 主线第 6 + 0.6 × (F − 1) 关（第 1 层 ≈ 1-7，第 48 层 ≈ 5-7，不算墙），之后每层继续变强；
         // 掉落等级也沿着这条线走（5-7 掉 84–87 级，往后每层约 +1.2 级），所以打完主线去回声层一直有收益。
-        public const float EchoRegionsPerFloor = .6f, DeepHealthGrowth = 1.07f, DeepAttackGrowth = 1.045f;
+        public const float EchoRegionsPerFloor = .6f, DeepHealthGrowth = 1.045f, DeepAttackGrowth = 1.03f;
         public static float EchoRegion(int floor) { return EchoAnchor + EchoRegionsPerFloor * Math.Max(0, floor - 1); }
         /// 主线第 region 关对应回声层第几层（往下取整）。
         public static int FloorForRegion(int region) { return 1 + (int)Math.Floor(Math.Max(0, region - EchoAnchor) / EchoRegionsPerFloor); }

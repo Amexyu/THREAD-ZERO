@@ -271,7 +271,14 @@ namespace ThreadZero
             if (q < 4) return;
             float n = Mathf.Min(w, h) * .16f;   // 四角标
             FillRaw(x, y, n, 4, c); FillRaw(x, y, 4, n, c); FillRaw(x + w - n, y, n, 4, c); FillRaw(x + w - 4, y, 4, n, c);
-            float period = q >= 5 ? 2.2f : 3.6f, ph = Mathf.Repeat(now + (x * .013f + y * .007f), period) / .55f;   // 斜光：各张卡错开一点
+            if (q >= 6)
+            {   // v0.22 零号：里面再套一圈细框，四角标换成白色，边框上有一个光点绕着走
+                FillRaw(x + 5, y + 5, w - 10, 1, Alpha(c, .5f)); FillRaw(x + 5, y + 6, 1, h - 12, Alpha(c, .5f)); FillRaw(x + w - 6, y + 6, 1, h - 12, Alpha(c, .5f));
+                FillRaw(x, y, n * .5f, 4, Color.white); FillRaw(x, y, 4, n * .5f, Color.white); FillRaw(x + w - n * .5f, y, n * .5f, 4, Color.white); FillRaw(x + w - 4, y, 4, n * .5f, Color.white);
+                float per = 2 * (w + h), d = Mathf.Repeat(now * 90 + x + y, per), px = d < w ? x + d : d < w + h ? x + w - 3 : d < 2 * w + h ? x + w - (d - w - h) : x, py = d < w ? y : d < w + h ? y + (d - w) : d < 2 * w + h ? y + h - 8 : y + h - (d - 2 * w - h);
+                FillRaw(Mathf.Clamp(px - 5, x, x + w - 10), Mathf.Clamp(py - 1, y, y + h - 8), 10, 3, Color.white);
+            }
+            float period = q >= 6 ? 1.6f : q >= 5 ? 2.2f : 3.6f, ph = Mathf.Repeat(now + (x * .013f + y * .007f), period) / .55f;   // 斜光：各张卡错开一点
             if (ph < 1)
             {
                 float sw = w * .22f, sx = x - sw + (w + sw) * ph, x0 = Mathf.Max(x, sx), x1 = Mathf.Min(x + w, sx + sw);

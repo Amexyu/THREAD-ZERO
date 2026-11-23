@@ -46,6 +46,14 @@ namespace ThreadZero
         public const float SalvageScale = .4f;
         /// v0.20 机械飞升材料「织网碎片」：回声层每过一层 1 个、首领层 5 个、每 25 层里程碑再 20 个；重复打主线首领 2 个。
         public const int ShardsEchoFloor = 1, ShardsEchoBoss = 5, ShardsMilestone = 20, ShardsBossRepeat = 2;
+        /// v0.22 越深给得越多：第 40 层以后每 15 层普通层多 1 片（55 层 2 片、70 层 3 片、100 层 5 片），首领层 ×4。
+        /// 主线期间去深网（40 层上下）基本不受影响；打完主线后飞升才跟得上。
+        public const int ShardsDeepFrom = 40, ShardsDeepEvery = 15, ShardsBossTimes = 4;
+        public static int EchoShards(int floor, bool boss)
+        {
+            int n = ShardsEchoFloor + System.Math.Max(0, floor - ShardsDeepFrom) / ShardsDeepEvery;
+            return boss ? System.Math.Max(ShardsEchoBoss, n * ShardsBossTimes) : n;
+        }
         public const float WaveRecovery=.2f, BossRecovery=1;
         // v0.9 路段制：每关 5 个路段。1、2、4 是怪群，3 是精英，5 是首领。
         public const int EliteWave=3, BossWave=5;
@@ -90,7 +98,9 @@ namespace ThreadZero
             new QualityTier("军规", "BF80FF", 1.18f,3,.85f,1.15f,.32f,2.8f,1),
             new QualityTier("机密", "FFC24D", 1.26f,4,.85f,1.15f,.5f, 2.4f,3),
             // 第六档。不进普通掉落：只来自首领的极低概率，或把「机密」装备用核心突破。
-            new QualityTier("原型", "FF4D5E", 1.35f,5,.85f,1.15f,.5f, 2.4f,4)
+            new QualityTier("原型", "FF4D5E", 1.35f,5,.85f,1.15f,.5f, 2.4f,4),
+            // v0.22 第七档。打完主线才有：零号深网 60 层以后的首领层小概率掉，或把「原型」再突破一次。带两条专属词条。
+            new QualityTier("零号", "45E6D6", 1.46f,5,.85f,1.15f,.6f, 2f,  5)
         };
         public static QualityTier Tier(Quality quality)
         {
@@ -100,9 +110,17 @@ namespace ThreadZero
         // v0.10 许可等级：每通过一关首领，上限提高 5 级，最高 30。装备每级的涨幅随之调小，
         // 第 6 关装备的强度与旧版（6 级、每级 15%）大致相同。
         public const int LicenseStep=5, MaxLicense=30, AscendCores=8;
+        /// v0.22「零号」：原型再突破要的核心；深网从第几层起首领层可能直接掉、概率多少。
+        public const int ZeroCores=40, ZeroFromFloor=60; public const double ZeroBossChance=.03;
+        /// v0.22 回收终端（工坊第四个页签，花零件抽装备）。价格 = 每级单价 × 抽到的装备等级。
+        ///   部位回收：指定部位，品质按平时掉落的规则（含保底）抽，优先出图鉴里没有的。
+        ///   深层回收：打完主线开放，部位随机，至少特装；TerminalDeepPity 次没出机密以上，下一次必出机密。
+        public const int TerminalSlotPrice=4, TerminalDeepPrice=12, TerminalDeepPity=30;
+        public const double TerminalNewChance=.6;
+        public static readonly double[] TerminalDeepWeights={0,0,55,30,13,2};
         public const double RepeatCoreChance=.25;   // v0.16 首领首通必掉核心，之后每次 25%
         public const double PrototypeBossChance=.02;
-        public static readonly int[] ChipSlots={0,0,1,1,2,3};
+        public static readonly int[] ChipSlots={0,0,1,1,2,3,3};
         private static float Soft(int level,float g) { int l=Math.Max(1,Math.Min(MaxItemLevel,level)); return 1+g*(Math.Min(l,SoftLevel)-1)+g*.5f*Math.Max(0,l-SoftLevel); }
         public static float AffixLevelFactor(int level) { return Soft(level,AffixLevelGrowth); }
         public static float SpecialLevelFactor(int level) { return 1+.01f*(Math.Max(1,Math.Min(MaxItemLevel,level))-1); }

@@ -9,7 +9,7 @@ namespace ThreadZero
     public sealed partial class GameApp
     {
         private float workshopScroll;
-        private int workshopTab;   // v0.21 0 装备台 · 1 改造板 · 2 机库
+        private int workshopTab;   // v0.21 0 装备台 · 1 改造板 · 2 机库 · 3 回收终端（v0.22）
 
         // ---------- v0.21 改造板（取代训练）：三条分支 + 每条 4 个改变打法的节点 ----------
         private void BoardPage()
@@ -59,11 +59,11 @@ namespace ThreadZero
             float titleW = Ui.Width("工坊", 30, true);   // v0.21 四语：标题变长时页签跟着往右挪
             Ui.Text(128, 16, titleW + 12, 52, "工坊", 30, Ui.Ink, TextAnchor.MiddleLeft, true);
             // v0.21 三个页签都能用：装备台、改造板（取代训练）、机库（机器人）
-            string[] tabs = { "装备台", "改造板", model.HangarUnlocked ? "机库" : "机库 · 第二章开放" };
+            string[] tabs = { "装备台", "改造板", model.HangarUnlocked ? "机库" : "机库 · 第二章开放", model.TerminalUnlocked ? "回收终端" : "回收终端 · 第三章开放" };
             float tabX = Mathf.Max(250, 128 + titleW + 28);
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 4; i++)
             {
-                bool open = i < 2 || model.HangarUnlocked; float width = Math.Max(120, Ui.Width(tabs[i], 14) + 40);
+                bool open = i < 2 || (i == 2 ? model.HangarUnlocked : model.TerminalUnlocked); float width = Math.Max(120, Ui.Width(tabs[i], 14) + 40);
                 if (Ui.Button(tabX, 22, width, 40, tabs[i], workshopTab == i ? 2 : 0, open, 14) && open) workshopTab = i;
                 tabX += width + 8;
             }
@@ -83,7 +83,9 @@ namespace ThreadZero
 
             if (workshopTab == 2 && !model.HangarUnlocked) workshopTab = 0;
             if (workshopTab == 1) { BoardPage(); return; }
+            if (workshopTab == 3 && !model.TerminalUnlocked) workshopTab = 0;
             if (workshopTab == 2) { HangarPage(); return; }
+            if (workshopTab == 3) { TerminalPage(); return; }
             WorkshopList();
             Item chosen = FindItem(selectedItem);
             Ui.Fill(748, 156, 820, 720, Ui.Panel);
@@ -143,7 +145,7 @@ namespace ThreadZero
         private void AscendClicked(Item item, EquipmentBase b)
         {
             if (!model.Ascend(item.uid)) return;
-            combat.ClampHealth(); Save(); Play(rareSound); Notify("突破完成：" + b.name + " 现在是「" + Catalog.QualityNames[5] + "」", 5);
+            combat.ClampHealth(); Save(); Play(rareSound); Notify("突破完成：" + b.name + " 现在是「" + Catalog.QualityNames[(int)item.quality] + "」", 5);
             benchFxUid = item.uid; benchFxAt = Time.unscaledTime; benchFxKind = 3;
         }
         public void TestBenchUpgrade(int slot) { Item it = model.Equipped((Slot)slot); if (it == null) return; selectedItem = it.uid; model.state.scrap = Mathf.Max(model.state.scrap, 999999999); UpgradeClicked(it); }
@@ -270,12 +272,15 @@ namespace ThreadZero
                 Ui.Text(772, 500 + item.affixes.Count * 42 + 8, 772, 40, "重校：只换这一条。洗炼：没锁的全部重抽，每锁一条费用多一倍。特装及以上可能出橙色的特殊词条（暴击伤害、特效伤害、首领伤害、零件回收）。", 12, Ui.Mute, TextAnchor.UpperLeft, false, false, true);   // 一行放不下（会顶出面板边），自动换行
 
             // 突破（仅「机密」）
-            if (item.quality == Quality.Legendary)
-            {
-                Ui.Fill(772, 756, 772, 60, Ui.Ink); Ui.Fill(772, 756, 8, 60, QualityVisual.Colors[5]);
-                string need = !model.AscendUnlocked ? "进入第四章后开放：用核心把「" + Catalog.QualityNames[4] + "」突破为「" + Catalog.QualityNames[5] + "」" : item.level < model.AscendLevel ? "先把等级升到 Lv." + model.AscendLevel + "，再用核心突破" : "突破为「" + Catalog.QualityNames[5] + "」· 多一条词条，属性更高";
-                Ui.Text(796, 756, 540, 60, need, 15, !model.AscendUnlocked || item.level < model.AscendLevel ? Ui.MuteOnInk : Ui.Panel, TextAnchor.MiddleLeft, true);
-                if (Ui.Button(1348, 762, 188, 48, "核心 " + Balance.AscendCores + "（持有 " + model.state.cores + "）", 1, model.CanAscend(item), 14)) AscendClicked(item, b);
+            if (item.quality == Quality.Legendary || item.quality == Quality.Prototype)
+            {   // v0.22 原型还能再突破一次：打完主线后变成「零号」，多一条专属词条
+                bool second = item.quality == Quality.Prototype, open = model.AscendOpen(item); int to = second ? 6 : 5;
+                Ui.Fill(772, 756, 772, 60, Ui.Ink); Ui.Fill(772, 756, 8, 60, QualityVisual.Colors[to]);
+                string need = !open ? (second ? "打完主线后开放：用核心把「" : "进入第四章后开放：用核心把「") + Catalog.QualityNames[to - 1] + "」突破为「" + Catalog.QualityNames[to] + "」"
+                    : item.level < model.AscendLevel ? "先把等级升到 Lv." + model.AscendLevel + "，再用核心突破"
+                    : "突破为「" + Catalog.QualityNames[to] + (second ? "」· 多一条专属词条，属性更高" : "」· 多一条词条，属性更高");
+                Ui.FitText(796, 756, 540, 60, need, 15, !open || item.level < model.AscendLevel ? Ui.MuteOnInk : Ui.Panel, TextAnchor.MiddleLeft, true);
+                if (Ui.Button(1348, 762, 188, 48, "核心 " + model.AscendCost(item) + "（持有 " + model.state.cores + "）", 1, model.CanAscend(item), 14)) AscendClicked(item, b);
             }
             ChipRow(item, 826);
         }

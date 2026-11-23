@@ -115,6 +115,13 @@ re:排序：(.+)	Sort: {1}
 re:^专属 · (.+)$	Unique · {1}
 re:^掉落 · (.+)$	Drop · {1}
 re:^◆ 标记的属性含随机词条，共 (\d+) 条；短条是成色，★ 是极品$	◆ marks rolled stats ({1} total). The bar shows roll quality; ★ is a top roll
+re:装备等级 Lv\.(\d+)	Gear level Lv.{1}
+re:这个部位的图鉴 (\d+) / (\d+)	Collection for this slot {1} / {2}
+re:保底：再 (\d+) 次内必出机密以上	Guarantee: Classified or better within {1} more pulls
+re:回收 (\d+) 次 · 零件 (\d+)	Recycle ×{1} · Parts {2}
+re:新外观 (\d+) 件	{1} new looks
+re:打完主线后开放：用核心把「(.+)」突破为「(.+)」	Unlocks after the main story: use Cores to break {1} through to {2}
+re:突破为「(.+)」· 多一条专属词条，属性更高	Break through to {1} · one more Unique effect, higher values
 Ame（企划、美术指导、测试）	Ame (design, art direction, testing)
 DEEP NET / 零号深网	DEEP NET
 Kenney（www.kenney.nl）：Interface Sounds、Sci-fi Sounds、Impact Sounds，CC0	Kenney (www.kenney.nl): Interface Sounds, Sci-fi Sounds, Impact Sounds, CC0
@@ -168,6 +175,7 @@ v0.21 · 毕业制作 · 展览模式	v0.21 · Graduation Project · Exhibition 
 仅量产	Standard only
 从低到高 ↑	Low to high ↑
 从左边选一件装备\n在这里升级、重校词条或突破	Pick gear on the left\nto upgrade, recalibrate or break it through here
+从织网深处捞一件装备：部位随机，至少是特装。出不出货都算一次保底。	Pull one piece of gear from deep in the weave: random slot, at least Special. Every pull counts toward the guarantee.
 从高到低 ↓	High to low ↓
 伞架无人机	Umbrella-Frame Drone
 传感件	Sensor Parts
@@ -221,6 +229,7 @@ v0.21 · 毕业制作 · 展览模式	v0.21 · Graduation Project · Exhibition 
 冷却腿甲	Coolant Greaves
 冷却重锤	Coolant Maul
 冷核心脏	Cold-Core Heart
+减伤蓄能，强化下一次攻击	Blocks damage and charges your next attack
 减弱	Reduced
 击杀回复	Kill Heal
 击杀敌人回复 1.5% 最大生命	Killing an enemy heals 1.5% of max HP
@@ -304,6 +313,9 @@ v0.21 · 毕业制作 · 展览模式	v0.21 · Graduation Project · Exhibition 
 回收员编号：零。今天开始回收。	Recycler number: Zero. Reclamation starts today.
 回收无人机	Recycler Drone
 回收目标	Recovery target
+回收终端	Recycle Terminal
+回收终端 · 第三章开放	Recycle Terminal · Unlocks in Chapter 3
+回收结果	Results
 回旋切割	Spin Cutter
 图纸不够	Not enough blueprints
 在整备里穿戴装备改变属性；在衣柜里应用外观只改变样子（武器外观只能套在同类武器上）。锁定或穿戴中的装备不能分解。	Equip gear in the Loadout to change your stats; applying a look in the Wardrobe only changes how you look (weapon looks only fit weapons of the same type). Locked or equipped gear can't be salvaged.
@@ -338,6 +350,7 @@ v0.21 · 毕业制作 · 展览模式	v0.21 · Graduation Project · Exhibition 
 完整	Full
 定向干扰塔	Directional Jammer Tower
 定向干扰枪	Directional Jammer Gun
+定时锁定目标，目标多受伤害，联动无人机与电弧	Periodically locks a target so it takes more damage; boosts Drone and Arc
 审计之庭	Court of Audit
 审计制服	Auditor Uniform
 审计卫兵	Audit Sentry
@@ -435,6 +448,7 @@ v0.21 · 毕业制作 · 展览模式	v0.21 · Graduation Project · Exhibition 
 我的病没有药可治。能换掉的零件，都在封锁区里。	There's no cure for what I have. Every part I could replace is inside the lockdown zone.
 手	ARM
 手臂	Arm
+打完主线后开放	Unlocks after the main story
 打精英和首领伤害 +10%	+10% damage to elites and bosses
 打败了第一个首领，零号深网开放了：在选关最下面，一层比一层难，还能攒织网碎片升义体。	You beat your first boss and Deep Net Zero is open: it's at the bottom of stage select. Each floor is harder than the last, and you'll collect Weave Shards to upgrade implants.
 打过第一个首领后，选关最下面可以进零号深网：一层层往上刷，每层都有掉落和织网碎片。织网碎片在整备页左边升级义体，义体越多越强，主角一步步机械飞升。	After your first boss, you can enter Deep Net Zero from the bottom of stage select: climb floor by floor, with drops and Weave Shards on every floor. Spend Weave Shards on the left side of the Loadout page to upgrade implants; the more implants, the stronger you get, step by step toward Mechanical Ascension.
@@ -457,6 +471,7 @@ v0.21 · 毕业制作 · 展览模式	v0.21 · Graduation Project · Exhibition 
 拆解专家	Dismantling Expert
 拆解者	Dismantler
 拾荒	Scavenger
+指定一个部位，回收一件这个部位的装备。品质和平时掉落一样，优先给图鉴里还没有的。	Pick a slot and recycle one piece of gear for it. Quality rolls like a normal drop, and pieces missing from your collection come first.
 按空格或右下角按钮继续	Press Space or the button at the bottom right to resume
 换上场	Swap in
 掉装备了：去「整备」比一比，穿上更好的。左边导航上的数字是还没看过的件数。	Gear dropped: compare it in the Loadout and equip the better one. The number on the left menu counts items you haven't looked at.
@@ -494,6 +509,7 @@ v0.21 · 毕业制作 · 展览模式	v0.21 · Graduation Project · Exhibition 
 攻速	Attack Speed
 攻速 +	Attack Speed +
 故障猫耳终端	Glitched Cat-Ear Terminal
+敌人低血时提高伤害	More damage to low-HP enemies
 整备	Loadout
 断讯 · 出手变慢	Jammed · Slower attacks
 断讯中继	Dead-Signal Relay
@@ -576,11 +592,14 @@ v0.21 · 毕业制作 · 展览模式	v0.21 · Graduation Project · Exhibition 
 每 10 秒给主角 6% 生命的护盾	Gives you a shield worth 6% HP every 10 s
 每 2 秒射击，打穿目标身后的一只	Fires every 2 s, piercing the enemy behind the target
 每 2 秒炮击目标	Shells the target every 2 s
+每 2.4 秒自动射击，标记增伤	Fires every 2.4 s, more damage to marked targets
 每 3 秒重炮一发	Fires a heavy shell every 3 s
+每 4 秒突袭，近战武器强化冲击	Dash strike every 4 s, stronger with melee weapons
 每 8 秒给主角回复 3% 生命	Heals you for 3% HP every 8 s
 每一根天线都在低声重复同一段广播	Every antenna whispers the same broadcast over and over
 每一根线缆都连着一个被回收的人	Every cable is connected to someone who was reclaimed
 每一波开始得到 15% 生命的护盾	Gain a shield worth 15% HP at the start of each wave
+每三次攻击追加伤害	Bonus damage every third attack
 每关一次：生命低于 30% 时回复 25%	Once per stage: heal 25% when below 30% HP
 每关一次：被打倒时一半概率留 20% 生命继续	Once per stage: 50% chance to survive a knockdown with 20% HP
 每波冲锋怪 +50%；零件 ×1.5	+50% chargers per wave; parts ×1.5
@@ -606,6 +625,7 @@ v0.21 · 毕业制作 · 展览模式	v0.21 · Graduation Project · Exhibition 
 洗炼	Reforge
 洗炼 · 进入第三章后开放	Reforge · Unlocks in Chapter 3
 测试存档 · F8 切回正式 · F9 清空重开	Test save · F8 back to real save · F9 wipe and restart
+深层回收	Deep Recycle
 深网 ·	Deep Net ·
 深网 · 母线之翼	Deep Net · Busbar Wings
 深网 · 织网长衣	Deep Net · Weave Longcoat
@@ -616,6 +636,7 @@ v0.21 · 毕业制作 · 展览模式	v0.21 · Graduation Project · Exhibition 
 清除异常	Clear anomalies
 火力	Firepower
 点一下关掉	Click to close
+点一件装备，回到装备台查看。	Click a piece to view it on the Bench.
 物流高架	Freight Overpass
 物流高架装卸长	Overpass Loadmaster
 特效伤害	Effect Damage
@@ -631,6 +652,7 @@ v0.21 · 毕业制作 · 展览模式	v0.21 · Graduation Project · Exhibition 
 生命 +	HP +
 生命低于 40% 时受到的伤害 −12%	Take 12% less damage below 40% HP
 生命低于一半时伤害 +25%	+25% damage while below half HP
+用不上的装备分解成零件，零件可以在这里换成新装备。抽到的装备直接进仓库。	Salvage gear you don't need into Parts, then trade Parts for new gear here. Pulled gear goes straight to your inventory.
 用当前进度作起点	Use current progress
 用预设：第三章开头	Use preset: start of Chapter 3
 电弧	Arc
@@ -828,6 +850,8 @@ v0.21 · 毕业制作 · 展览模式	v0.21 · Graduation Project · Exhibition 
 选择街区	Districts
 通关后	After clear
 通过上一关后开放	Unlocks after clearing the previous stage
+造成伤害恢复生命	Heal from the damage you deal
+部位回收	Slot Recycle
 重刷本关	Replay stage
 重刷本层	Replay floor
 重型	heavy
@@ -874,6 +898,7 @@ v0.21 · 毕业制作 · 展览模式	v0.21 · Graduation Project · Exhibition 
 零件	Parts
 零件不足	Not enough parts
 零件回收	Parts Recovery
+零号	Zero
 零号协议：攻击 +20	Protocol Zero: Attack +20
 零号战衣	Zero Battle Suit
 零号战装	Zero Battle Gear

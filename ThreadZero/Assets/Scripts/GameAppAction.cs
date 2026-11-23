@@ -731,7 +731,7 @@ namespace ThreadZero
         private void DropBeam(float gx, float top, Quality quality, float strength)
         {
             int q = (int)quality; if (q < 3 || model.state.glowMode == 0 || strength <= 0) return;
-            Color qc = QualityVisual.Colors[q]; float hgt = q >= 5 ? 420 : q == 4 ? 340 : 220, k = strength * (model.state.glowMode == 1 ? .6f : 1);
+            Color qc = QualityVisual.Colors[q]; float hgt = q >= 6 ? 500 : q == 5 ? 420 : q == 4 ? 340 : 220, k = strength * (model.state.glowMode == 1 ? .6f : 1);
             for (int i = 0; i < 6; i++)
             {   // 从下往上分 6 段淡出
                 float y1 = top - hgt * i / 6f, seg = hgt / 6f, fade = 1 - i / 6f;

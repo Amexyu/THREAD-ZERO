@@ -20,3 +20,32 @@ re:排序：(.+)§並び順：{1}§Sort: {1}§정렬: {1}
 re:^专属 · (.+)$§専用 · {1}§Unique · {1}§전용 · {1}
 re:^掉落 · (.+)$§ドロップ · {1}§Drop · {1}§획득 · {1}
 re:^◆ 标记的属性含随机词条，共 (\d+) 条；短条是成色，★ 是极品$§◆ はランダム特性つき（全{1}件）。短いバーは出来、★は極上§◆ marks rolled stats ({1} total). The bar shows roll quality; ★ is a top roll§◆ 표시는 무작위 옵션 포함(총 {1}개). 막대는 품질, ★는 최상급
+
+# v0.22 第七档品质「零号」、回收终端
+零号§零号§Zero§제로
+回收终端§回収端末§Recycle Terminal§회수 단말
+回收终端 · 第三章开放§回収端末・第三章で開放§Recycle Terminal · Unlocks in Chapter 3§회수 단말 · 3장에서 개방
+部位回收§部位回収§Slot Recycle§부위 회수
+深层回收§深層回収§Deep Recycle§심층 회수
+回收结果§回収結果§Results§회수 결과
+re:装备等级 Lv\.(\d+)§装備レベル Lv.{1}§Gear level Lv.{1}§장비 레벨 Lv.{1}
+从织网深处捞一件装备：部位随机，至少是特装。出不出货都算一次保底。§織網の深部から装備を1つ引き上げる。部位はランダム、最低でも特装。結果に関わらず天井カウントが1進む。§Pull one piece of gear from deep in the weave: random slot, at least Special. Every pull counts toward the guarantee.§직조망 깊은 곳에서 장비 하나를 건져 올립니다. 부위는 무작위, 최소 특장. 결과와 관계없이 보장 횟수가 1 쌓입니다.
+指定一个部位，回收一件这个部位的装备。品质和平时掉落一样，优先给图鉴里还没有的。§部位を1つ選んで、その部位の装備を1つ回収する。品質は通常ドロップと同じで、図鑑にないものが優先される。§Pick a slot and recycle one piece of gear for it. Quality rolls like a normal drop, and pieces missing from your collection come first.§부위를 하나 골라 그 부위의 장비를 하나 회수합니다. 품질은 평소 드롭과 같고, 도감에 없는 장비가 우선됩니다.
+re:这个部位的图鉴 (\d+) / (\d+)§この部位の図鑑 {1} / {2}§Collection for this slot {1} / {2}§이 부위 도감 {1} / {2}
+re:保底：再 (\d+) 次内必出机密以上§天井：あと{1}回以内に機密以上が確定§Guarantee: Classified or better within {1} more pulls§보장: {1}회 안에 기밀 이상 확정
+打完主线后开放§メインストーリークリア後に開放§Unlocks after the main story§메인 스토리 클리어 후 개방
+re:回收 (\d+) 次 · 零件 (\d+)§{1}回回収・パーツ {2}§Recycle ×{1} · Parts {2}§{1}회 회수 · 부품 {2}
+用不上的装备分解成零件，零件可以在这里换成新装备。抽到的装备直接进仓库。§使わない装備は分解してパーツに。パーツはここで新しい装備に交換できる。引いた装備はそのまま倉庫に入る。§Salvage gear you don't need into Parts, then trade Parts for new gear here. Pulled gear goes straight to your inventory.§쓰지 않는 장비는 분해해 부품으로 만들고, 부품은 여기서 새 장비로 바꿀 수 있습니다. 뽑은 장비는 바로 창고에 들어갑니다.
+re:新外观 (\d+) 件§新しい見た目 {1} 件§{1} new looks§새 외형 {1}개
+点一件装备，回到装备台查看。§装備をクリックすると、装備台に戻って確認できる。§Click a piece to view it on the Bench.§장비를 클릭하면 장비대에서 확인할 수 있습니다.
+re:打完主线后开放：用核心把「(.+)」突破为「(.+)」§メインクリア後に開放：コアを使って「{1}」を「{2}」に突破§Unlocks after the main story: use Cores to break {1} through to {2}§메인 클리어 후 개방: 코어로 「{1}」을(를) 「{2}」(으)로 돌파
+re:突破为「(.+)」· 多一条专属词条，属性更高§「{1}」に突破・専用効果が1つ増え、数値も上がる§Break through to {1} · one more Unique effect, higher values§「{1}」(으)로 돌파 · 전용 효과 1개 추가, 수치 상승
+
+# 固定效果的说明（整备页把「名字：说明」拆开显示，说明部分单独要一条）
+每三次攻击追加伤害§3回攻撃ごとに追加ダメージ§Bonus damage every third attack§공격 3회마다 추가 피해
+造成伤害恢复生命§与えたダメージで体力を回復§Heal from the damage you deal§입힌 피해로 체력 회복
+减伤蓄能，强化下一次攻击§被ダメージを軽減して蓄積し、次の攻撃を強化§Blocks damage and charges your next attack§받는 피해를 줄이며 충전해 다음 공격을 강화
+敌人低血时提高伤害§体力の少ない敵へのダメージ上昇§More damage to low-HP enemies§체력이 낮은 적에게 피해 증가
+每 2.4 秒自动射击，标记增伤§2.4秒ごとに自動射撃、マーク中はダメージ上昇§Fires every 2.4 s, more damage to marked targets§2.4초마다 자동 사격, 표식 대상에게 피해 증가
+定时锁定目标，目标多受伤害，联动无人机与电弧§定期的に標的をロックし、被ダメージ上昇。ドローンとアークも強化§Periodically locks a target so it takes more damage; boosts Drone and Arc§주기적으로 대상을 고정해 받는 피해 증가, 드론·아크도 강화
+每 4 秒突袭，近战武器强化冲击§4秒ごとに突撃、近接武器なら衝撃強化§Dash strike every 4 s, stronger with melee weapons§4초마다 돌격, 근접 무기면 충격 강화

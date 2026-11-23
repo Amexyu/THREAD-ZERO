@@ -182,7 +182,7 @@ namespace ThreadZero
                 {
                     // 被打倒：撤回上一关刷（开着自动推进时，过关后会自动再挑战）。
                     combat.RetreatRequested = false;
-                    if (model.InEcho) BeginEchoTransition(Mathf.Max(1, model.state.echoFloor - 3));   // 回声层：退 3 层继续刷
+                    if (model.InEcho) BeginEchoTransition(Mathf.Max(1, model.state.echoFloor - 1));   // 回声层：退 1 层继续刷（v0.22，和主线一致）
                     else { StuckHint(); QueueTip(Tip.Defeat); BeginStageTransition(model.RetreatTarget()); }   // 不跨章；在回刷的关倒下就重打这一关
                 }
                 else if (combat.StageCleared)
@@ -325,14 +325,14 @@ namespace ThreadZero
         private void TestEquip(string id) { Item item = model.Create(id, Quality.Rare, 30); model.state.items.Add(item); model.Unlock(id); model.Equip(item.uid); }
         /// 测试用：五个部位都换成同款、指定品质和等级的装备（看装备光效）。没穿的部位用初始装备那一款。
         /// 测试：掉一件指定品质的装备（走正式的掉落流程：光柱、停顿、提示）。
-        public void TestDrop(int q) { Item it = model.Create("h" + (model.Chapter - 1) * 5, (Quality)Mathf.Clamp(q, 0, 5), 20); model.state.items.Add(it); model.Unlock(it.baseId); combat.OnDrop(it, true); }
+        public void TestDrop(int q) { Item it = model.Create("h" + (model.Chapter - 1) * 5, (Quality)Mathf.Clamp(q, 0, 6), 20); model.state.items.Add(it); model.Unlock(it.baseId); combat.OnDrop(it, true); }
         /// 测试：选中身上某个部位的装备（整备页 / 工坊右边显示它）。
         public void TestSelect(int slot) { Item it = model.Equipped((Slot)slot); if (it != null) selectedItem = it.uid; }
         /// 测试：往仓库里塞一批各品质的装备，看卡片分档和排版。
         public void TestBag(int n)
         {
             string[] ids = { "w3", "h4", "c8", "b1", "l7", "w17", "h18", "c23", "b20", "l24" };
-            for (int i = 0; i < n; i++) { Item it = model.Create(ids[i % ids.Length], (Quality)(i % 6), 20 + i % 9); model.state.items.Add(it); model.Unlock(it.baseId); }
+            for (int i = 0; i < n; i++) { Item it = model.Create(ids[i % ids.Length], (Quality)(i % 7), 20 + i % 9); model.state.items.Add(it); model.Unlock(it.baseId); }
             model.state.scrap = 123456;
         }
         private void TestGearQuality(int q, int level)
@@ -340,7 +340,7 @@ namespace ThreadZero
             for (int s = 0; s < 5; s++)
             {
                 Item cur = model.Equipped((Slot)s); string id = cur != null ? cur.baseId : Catalog.StarterIds[s];
-                Item item = model.Create(id, (Quality)Mathf.Clamp(q, 0, 5), level); model.state.items.Add(item); model.Unlock(id); model.Equip(item.uid);
+                Item item = model.Create(id, (Quality)Mathf.Clamp(q, 0, 6), level); model.state.items.Add(item); model.Unlock(id); model.Equip(item.uid);
             }
         }
 

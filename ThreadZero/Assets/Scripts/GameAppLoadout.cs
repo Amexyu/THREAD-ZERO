@@ -261,7 +261,7 @@ namespace ThreadZero
             bool equippedNow = model.state.equipped.Contains(item.uid);
             Ui.Fill(1160, 20, 408, 148, Ui.Ink); Ui.Fill(1160, 20, 408, 8, quality);
             Ui.Fill(1176, 44, 108, 108, Ui.Tile2); PaperDollView.DrawEquipmentIcon(b, Ui.R(1183, 51, 94, 94));
-            Ui.Text(1300, 48, 256, 22, Catalog.QualityNames[(int)item.quality] + " · " + Catalog.SlotNames[(int)b.slot] + " · Lv." + item.level
+            Ui.FitText(1300, 48, 256, 22, Catalog.QualityNames[(int)item.quality] + " · " + Catalog.SlotNames[(int)b.slot] + " · Lv." + item.level
                 + (b.slot == Slot.Weapon ? (Catalog.IsGroupWeapon(b.id) ? " · 群伤" : " · 单体") : ""), 14, quality, TextAnchor.MiddleLeft, true);   // v0.20 武器标群伤 / 单体，卡关提示里说的「换群伤武器」有地方看
             Ui.FitText(1300, 74, 256, 40, b.name, 24, Ui.Panel, TextAnchor.MiddleLeft, true);
             Ui.Text(1300, 118, 256, 22, equippedNow ? "穿戴中" : item.locked ? "已锁定 · 不会被分解" : "背包中", 13, Ui.MuteOnInk, TextAnchor.MiddleLeft);
@@ -276,7 +276,7 @@ namespace ThreadZero
             // 行数多了（最多 10 行）就把行距从 42 压到 36，免得顶到下面的固定效果框和按钮。
             int rows = 0; for (int i = 0; i < Balance.AffixStats; i++) if (Mathf.Abs(mine[i]) >= .0001f || Mathf.Abs(old[i]) >= .0001f) rows++;
             // 11-23 行高按剩下的高度算：下面还有专属词条（机密起）、固定效果框和一行说明，行数多时自动压扁，不再靠写死的 36 / 42。
-            float below = (item.talent > 0 ? 40 : 0) + 14 + 88 + 30;
+            float below = (item.talent > 0 ? 40 : 0) + (item.talent2 > 0 ? 32 : 0) + 14 + 88 + 30;
             float rowH = Mathf.Clamp(Mathf.Floor((700 - 204 - below) / Mathf.Max(1, rows)), 28, 42);
             for (int i = 0; i < Balance.AffixStats; i++)
             {
@@ -301,13 +301,14 @@ namespace ThreadZero
                 y += rowH;
             }
 
-            if (item.talent > 0)
-            {   // 11-23 专属词条（机密、原型各带一条）
-                y += 8; Ui.Fill(1176, y, 376, 30, Ui.Ink); Ui.Fill(1176, y, 5, 30, quality);
-                string tn = "专属 · " + Catalog.TalentNames[item.talent];
+            for (int ti = 0; ti < 2; ti++)
+            {   // 11-23 专属词条（机密、原型各带一条；v0.22 零号带两条）
+                int tal = ti == 0 ? item.talent : item.talent2; if (tal <= 0) continue;
+                y += ti == 0 ? 8 : 8; Ui.Fill(1176, y, 376, 30, Ui.Ink); Ui.Fill(1176, y, 5, 30, quality);
+                string tn = "专属 · " + Catalog.TalentNames[tal];
                 Ui.Text(1190, y, 120, 30, tn, 14, quality, TextAnchor.MiddleLeft, true);
                 float tnw = Ui.Width(tn, 14, true) + 14;
-                Ui.FitText(1190 + tnw, y, 376 - 20 - tnw, 30, Catalog.TalentTexts[item.talent], 13, Ui.Panel, TextAnchor.MiddleLeft);
+                Ui.FitText(1190 + tnw, y, 376 - 20 - tnw, 30, Catalog.TalentTexts[tal], 13, Ui.Panel, TextAnchor.MiddleLeft);
                 y += 30 - 6;
             }
             string effectName, effectText; SplitEffect(b.effect, out effectName, out effectText);

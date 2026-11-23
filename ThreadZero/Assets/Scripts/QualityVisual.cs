@@ -9,7 +9,7 @@ namespace ThreadZero
         // Text on the pale workshop surface uses ink; luminous emission keeps the bright palette.
         public static Color Ink(Quality quality)
         {
-            Color[] ink={new Color(.32f,.39f,.43f),new Color(.13f,.42f,.28f),new Color(.12f,.32f,.74f),new Color(.49f,.24f,.66f),new Color(.65f,.35f,.05f),new Color(.72f,.13f,.18f)};
+            Color[] ink={new Color(.32f,.39f,.43f),new Color(.13f,.42f,.28f),new Color(.12f,.32f,.74f),new Color(.49f,.24f,.66f),new Color(.65f,.35f,.05f),new Color(.72f,.13f,.18f),new Color(.04f,.47f,.44f)};
             return ink[(int)quality];
         }
         private static Color[] MakeColors()
@@ -74,7 +74,7 @@ namespace ThreadZero
             if(mode>0 && (int)quality>=3)
                 Halo(new Vector2(rect.x+8,rect.y+rect.height/2),18,color,mode==1?.1f:.2f);
         }
-        public static float DropDuration(Quality quality) { return new[]{1.2f,1.5f,2.2f,3.2f,4.2f,5f}[(int)quality]; }
+        public static float DropDuration(Quality quality) { return new[]{1.2f,1.5f,2.2f,3.2f,4.2f,5f,5.6f}[(int)quality]; }
         public static void DropBeam(Vector2 point,Quality quality,float remaining,int mode)
         {
             Color color=Colors[(int)quality]; float fade=Mathf.Clamp01(remaining*2);

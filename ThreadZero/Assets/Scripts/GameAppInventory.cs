@@ -42,7 +42,7 @@ namespace ThreadZero
                 if (search != inventoryQuery.search) { inventoryQuery.search = search; inventoryScroll = 0; }
                 Ui.Text(548, 154, 62, 30, "品质", 13, Ui.Mute);
                 for (int i = 0; i < Catalog.QualityNames.Length; i++)
-                    if (Ui.Button(610 + i * 89, 150, 85, 30, Catalog.QualityNames[i], (inventoryQuery.qualityMask & 1 << i) != 0 ? 2 : 0, true, 13))
+                    if (Ui.Button(610 + i * 76, 150, 73, 30, Catalog.QualityNames[i], (inventoryQuery.qualityMask & 1 << i) != 0 ? 2 : 0, true, 13))
                     { inventoryQuery.qualityMask ^= 1 << i; inventoryScroll = 0; }
                 Ui.Text(548, 190, 62, 30, "等级", 13, Ui.Mute);
                 string low = InventoryInput(610, 186, 70, minimumLevel, true), high = InventoryInput(710, 186, 70, maximumLevel, true);
