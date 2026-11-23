@@ -50,10 +50,11 @@ namespace ThreadZero
             if (!titleArtTried) { titleArtTried = true; titleArt = Resources.Load<Texture2D>("Art/V16/Title/title"); }
             float t = clock - titleAt, fade = Mathf.Clamp01(t / .9f), now = Time.unscaledTime;
             Ui.FillScreen(Ui.Hex(0x101317));
+            float dx = Mathf.Sin(now * .11f) * 14, dy = Mathf.Sin(now * .083f + 1.3f) * 8;   // v0.22 背景慢慢漂（放大 4%，来回各十几像素），不再是一张死图
             if (titleArt != null)
-            {   // v0.22 背景慢慢漂（放大 4%，来回各十几像素），不再是一张死图
-                float dx = Mathf.Sin(now * .11f) * 14, dy = Mathf.Sin(now * .083f + 1.3f) * 8;
+            {
                 GUI.DrawTexture(Ui.R(-32 + dx, -18 + dy, 1664, 936), titleArt, ScaleMode.ScaleAndCrop);
+                TitleFx(now, dx, dy);
             }
             else TitleThreads(t);
             TitleRain(now);
@@ -144,14 +145,70 @@ namespace ThreadZero
             if (hit && Ui.Clicked != null) Ui.Clicked();
             y += h + (main ? 14 : 2); row++; return hit;
         }
-        /// 雨：70 根斜着往下掉的细线，位置和速度按序号定死（不用随机数，免得每帧跳）。
+        // ---------- v0.22 标题背景上的动态（都是程序画的，位置按 1600×900 的图量出来，跟着背景一起漂）----------
+        private static Texture2D titleGlow;
+        private static Texture2D TitleGlowTex()
+        {
+            if (titleGlow != null) return titleGlow;
+            const int n = 64; titleGlow = new Texture2D(n, n, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, hideFlags = HideFlags.HideAndDontSave };
+            for (int y = 0; y < n; y++) for (int x = 0; x < n; x++)
+            {
+                float d = Mathf.Sqrt((x - 31.5f) * (x - 31.5f) + (y - 31.5f) * (y - 31.5f)) / 31.5f, v = Mathf.Clamp01(1 - d);
+                titleGlow.SetPixel(x, y, new Color(1, 1, 1, v * v));
+            }
+            titleGlow.Apply(); return titleGlow;
+        }
+        private static void Glow(float cx, float cy, float w, float h, Color c)
+        {
+            if (c.a <= .003f) return;
+            Color old = GUI.color; GUI.color = c; GUI.DrawTexture(Ui.R(cx - w / 2, cy - h / 2, w, h), TitleGlowTex(), ScaleMode.StretchToFill, true); GUI.color = old;
+        }
+        // 天上的线缆（从左到右，终点都在高塔上），照着图描的折线
+        private static readonly float[][] TitleCables = {
+            new[] { 460f, 0f, 520f, 45f, 600f, 98f, 700f, 160f, 800f, 193f, 900f, 202f, 1000f, 182f, 1060f, 150f, 1118f, 114f },
+            new[] { 340f, 0f, 400f, 60f, 500f, 140f, 600f, 200f, 700f, 235f, 800f, 240f, 900f, 228f, 1000f, 195f, 1118f, 124f },
+            new[] { 80f, 0f, 150f, 50f, 250f, 110f, 350f, 170f, 450f, 205f, 550f, 228f, 650f, 240f, 750f, 250f, 900f, 245f, 1000f, 215f, 1118f, 134f },
+            new[] { 0f, 25f, 100f, 85f, 200f, 125f, 300f, 150f, 400f, 185f, 500f, 215f, 600f, 235f, 700f, 255f, 800f, 262f, 900f, 258f, 1000f, 235f, 1118f, 148f },
+            new[] { 800f, 400f, 900f, 345f, 1000f, 270f, 1118f, 162f },
+            new[] { 850f, 420f, 950f, 360f, 1050f, 270f, 1120f, 188f } };
+        private static Vector2 Along(float[] line, float u)
+        {
+            int n = line.Length / 2 - 1; float f = Mathf.Clamp01(u) * n; int i = Mathf.Min(n - 1, (int)f); float k = f - i;
+            return new Vector2(Mathf.Lerp(line[i * 2], line[i * 2 + 2], k), Mathf.Lerp(line[i * 2 + 1], line[i * 2 + 3], k));
+        }
+        private void TitleFx(float now, float dx, float dy)
+        {   // 11-24 03:15 用户：第一版（漂移 + 雨）的基础上加强一点就行，不要夸张。所以下面都压得很轻。
+            System.Func<float, float, Vector2> at = (x, y) => new Vector2(-32 + dx + x * 1.04f, -18 + dy + y * 1.04f);
+            Color teal = new Color(.45f, 1f, .95f);
+            // 1）高塔慢慢呼吸（约 5 秒一个来回），主角的轮廓光跟着一起
+            float breath = .5f + .5f * Mathf.Sin(now * 1.25f);
+            Vector2 tower = at(1150, 300);
+            Glow(tower.x, tower.y, 560, 900, new Color(teal.r, teal.g, teal.b, .03f + .07f * breath));
+            Glow(tower.x, tower.y - 20, 110, 700, new Color(.8f, 1, 1, .04f + .1f * breath));
+            Vector2 hero = at(1345, 480); Glow(hero.x - 30, hero.y, 220, 360, new Color(teal.r, teal.g, teal.b, .015f + .035f * breath));
+            // 2）四根主线缆上各有一个小光点，慢慢流向高塔
+            for (int c = 0; c < 4; c++)
+            {
+                float u = Mathf.Repeat(now * .09f + c * .27f, 1), a = Mathf.Clamp01(u * 5) * Mathf.Clamp01((1 - u) * 8);
+                for (int tail = 2; tail >= 0; tail--)
+                {
+                    Vector2 q = Along(TitleCables[c], u - tail * .01f), s2 = at(q.x, q.y); float ta = a * (1 - tail / 3f);
+                    Glow(s2.x, s2.y, tail == 0 ? 22 : 12, tail == 0 ? 22 : 12, new Color(.8f, 1, .97f, .45f * ta));
+                }
+            }
+            // 3）路灯偶尔暗一下
+            float flick = Mathf.PerlinNoise(now * 3f, 3.1f) > .8f ? .55f : 1;
+            Vector2 lamp = at(1473, 287);
+            Glow(lamp.x, lamp.y, 220, 150, new Color(.72f, .96f, 1f, .16f * flick));
+        }
+        /// 雨：90 根细线，位置和速度按序号定死（不用随机数，免得每帧跳）。
         private void TitleRain(float now)
         {
-            for (int i = 0; i < 70; i++)
+            for (int i = 0; i < 90; i++)
             {
                 float h1 = Mathf.Repeat(i * .6180339f, 1), h2 = Mathf.Repeat(i * .3819660f + .17f, 1);
-                float speed = 760 + 520 * h2, len = 22 + 36 * h2, yy = Mathf.Repeat(now * speed + h1 * 3100, 1000) - 60, xx = 60 + h1 * 1700 - yy * .16f;
-                Ui.Stroke(xx, yy, xx - len * .16f, yy + len, 1.4f, new Color(.72f, .88f, 1, .07f + .11f * h2));
+                float speed = 780 + 540 * h2, len = 22 + 38 * h2, yy = Mathf.Repeat(now * speed + h1 * 3100, 1000) - 60, xx = 60 + h1 * 1700 - yy * .16f;
+                Ui.Stroke(xx, yy, xx - len * .16f, yy + len, 1.4f, new Color(.72f, .88f, 1, .08f + .12f * h2));
             }
         }
         /// 没有标题图时的背景：几根慢慢摆动的青绿织线。
