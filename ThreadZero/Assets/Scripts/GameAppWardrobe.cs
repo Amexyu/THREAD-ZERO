@@ -132,7 +132,20 @@ namespace ThreadZero
                 int owned = model.SetOwned(set); bool done = owned == 5;
                 Ui.Fill(588, y, 980, 94, done ? Ui.Ink : Ui.Tile);
                 if (done) Ui.Fill(588, y, 6, 94, Ui.Orange);
-                Ui.Text(612, y + 10, 330, 32, Catalog.SetNames[set], 20, done ? Ui.Orange : Ui.Panel, TextAnchor.MiddleLeft, true);
+                Ui.FitText(612, y + 10, done ? 196 : 330, 32, Catalog.SetNames[set], 20, done ? Ui.Orange : Ui.Panel, TextAnchor.MiddleLeft, true);
+                if (done)
+                {   // v0.22 集齐的套装可以一键换上整套外观（只换外观，不动实际穿的装备）
+                    string[] pieces = Catalog.SetPieces(set); bool wearing = true;
+                    foreach (string id in pieces) { EquipmentBase pb = Catalog.Find(id); if (pb == null || model.state.appearance[(int)pb.slot] != id) wearing = false; }
+                    if (Ui.Button(816, y + 11, 126, 30, wearing ? "外观使用中" : "换上外观", wearing ? 0 : 1, !wearing, 13))
+                    {
+                        foreach (string id in pieces) model.SetAppearance(id);
+                        EquipmentBase wl = Catalog.Find(pieces[0]); Item worn = model.Equipped(Slot.Weapon); EquipmentBase wb = worn == null ? null : Catalog.Find(worn.baseId);
+                        bool mismatch = wl != null && wb != null && wl.attackStyle != wb.attackStyle;
+                        Save(); Play(equipSound);
+                        Notify(mismatch ? "已换上套装外观「" + Catalog.SetNames[set] + "」。武器外观要换成同类武器（近战 / 远程）才显示。" : "已换上套装外观「" + Catalog.SetNames[set] + "」", mismatch ? 5 : 3);
+                    }
+                }
                 Ui.Text(612, y + 44, 330, 40, done ? "已集齐 · 核心 +" + Balance.SetCores + "、织网碎片 +" + Balance.SetShards + " 已领取"
                     : "已收藏 " + owned + " / 5 · 集齐给核心 +" + Balance.SetCores + "、织网碎片 +" + Balance.SetShards, 13, Ui.MuteOnInk, TextAnchor.UpperLeft, false, false, true);
                 string[] ids = Catalog.SetPieces(set);

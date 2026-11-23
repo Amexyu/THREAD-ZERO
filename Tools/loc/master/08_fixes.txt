@@ -49,3 +49,9 @@ re:突破为「(.+)」· 多一条专属词条，属性更高§「{1}」に突�
 每 2.4 秒自动射击，标记增伤§2.4秒ごとに自動射撃、マーク中はダメージ上昇§Fires every 2.4 s, more damage to marked targets§2.4초마다 자동 사격, 표식 대상에게 피해 증가
 定时锁定目标，目标多受伤害，联动无人机与电弧§定期的に標的をロックし、被ダメージ上昇。ドローンとアークも強化§Periodically locks a target so it takes more damage; boosts Drone and Arc§주기적으로 대상을 고정해 받는 피해 증가, 드론·아크도 강화
 每 4 秒突袭，近战武器强化冲击§4秒ごとに突撃、近接武器なら衝撃強化§Dash strike every 4 s, stronger with melee weapons§4초마다 돌격, 근접 무기면 충격 강화
+
+# v0.22 套装一键换外观
+换上外观§見た目を着る§Wear look§외형 입기
+外观使用中§着用中§Wearing§착용 중
+re:已换上套装外观「(.+)」。武器外观要换成同类武器（近战 / 远程）才显示。§セット「{1}」の見た目に着替えた。武器の見た目は同じ種類（近接／遠距離）の武器に替えると表示される。§Now wearing the {1} set look. The weapon look only shows on a weapon of the same type (melee / ranged).§세트 「{1}」 외형으로 갈아입었습니다. 무기 외형은 같은 종류(근접 / 원거리) 무기로 바꿔야 표시됩니다.
+re:已换上套装外观「(.+)」§セット「{1}」の見た目に着替えた§Now wearing the {1} set look§세트 「{1}」 외형으로 갈아입었습니다

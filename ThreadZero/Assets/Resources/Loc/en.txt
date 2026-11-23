@@ -122,6 +122,8 @@ re:回收 (\d+) 次 · 零件 (\d+)	Recycle ×{1} · Parts {2}
 re:新外观 (\d+) 件	{1} new looks
 re:打完主线后开放：用核心把「(.+)」突破为「(.+)」	Unlocks after the main story: use Cores to break {1} through to {2}
 re:突破为「(.+)」· 多一条专属词条，属性更高	Break through to {1} · one more Unique effect, higher values
+re:已换上套装外观「(.+)」。武器外观要换成同类武器（近战 / 远程）才显示。	Now wearing the {1} set look. The weapon look only shows on a weapon of the same type (melee / ranged).
+re:已换上套装外观「(.+)」	Now wearing the {1} set look
 Ame（企划、美术指导、测试）	Ame (design, art direction, testing)
 DEEP NET / 零号深网	DEEP NET
 Kenney（www.kenney.nl）：Interface Sounds、Sci-fi Sounds、Impact Sounds，CC0	Kenney (www.kenney.nl): Interface Sounds, Sci-fi Sounds, Impact Sounds, CC0
@@ -326,6 +328,7 @@ v0.21 · 毕业制作 · 展览模式	v0.21 · Graduation Project · Exhibition 
 复合装甲	Composite Armor
 外套	Coat
 外观	Look
+外观使用中	Wearing
 外观只改变样子。属性和模块来自「整备」里实际穿戴的装备，分解装备不会丢失已收藏的外观。武器外观只能套在同类武器上（近战 / 远程）。	Looks only change how you look. Stats and modules come from the gear you actually equip in the Loadout; salvaging gear never loses a collected look. Weapon looks only fit weapons of the same type (melee / ranged).
 外观收集	Look Collection
 外观类别不同	Different look type
@@ -474,6 +477,7 @@ v0.21 · 毕业制作 · 展览模式	v0.21 · Graduation Project · Exhibition 
 指定一个部位，回收一件这个部位的装备。品质和平时掉落一样，优先给图鉴里还没有的。	Pick a slot and recycle one piece of gear for it. Quality rolls like a normal drop, and pieces missing from your collection come first.
 按空格或右下角按钮继续	Press Space or the button at the bottom right to resume
 换上场	Swap in
+换上外观	Wear look
 掉装备了：去「整备」比一比，穿上更好的。左边导航上的数字是还没看过的件数。	Gear dropped: compare it in the Loadout and equip the better one. The number on the left menu counts items you haven't looked at.
 排序：	Sort:
 排污口	Outfall
