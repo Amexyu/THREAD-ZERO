@@ -248,7 +248,7 @@ namespace ThreadZero
             new EquipmentBase("b4", "轻量推进背架", Slot.Back, 4, new Stats(8, 0, 0, .08f), Effect.Thruster),
             // ---- v0.16 第二章「物流高架」20 件（雨夜货运）。先在回声层掉落，第二章关卡做好后也在第二章掉。----
             new EquipmentBase("w5", "撞杆矛", Slot.Weapon, 0, new Stats(0, 9, 0, -.02f), Effect.None, AttackStyle.Melee),
-            new EquipmentBase("w6", "气动钉枪", Slot.Weapon, 1, new Stats(0, 9.5f, 0, .06f), Effect.Mark),
+            new EquipmentBase("w6", "气动钉枪", Slot.Weapon, 1, new Stats(0, 11.5f, 0, .08f), Effect.Mark),
             new EquipmentBase("w7", "吊臂钩索", Slot.Weapon, 2, new Stats(0, 9, 0), Effect.Leech, AttackStyle.Melee),
             new EquipmentBase("w8", "切割锯", Slot.Weapon, 3, new Stats(0, 8, 0, .1f, .02f), Effect.Execute, AttackStyle.Melee),
             new EquipmentBase("w9", "信号弩", Slot.Weapon, 4, new Stats(0, 8, 0, 0, .04f), Effect.Arc),
@@ -280,7 +280,7 @@ namespace ThreadZero
             new EquipmentBase("l9", "信号员马裤", Slot.Legs, 4, new Stats(16, 1, 2, 0, .02f, 2)),
             // ---- v0.18 第三章 25 件（美术未到：外观借 art 指定的旧装备，武器招式借 mech 指定的旧武器）----
             // v0.20 卡27：第三～五章 15 把武器（w10–w24）都有了自己的图（art = null），招式仍借同类旧武器（mech）。
-            new EquipmentBase("w10", "天线警棍", Slot.Weapon, 0, new Stats(0f, 12f, 0f, -0.02f), Effect.Arc, AttackStyle.Melee, null, "w8"),
+            new EquipmentBase("w10", "天线警棍", Slot.Weapon, 0, new Stats(0f, 13.2f, 0f, -0.02f), Effect.Arc, AttackStyle.Melee, null, "w8"),
             new EquipmentBase("w11", "定向干扰枪", Slot.Weapon, 1, new Stats(0f, 14f, 0f, 0.08f), Effect.Mark, AttackStyle.Ranged, null, "w6"),
             new EquipmentBase("w12", "雷达碟炮", Slot.Weapon, 2, new Stats(0f, 8.1f, 0f), Effect.None, AttackStyle.Ranged, null, "w3"),
             new EquipmentBase("w13", "屏蔽网刃", Slot.Weapon, 3, new Stats(0f, 6.9f, 0f, 0.1f, 0.02f), Effect.Guard, AttackStyle.Melee, null, "w5"),
@@ -306,11 +306,11 @@ namespace ThreadZero
             new EquipmentBase("l13", "天线兵马裤", Slot.Legs, 3, new Stats(20.7f, 1.1f, 2.3f, 0.03f), Effect.None, AttackStyle.Ranged, null, null),
             new EquipmentBase("l14", "中继护膝", Slot.Legs, 4, new Stats(18.4f, 1.1f, 2.3f, 0f, 0.02f, 2), Effect.None, AttackStyle.Ranged, null, null),
             // ---- v0.18 第四章 25 件（美术未到：外观借 art 指定的旧装备，武器招式借 mech 指定的旧武器）----
-            new EquipmentBase("w15", "镜刃", Slot.Weapon, 0, new Stats(0f, 15f, 0f, -0.02f), Effect.Execute, AttackStyle.Melee, null, "w1"),   // v0.20 镜刃招式用匕首的迅切连击（卡27 起用自己的图）
+            new EquipmentBase("w15", "镜刃", Slot.Weapon, 0, new Stats(0f, 18f, 0f, 0.03f), Effect.Execute, AttackStyle.Melee, null, "w1"),   // v0.20 镜刃招式用匕首的迅切连击（卡27 起用自己的图）
             new EquipmentBase("w16", "折光步枪", Slot.Weapon, 1, new Stats(0f, 9f, 0f, 0.06f), Effect.Mark, AttackStyle.Ranged, null, "w0"),   // v0.20 折光步枪招式用贴脸轰击（卡27 起用自己的图）
             new EquipmentBase("w17", "审计手炮", Slot.Weapon, 2, new Stats(0f, 10.5f, 0f), Effect.Leech, AttackStyle.Ranged, null, "w3"),
-            new EquipmentBase("w18", "冷却重锤", Slot.Weapon, 3, new Stats(0f, 7.8f, 0f, 0.1f, 0.02f), Effect.None, AttackStyle.Melee, null, "w4"),
-            new EquipmentBase("w19", "光纤钩索", Slot.Weapon, 4, new Stats(0f, 12.5f, 0f, 0f, 0.04f), Effect.Leech, AttackStyle.Melee, null, "w7"),
+            new EquipmentBase("w18", "冷却重锤", Slot.Weapon, 3, new Stats(0f, 8.4f, 0f, 0.1f, 0.02f), Effect.None, AttackStyle.Melee, null, "w4"),
+            new EquipmentBase("w19", "光纤钩索", Slot.Weapon, 4, new Stats(0f, 13.4f, 0f, 0f, 0.04f), Effect.Leech, AttackStyle.Melee, null, "w7"),
             new EquipmentBase("h15", "镜面面罩", Slot.Head, 0, new Stats(23.4f, 1.3f, 3.9f, 0f, 0f, 2), Effect.None, AttackStyle.Ranged, null, null),
             new EquipmentBase("h16", "审计耳机", Slot.Head, 1, new Stats(13f, 1.3f, 1.3f, 0.05f), Effect.Mark, AttackStyle.Ranged, null, null),
             new EquipmentBase("h17", "冷光头盔", Slot.Head, 2, new Stats(20.8f, 0f, 4f), Effect.Guard, AttackStyle.Ranged, null, null),
@@ -1148,6 +1148,21 @@ namespace ThreadZero
         public bool HasPerk(int branch, int tier) { return (state.boardPerks & (1 << (branch * 4 + tier))) != 0; }
         /// 节点按章解锁（第二 / 三 / 四 / 五章），同一条分支要按顺序买。
         public bool PerkOpen(int branch, int tier) { return state.unlockedRegion >= Chapters.FirstRegion(Catalog.PerkChapter[tier]) && (tier == 0 || HasPerk(branch, tier - 1)); }
+        /// 11-24 工坊提示：有改造板节点买得起 / 有机器人能组装。模拟玩家每次都会买，真人不点开改造板就不知道（节点全不买主线慢七成）。
+        public bool AnyPerkBuyable { get { for (int b = 0; b < 3; b++) for (int t = 0; t < 4; t++) if (CanBuyPerk(b, t)) return true; return false; } }
+        /// 有芯片在库存里、身上又有空的芯片槽（不插芯片第五章会卡：模拟里有一个种子 18 小时没打通）。
+        public bool AnyChipToSocket
+        {
+            get
+            {
+                if (!ChipsUnlocked || state.chipBag == null || state.chipBag.Count == 0) return false;
+                for (int s = 0; s < Catalog.SlotCount; s++) { Item it = Equipped((Slot)s); if (it != null && (it.chips == null ? 0 : it.chips.Count) < ChipSlotsOf(it)) return true; }
+                return false;
+            }
+        }
+        /// 有义体能升级（不升义体主线慢三成多，模拟里还有一个种子没打通）。
+        public bool AnyImplantUpgradable { get { for (int i = 0; i < Catalog.Implants.Length; i++) if (CanUpgradeImplant(i)) return true; return false; } }
+        public bool AnyRobotAssemblable { get { for (int i = 0; i < Catalog.RobotCount; i++) if (CanAssemble(i)) return true; return false; } }
         public bool CanBuyPerk(int branch, int tier) { return !HasPerk(branch, tier) && PerkOpen(branch, tier) && state.cores >= Catalog.PerkCores[tier]; }
         public bool BuyPerk(int branch, int tier)
         {

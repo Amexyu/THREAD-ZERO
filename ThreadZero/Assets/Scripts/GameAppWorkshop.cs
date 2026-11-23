@@ -65,6 +65,7 @@ namespace ThreadZero
             {
                 bool open = i < 2 || (i == 2 ? model.HangarUnlocked : model.TerminalUnlocked); float width = Math.Max(120, Ui.Width(tabs[i], 14) + 40);
                 if (Ui.Button(tabX, 22, width, 40, tabs[i], workshopTab == i ? 2 : 0, open, 14) && open) workshopTab = i;
+                if ((i == 0 && model.AnyChipToSocket) || (i == 1 && model.AnyPerkBuyable) || (i == 2 && model.AnyRobotAssemblable)) Ui.Fill(tabX + width - 13, 27, 8, 8, Ui.Orange);   // 11-24 这一页有能买的东西
                 tabX += width + 8;
             }
 

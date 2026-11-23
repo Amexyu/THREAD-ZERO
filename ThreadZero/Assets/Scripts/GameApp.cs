@@ -529,6 +529,8 @@ namespace ThreadZero
                     Ui.Fill(60, y + 8, 26, 20, Ui.Orange);
                     Ui.Text(60, y + 8, 26, 20, Math.Min(99, unseen.Count).ToString(), 14, Ui.Ink, TextAnchor.MiddleCenter, true, true);
                 }
+                if (i == 1 && unseen.Count == 0 && model.AnyImplantUpgradable) { Ui.Fill(66, y + 10, 14, 14, Ui.Ink); Ui.Fill(68, y + 12, 10, 10, Ui.Orange); }   // 11-24 整备：有义体能升级
+                if (i == 3 && (model.AnyPerkBuyable || model.AnyRobotAssemblable || model.AnyChipToSocket)) { Ui.Fill(66, y + 10, 14, 14, Ui.Ink); Ui.Fill(68, y + 12, 10, 10, Ui.Orange); }   // 11-24 工坊有东西能做（改造板节点买得起、机器人能组装、有芯片没插）：亮一个橙点
                 if (Ui.Click(0, y, 96, 84)) Go((GameScreen)i);
             }
             bool over = Ui.Hover(20, 824, 56, 56);

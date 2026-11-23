@@ -15,8 +15,8 @@ namespace ThreadZero.EditorTools
     {
         private static int[] captureAt;
         private static Dictionary<int, string> captured;
-        private static readonly int[] DuelSeeds = { 101, 152 };
-        private const int DuelTries = 3;
+        private static readonly int[] DuelSeeds = { 101, 135, 169 };   // 11-24 两个种子 × 3 次太吵（取样点在首领首通边缘，输赢一翻指数差几十），改 3 个种子 × 4 次
+        private const int DuelTries = 4;
         private static readonly string[] SlotNames = { "武器", "头部", "外套", "背部", "下装" };
         private static readonly string[] SlotPrefix = { "w", "h", "c", "b", "l" };
         public static string DuelPath { get { return Path.Combine(RepoRoot, "Docs/装备对照报告.md"); } }
@@ -60,7 +60,7 @@ namespace ThreadZero.EditorTools
                         for (int k = 0; k < 5; k++)
                         {
                             string id = SlotPrefix[slot] + ((c - 1) * 5 + k);
-                            EditorUtility.DisplayProgressBar("装备对照", "第 " + c + " 章 · " + Catalog.Find(id).name, .3f + .7f * done++ / total);
+                            if (done++ % 25 == 0) EditorUtility.DisplayProgressBar("装备对照", "第 " + c + " 章 · 种子 " + (states.FindIndex(x => x.Value == kv.Value) / 5 + 1), .3f + .7f * done / total);   // 11-24 每份存档只刷一次：屏幕关着时进度条一次要几秒，每件都刷会让对照从 6 分钟拖到 30 多分钟
                             DuelResult r; if (!results.TryGetValue(id, out r)) results[id] = r = new DuelResult { id = id };
                             Duel(kv.Value, slot, id, Chapters.BossRegion(c) - 1, ref r.wins6, ref r.tries6, ref r.time6, ref r.value6);
                             Duel(kv.Value, slot, id, Chapters.BossRegion(c), ref r.wins7, ref r.tries7, ref r.time7, ref r.value7);
