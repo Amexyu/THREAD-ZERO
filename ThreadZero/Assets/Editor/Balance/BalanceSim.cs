@@ -108,7 +108,7 @@ namespace ThreadZero.EditorTools
         // ---------- 模拟 ----------
         private sealed class StageLog
         {
-            public int attempts, clears, defeats, timeouts; public float first = -1, clearSum;
+            public int attempts, clears, defeats, timeouts, preDefeats; public float first = -1, clearSum;   // 11-24 preDefeats：第一次打过之前被打倒几次（倒下只退一关以后，回刷时也会在前一关倒下，合计数看不出哪关是墙）
             public float atk, hp, def, haste, crit, gearLevel; public int training; public string weapon = "";
         }
         private sealed class RunLog
@@ -161,7 +161,7 @@ namespace ThreadZero.EditorTools
                     {   // 被打倒（已经修了 3 秒）：和游戏一样撤回上一关，不跨章
                         combat.RetreatRequested = false;
                         bool timeout = combat.timeouts > timeoutsSeen;
-                        if (timeout) { timeoutsSeen = combat.timeouts; run.stages[region].timeouts++; } else run.stages[region].defeats++;
+                        if (timeout) { timeoutsSeen = combat.timeouts; run.stages[region].timeouts++; } else { run.stages[region].defeats++; if (run.stages[region].first < 0) run.stages[region].preDefeats++; }
                         if (region >= model.state.unlockedRegion - 1)
                         {   // 卡在最前面（或回刷的前一关）：连续倒 3 次以上就洗炼，和真人一样
                             if (run.stuckAt != model.state.unlockedRegion) { run.stuckAt = model.state.unlockedRegion; run.stuckCount = 0; }
@@ -442,7 +442,7 @@ namespace ThreadZero.EditorTools
                 var sb = new StringBuilder();
                 sb.AppendLine("# 提升来源对照（自动生成）"); sb.AppendLine();
                 sb.AppendLine("> 菜单 `Thread Zero/数值测试/提升来源对照`。每一行只关掉一样东西，其余和基线一样；6 个种子的中位数，1× 速度的游戏时间。");
-                sb.AppendLine("> 主线 = 打通 5-7 的总用时；倒下 = 各章第 6 关 / 首领被打倒次数（首通前后合计）；深网和飞升 = 打完主线后挂 3 / 8 小时。");
+                sb.AppendLine("> 主线 = 打通 5-7 的总用时；倒下 = 各章第 6 关 / 首领第一次打过之前被打倒的次数；深网和飞升 = 打完主线后挂 3 / 8 小时。");
                 sb.AppendLine("> 生成：" + DateTime.Now.ToString("yyyy-MM-dd HH:mm") + "，已跑 " + (watch.Elapsed.TotalMinutes).ToString("F0") + " 分钟，脚本指纹 " + SourceHash());
                 sb.AppendLine();
                 sb.AppendLine("| 关掉的东西 | 打通 | 主线 | 比基线 | 一 | 二 | 三 | 四 | 五 | 倒下 6关/首领（四章 · 五章） | 深网 3h | 深网 8h | 飞升 8h |");
@@ -462,7 +462,7 @@ namespace ThreadZero.EditorTools
             Func<List<RunLog>, int, float> chap = (rs, c) => Median(rs.Select(r => r.bossAt[c - 1] < 0 || (c > 1 && r.bossAt[c - 2] < 0) ? -1 : r.bossAt[c - 1] - (c == 1 ? 0 : r.bossAt[c - 2])));
             Func<List<RunLog>, int, float> deep = (rs, h) => Median(rs.Select(r => r.echoMarks.Count >= h ? (float)r.echoMarks[h - 1] : -1));
             Func<List<RunLog>, int, float> asc = (rs, h) => Median(rs.Select(r => r.echoAsc.Count >= h ? (float)r.echoAsc[h - 1] : -1));
-            Func<List<RunLog>, int, int, float> deaths = (rs, c, st) => Median(rs.Select(r => (float)r.stages[Chapters.FirstRegion(c) + st].defeats));
+            Func<List<RunLog>, int, int, float> deaths = (rs, c, st) => Median(rs.Select(r => (float)r.stages[Chapters.FirstRegion(c) + st].preDefeats));
             int done = runs.Count(r => r.finished);
             float t = total(runs), bt = baseRuns == null ? -1 : total(baseRuns), ratio = t > 0 && bt > 0 ? t / bt : -1;
             Func<float, string> hm = v => v < 0 ? "—" : H(v);
@@ -616,7 +616,7 @@ namespace ThreadZero.EditorTools
                 float clear = Median(runs.Where(x => x.stages[r].clears > 0).Select(x => x.stages[r].clearSum / x.stages[r].clears));
                 var got = runs.Where(x => x.stages[r].first >= 0).Select(x => x.stages[r]).ToList();
                 string kind = def.kind == StageKind.Boss ? "首领" : def.kind == StageKind.Elite ? "精英" : "";
-                stageRows.AppendLine("| " + Catalog.StageCode(r) + " " + kind + " | " + Catalog.RegionNames[r] + " | " + H(first) + " | " + attempts.ToString("F0") + " | " + deaths.ToString("F0")
+                stageRows.AppendLine("| " + Catalog.StageCode(r) + " " + kind + " | " + Catalog.RegionNames[r] + " | " + H(first) + " | " + attempts.ToString("F0") + " | " + Median(runs.Select(x => (float)x.stages[r].preDefeats)).ToString("F0") + "（" + deaths.ToString("F0") + "）"
                     + " | " + (clear < 0 ? "—" : clear.ToString("F0") + " 秒")
                     + " | " + (got.Count == 0 ? "— | — | — | —" : Median(got.Select(s => s.atk)).ToString("F0") + " | " + Median(got.Select(s => s.hp)).ToString("F0") + " | "
                         + Median(got.Select(s => s.gearLevel)).ToString("F1") + " | " + Median(got.Select(s => (float)s.training)).ToString("F0")) + " |");
@@ -658,7 +658,7 @@ namespace ThreadZero.EditorTools
             sb.AppendLine();
             sb.AppendLine("首通时间 = 从新存档开始累计的游戏时间（时:分）。进关次数 / 被打倒次数 含回刷。通关用时 = 这一关所有成功通关的平均用时。右边四列是第一次打过这一关时的角色面板。");
             sb.AppendLine();
-            sb.AppendLine("| 关 | 名字 | 首通时间 | 进关次数 | 被打倒 | 通关用时 | 攻击 | 生命 | 装备平均等级 | 训练 |");
+            sb.AppendLine("| 关 | 名字 | 首通时间 | 进关次数 | 被打倒：首通前（合计） | 通关用时 | 攻击 | 生命 | 装备平均等级 | 训练 |");
             sb.AppendLine("|---|---|---|---|---|---|---|---|---|---|");
             sb.Append(stageRows);
             sb.AppendLine();
