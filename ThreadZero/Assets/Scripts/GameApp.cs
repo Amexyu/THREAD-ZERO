@@ -460,7 +460,7 @@ namespace ThreadZero
             ExhibitKey(current);   // v0.21 展览模式：Ctrl+Shift+E 退出
             if (titleOpen)
             {   // v0.21 标题画面：Esc 关掉上面的弹层
-                if (current.type == EventType.KeyDown && current.keyCode == KeyCode.Escape) { if (exhibitPanel || exhibitExitPanel) exhibitPanel = exhibitExitPanel = false; else if (titleConfirmNew) titleConfirmNew = false; else if (creditsOpen) creditsOpen = false; else navigation.Close(); current.Use(); }
+                if (current.type == EventType.KeyDown && current.keyCode == KeyCode.Escape) { if (exhibitPanel || exhibitExitPanel) exhibitPanel = exhibitExitPanel = false; else if (titleConfirmNew) titleConfirmNew = false; else navigation.Close(); current.Use(); }
                 TitleScreen(); ExhibitPanels(); return;
             }
             if (openingAt >= 0) { OpeningScreen(); return; }
