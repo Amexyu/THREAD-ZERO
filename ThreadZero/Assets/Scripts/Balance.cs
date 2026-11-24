@@ -48,7 +48,7 @@ namespace ThreadZero
         public const int ShardsEchoFloor = 1, ShardsEchoBoss = 5, ShardsMilestone = 20, ShardsBossRepeat = 2;
         /// v0.22 越深给得越多：第 40 层以后每 15 层普通层多 1 片（55 层 2 片、70 层 3 片、100 层 5 片），首领层 ×4。
         /// 主线期间去深网（40 层上下）基本不受影响；打完主线后飞升才跟得上。
-        public const int ShardsDeepFrom = 40, ShardsDeepEvery = 12, ShardsBossTimes = 4;   // 11-24 通宵 15 → 12：飞升 100% 要在主线后 8–10 小时
+        public const int ShardsDeepFrom = 40, ShardsDeepEvery = 10, ShardsBossTimes = 4;   // 11-24 通宵 15 → 12 → 10：飞升 100% 要在主线后 8–10 小时（12 时中位数约 10.5 小时）
         public static int EchoShards(int floor, bool boss)
         {
             int n = ShardsEchoFloor + System.Math.Max(0, floor - ShardsDeepFrom) / ShardsDeepEvery;
