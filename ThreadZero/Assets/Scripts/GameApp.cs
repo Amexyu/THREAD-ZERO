@@ -72,7 +72,7 @@ namespace ThreadZero
             combat.OnChainPull = e => EnemyFx.Burst(clock, e.x, GroundY - e.canvas * .4f, new Color(1, .62f, .25f), 1.1f);   // 钩拉：被拽的怪身上闪一下
             combat.OnCoilJump = CoilJumpFx;   // 线圈普攻：电流跳到第二只怪
             combat.OnImplant = d => { implantShown = d; implantAt = clock; implantNew = d.id; implantNewSeenAt = -1; Play(rareSound); Save(); };
-            combat.OnDamage = (value, critical, x) => { AddFloater(value, critical, true, x); GearHit(critical, x); Sfx(critical ? "hit_crit" : model.IsMelee ? "hit_melee" : "hit", critical ? .5f : .35f, .07f); };
+            combat.OnDamage = (value, critical, x) => { AddFloater(value, critical, true, x); GearHit(critical, x); Sfx(HitSound(critical), critical ? .5f : .35f, .07f); };
             combat.OnCheckpoint = Save;
             combat.OnMessage = message => Notify(message, 4);
             combat.OnDrop = (item, fresh) =>
@@ -427,6 +427,13 @@ namespace ThreadZero
         /// 测试用（桥接 call TestStuckHint）：直接弹一条卡关提示。
         public void TestStuckHint() { model.state.retryRegion = model.state.unlockedRegion; model.state.retryStreak = 3; hintRegion = -1; StuckHint(); }
 
+        /// 11-24 近战命中按武器类别分开（原来刀、锤、矛、钩索全是拳头声）：刀刃挥砍、重锤砸击、长杆金属中击；钩索等新素材，先用原来的。
+        private string HitSound(bool critical)
+        {
+            if (critical) return "hit_crit";
+            if (!model.IsMelee) return "hit";
+            switch (LayeredRigView.Kind) { case "dagger": return "hit_blade"; case "heavy": return "hit_heavy"; case "pole": return "hit_pole"; default: return "hit_melee"; }
+        }
         private void Notify(string value, float duration = 3, string item = null)
         { toast = value; toastFrom = clock; toastUntil = clock + duration; toastItem = item; }
 
