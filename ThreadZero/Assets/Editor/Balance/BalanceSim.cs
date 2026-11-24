@@ -415,7 +415,7 @@ namespace ThreadZero.EditorTools
             () => UseAscend = false, () => UseChips = false, () => UseTerminal = false, () => GameModel.TestNoTalents = true, () => GameModel.TestFlatQuality = true,
             () => UseSlotRecycle = true };
         public static string ContribPath { get { return Path.Combine(RepoRoot, "Docs/提升来源对照.md"); } }
-        [MenuItem("Thread Zero/数值测试/提升来源对照（逐项关闭，约 1.5 小时）")] public static void Contributions() { ContributionRun(null); }
+        [MenuItem("Thread Zero/数值测试/提升来源对照（逐项关闭，约 2 小时）")] public static void Contributions() { ContributionRun(null); }
         [MenuItem("Thread Zero/数值测试/提升来源对照：只跑部位回收")] public static void ContribSlot() { ContributionRun(new[] { 10 }); }
         private static void ContributionRun(int[] only)
         {

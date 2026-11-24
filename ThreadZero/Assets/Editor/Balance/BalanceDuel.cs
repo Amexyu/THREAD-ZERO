@@ -50,7 +50,7 @@ namespace ThreadZero.EditorTools
                     for (int c = 1; c <= 5; c++) { string js; if (captured.TryGetValue(Chapters.BossRegion(c), out js)) states.Add(new KeyValuePair<int, string>(c, js)); }
                 }
                 Directory.CreateDirectory(LogDir); File.WriteAllLines(cache, states.Select(kv => kv.Key + "\t" + kv.Value).ToArray());
-                var results = new Dictionary<string, DuelResult>();
+                var results = new Dictionary<string, DuelResult>(); var realSeconds = new Dictionary<string, double>();
                 int done = 0, total = states.Count * 25;
                 foreach (var kv in states)
                 {
@@ -60,13 +60,16 @@ namespace ThreadZero.EditorTools
                         for (int k = 0; k < 5; k++)
                         {
                             string id = SlotPrefix[slot] + ((c - 1) * 5 + k);
-                            if (done++ % 25 == 0) EditorUtility.DisplayProgressBar("装备对照", "第 " + c + " 章 · 种子 " + (states.FindIndex(x => x.Value == kv.Value) / 5 + 1), .3f + .7f * done / total);   // 11-24 每份存档只刷一次：屏幕关着时进度条一次要几秒，每件都刷会让对照从 6 分钟拖到 30 多分钟
+                            if (done++ % 25 == 0) EditorUtility.DisplayProgressBar("装备对照", "第 " + c + " 章 · 种子 " + (states.FindIndex(x => x.Value == kv.Value) / 5 + 1), .3f + .7f * done / total);   // 11-24 每份存档只刷一次（少刷几百次界面）。注意：对照偶尔整体慢 5 倍（6 分钟 → 30 多分钟）不是进度条造成的，原因没查清，见报告末尾的耗时统计
                             DuelResult r; if (!results.TryGetValue(id, out r)) results[id] = r = new DuelResult { id = id };
+                            var took = System.Diagnostics.Stopwatch.StartNew();
                             Duel(kv.Value, slot, id, Chapters.BossRegion(c) - 1, ref r.wins6, ref r.tries6, ref r.time6, ref r.value6);
                             Duel(kv.Value, slot, id, Chapters.BossRegion(c), ref r.wins7, ref r.tries7, ref r.time7, ref r.value7);
+                            double before; realSeconds.TryGetValue(id, out before); realSeconds[id] = before + took.Elapsed.TotalSeconds;   // 11-24 每件实际耗时，写在报告末尾
                         }
                 }
                 string report = DuelReport(results, watch.Elapsed.TotalSeconds);
+                report += "\n> 实际耗时最多的 8 件（两关 × " + DuelTries + " 次 × 各份存档合计）：" + string.Join("、", realSeconds.OrderByDescending(x => x.Value).Take(8).Select(x => Catalog.Find(x.Key).name + " " + x.Value.ToString("F0") + " 秒")) + "\n";
                 File.WriteAllText(DuelPath, report, new UTF8Encoding(false));
                 Debug.Log("[装备对照] 完成（" + watch.Elapsed.TotalSeconds.ToString("F0") + " 秒）：" + DuelPath);
             }
