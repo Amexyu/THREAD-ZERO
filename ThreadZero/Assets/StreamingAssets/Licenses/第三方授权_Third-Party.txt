@@ -1,0 +1,11 @@
+零织协议 / THREAD ZERO — 第三方素材与授权 / Third-party assets and licenses
+
+字体 / Fonts（SIL Open Font License 1.1，全文见同目录 OFL.txt / full text in OFL.txt）
+- 思源黑体 / Noto Sans CJK（SC · JP · KR）  © 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'.
+- Oxanium  © 2019 The Oxanium Project Authors (https://github.com/sevmeyer/oxanium)
+
+音乐 / Music（CC0 1.0，公共领域 / public domain）
+- T & T Free Cyberpunk Pack 1, 2 — tricksntraps (Alexander Ehlers), OpenGameArt.org
+
+音效 / Sound effects（CC0 1.0，公共领域 / public domain）
+- Kenney (www.kenney.nl) — Interface Sounds, Sci-fi Sounds, Impact Sounds

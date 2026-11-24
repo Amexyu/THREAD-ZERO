@@ -4,16 +4,14 @@ using UnityEngine;
 
 namespace ThreadZero
 {
-    /// v0.21 标题画面与开场。启动先停在标题（继续 / 新游戏 / 设置 / 制作人员 / 退出，下面一排切语言），标题和开场期间战斗暂停；
+    /// v0.21 标题画面与开场。启动先停在标题（继续 / 新游戏 / 设置 / 退出；11-24 制作人员去掉，授权文本放在 StreamingAssets/Licenses，下面一排切语言），标题和开场期间战斗暂停；
     /// 新游戏：没有存档时直接放开场；有存档要先确认，原存档复制一份（.archived-时间）再清空、重开、放开场。
     /// 自动测试（TZAutoTest）和匕首审查不进标题。标题图 Resources/Art/V16/Title/title（Gemini 卡 28），没有时画动的织线。
     public sealed partial class GameApp
     {
-        private bool titleOpen, titleConfirmNew, creditsOpen, hasSave;
+        private bool titleOpen, titleConfirmNew, hasSave;
         private float titleAt, openingAt = -1;
-        private Vector2 creditsScroll;
         private Texture2D titleArt; private bool titleArtTried;
-        private string[] creditsLines;
         private static bool pendingOpening;   // 新游戏重载场景以后直接放开场（静态字段跨场景重载还在）
 
         private static readonly string[] OpeningLines = {
@@ -31,7 +29,7 @@ namespace ThreadZero
             titleAt = clock;
         }
         private bool TitleBlocking { get { return titleOpen || openingAt >= 0; } }
-        private void CloseTitle() { titleOpen = false; titleConfirmNew = creditsOpen = false; navigation.Close(); ApplyOffline(); }
+        private void CloseTitle() { titleOpen = false; titleConfirmNew = false; navigation.Close(); ApplyOffline(); }
         private void StartOpening() { titleOpen = false; openingAt = clock; navigation.Close(); }
         private void EndOpening() { openingAt = -1; Go(GameScreen.Action); ApplyOffline(); }
         /// 新游戏（有存档时）：复制一份原存档，清空，重开以后放开场。
@@ -61,7 +59,7 @@ namespace ThreadZero
             for (int i = 0; i < 36; i++) Ui.Fill(i * 24, 0, 24, 900, new Color(.05f, .06f, .08f, .88f * Mathf.Pow(1 - i / 36f, 1.6f)));   // 左边压暗，放标题和菜单
             for (int i = 0; i < 8; i++) Ui.Fill(0, 820 + i * 10, 1600, 10, new Color(.05f, .06f, .08f, .5f * (i + 1) / 8f));            // 底边压暗，放语言和版本
             Ui.FillScreen(new Color(0, 0, 0, 1 - fade));
-            bool sub = titleConfirmNew || creditsOpen || navigation.HasModal || exhibitPanel || exhibitExitPanel;
+            bool sub = titleConfirmNew || navigation.HasModal || exhibitPanel || exhibitExitPanel;
             Ui.Blocked = sub;
 
             // ---- 标志：线缆织成的字（Tools/title/make_logo.py 生成，四种语言各一张）----
@@ -92,7 +90,7 @@ namespace ThreadZero
             string record = hasSave ? (model.InEcho ? "零号深网 · 第 " + model.state.echoFloor + " 层" : Catalog.StageCode(model.state.region) + " " + Catalog.RegionNames[model.state.region]) : null;
             string record2 = hasSave ? "机械飞升 " + Mathf.RoundToInt(model.Ascension * 100) + "% · 零号深网最高 " + model.state.echoBest + " 层 · 外观 " + model.state.collection.Count + " / " + Catalog.All.Length : null;
             if (ExhibitMode)
-            {   // v0.21 展览模式：只留开始、设置、制作人员
+            {   // v0.21 展览模式：只留开始、设置（11-24 制作人员去掉了）
                 if (TitleRow(ref y, ref row, t, "开始体验", true, null, null)) { if (hasSave) CloseTitle(); else StartOpening(); }
             }
             else
@@ -101,7 +99,6 @@ namespace ThreadZero
                 if (TitleRow(ref y, ref row, t, hasSave ? "新游戏" : "开始", !hasSave, null, null)) { if (hasSave) titleConfirmNew = true; else StartOpening(); }
             }
             if (TitleRow(ref y, ref row, t, "设置", false, null, null)) navigation.Open(GameModal.Settings);
-            if (TitleRow(ref y, ref row, t, "制作人员", false, null, null)) { creditsOpen = true; creditsScroll = Vector2.zero; }
             if (!ExhibitMode && TitleRow(ref y, ref row, t, "退出游戏", false, null, null)) Application.Quit();
 
             // ---- 底边：版本（v0.22 语言切换收回设置里）----
@@ -109,7 +106,6 @@ namespace ThreadZero
             Ui.Text(1068, 836, 500, 26, ExhibitMode ? "v0.22 · 毕业制作 · 展览模式" : "v0.22 · 毕业制作", 12, Ui.Alpha(Ui.MuteOnInk, .7f * ba), TextAnchor.MiddleRight);
             Ui.Blocked = exhibitPanel || exhibitExitPanel;
             if (titleConfirmNew) NewGamePanel();
-            else if (creditsOpen) CreditsPanel();
             else if (navigation.HasModal) Modal();
             Ui.Blocked = false;
         }
@@ -371,35 +367,6 @@ namespace ThreadZero
             if (Ui.Button(x + 32, y + h - 84, (w - 80) / 2, 56, "取消", 0, true, 16)) titleConfirmNew = false;
             if (Ui.Button(x + 48 + (w - 80) / 2, y + h - 84, (w - 80) / 2, 56, "清空并开始", 1, true, 16)) NewGame();
         }
-        private void CreditsPanel()
-        {
-            if (creditsLines == null)
-            {
-                TextAsset a = Resources.Load<TextAsset>("Credits");
-                creditsLines = (a != null ? a.text : "零织协议 / THREAD ZERO").Replace("\r", "").Split('\n');
-            }
-            Ui.FillScreen(Ui.Alpha(Ui.Ink, .72f));
-            float x = 400, y = 60, w = 800, h = 780;
-            Ui.Fill(x, y, w, h, Ui.Panel); Ui.Fill(x, y, w, 72, Ui.Ink); Ui.Fill(x, y, 8, 72, Ui.Orange); Ui.Frame(x, y, w, h, 2, Ui.Ink);
-            Ui.Text(x + 32, y, w - 160, 72, "制作人员", 22, Ui.Panel, TextAnchor.MiddleLeft, true);
-            if (Ui.Button(x + w - 108, y + 14, 92, 44, "关闭", 3, true, 15)) { creditsOpen = false; return; }
-            // 一行一行画（每行单独查翻译表）：「# 」开头是小标题，空行是间隔
-            float cy = y + 96 - creditsScroll.y, bottom = y + h - 20;
-            float total = 0;
-            foreach (string raw in creditsLines) total += raw.StartsWith("# ") ? 40 : raw.Trim().Length == 0 ? 14 : 28;
-            float maxScroll = Mathf.Max(0, total - (h - 116));
-            if (Event.current.type == EventType.ScrollWheel) { creditsScroll.y = Mathf.Clamp(creditsScroll.y + Event.current.delta.y * 24, 0, maxScroll); Event.current.Use(); }
-            Ui.BeginClip(x, y + 80, w, h - 96, 0);
-            foreach (string raw in creditsLines)
-            {
-                string line = raw.TrimEnd();
-                if (line.StartsWith("# ")) { if (cy > y + 40 && cy < bottom) Ui.Text(x + 40, cy + 8, w - 80, 30, line.Substring(2), 13, Ui.Orange, TextAnchor.MiddleLeft, true); cy += 40; }
-                else if (line.Trim().Length == 0) cy += 14;
-                else { if (cy > y + 40 && cy < bottom) Ui.Text(x + 40, cy, w - 80, 28, line, 15, Ui.Ink, TextAnchor.MiddleLeft); cy += 28; }
-            }
-            Ui.EndClip();
-        }
-
         // ---------- 开场 ----------
         private void OpeningScreen()
         {
@@ -426,8 +393,7 @@ namespace ThreadZero
         }
 
         // ---------- 测试 ----------
-        public void TestTitle(int saved) { hasSave = saved != 0; titleOpen = true; titleAt = clock - 5; titleConfirmNew = creditsOpen = false; navigation.Close(); }
-        public void TestCredits() { TestTitle(1); creditsOpen = true; }
+        public void TestTitle(int saved) { hasSave = saved != 0; titleOpen = true; titleAt = clock - 5; titleConfirmNew = false; navigation.Close(); }
         public void TestOpening(float at) { titleOpen = false; openingAt = clock - at; }
         public string locProbe, probeText;
         /// 测试：在屏幕上用几种字号画一串字（查字体里某个字画得对不对）。
@@ -443,6 +409,6 @@ namespace ThreadZero
         }
         /// 测试：开场第二句在当前语言下前 8 个字的码位（查译文和字体对不对得上）。
         public void TestLocProbe() { string t = Loc.Tr(OpeningLines[1]); var sb = new System.Text.StringBuilder(); for (int i = 0; i < 8 && i < t.Length; i++) sb.Append(((int)t[i]).ToString("X4")).Append(' '); locProbe = sb.ToString(); }
-        public void TestCloseTitle() { titleOpen = false; openingAt = -1; creditsOpen = titleConfirmNew = false; navigation.Close(); }
+        public void TestCloseTitle() { titleOpen = false; openingAt = -1; titleConfirmNew = false; navigation.Close(); }
     }
 }

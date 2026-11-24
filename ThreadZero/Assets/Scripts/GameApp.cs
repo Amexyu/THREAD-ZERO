@@ -43,6 +43,8 @@ namespace ThreadZero
         private void Awake()
         {
             Application.targetFrameRate = 60;
+            Application.runInBackground = true;   // 11-24 放置游戏：切到别的窗口也要接着打（原来失焦就停了）
+            LoadCompactPrefs(); FixTinyWindowOnStart();
             if (Camera.main == null)
             {
                 var camera = new GameObject("Main Camera").AddComponent<Camera>(); camera.tag = "MainCamera";
@@ -72,7 +74,7 @@ namespace ThreadZero
             combat.OnChainPull = e => EnemyFx.Burst(clock, e.x, GroundY - e.canvas * .4f, new Color(1, .62f, .25f), 1.1f);   // 钩拉：被拽的怪身上闪一下
             combat.OnCoilJump = CoilJumpFx;   // 线圈普攻：电流跳到第二只怪
             combat.OnImplant = d => { implantShown = d; implantAt = clock; implantNew = d.id; implantNewSeenAt = -1; Play(rareSound); Save(); };
-            combat.OnDamage = (value, critical, x) => { AddFloater(value, critical, true, x); GearHit(critical, x); Sfx(critical ? "hit_crit" : model.IsMelee ? "hit_melee" : "hit", critical ? .5f : .35f, .07f); };
+            combat.OnDamage = (value, critical, x) => { AddFloater(value, critical, true, x); GearHit(critical, x); Sfx(HitSound(critical), critical ? .5f : .35f, .07f); };
             combat.OnCheckpoint = Save;
             combat.OnMessage = message => Notify(message, 4);
             combat.OnDrop = (item, fresh) =>
@@ -100,7 +102,19 @@ namespace ThreadZero
         }
 
         // v0.20 离线收益：上次存档到现在过了多久，按挂机时的零件收入 × 25% 补给零件（最多算 2 小时），弹「欢迎回来」。
-        private double offlineAway; private float offlineCounted; private int offlineGain;
+        // 11-24 轻量化挂机：50%、最多 8 小时（拾荒 12 小时）；按离开时那一关接着刷（不推关）：零件、装备、织网碎片。
+        //   装备的分解价已经算在零件收入里，所以带回来的只留图鉴里没有的和军规以上，其余不再给零件（免得算两遍）。
+        private double offlineAway; private float offlineCounted; private int offlineGain, offlineItems, offlineShards; private Quality offlineBest;
+        // 11-24 挂机条/小窗开着时电脑睡眠（合盖）：醒来后这一段游戏没在跑，也按离线算（否则开着反而不如关掉）
+        private long lastTickUtc;
+        private void WakeCheck()
+        {
+            long now = System.DateTime.UtcNow.Ticks;
+            if (lastTickUtc > 0 && !TitleBlocking && (now - lastTickUtc) / 1e7 >= Balance.OfflineMinSeconds) { model.state.savedAt = lastTickUtc; ApplyOffline(); }
+            lastTickUtc = now;
+        }
+        /// 测试用（桥接 call TestSleep 90）：假装电脑睡了这么多分钟，下一帧按离线结算。
+        public void TestSleep(int minutes) { lastTickUtc = System.DateTime.UtcNow.AddMinutes(-minutes).Ticks; }
         /// 测试用（桥接 call TestOffline 180）：假装离开了这么多分钟。
         public void TestOffline(int minutes) { model.state.savedAt = System.DateTime.UtcNow.AddMinutes(-minutes).Ticks; ApplyOffline(); }
         public void ApplyOffline()
@@ -111,8 +125,20 @@ namespace ThreadZero
             double away = (now - then) / 1e7; if (away < Balance.OfflineMinSeconds) return;
             float counted = (float)System.Math.Min(away, model.OfflineMax);   // v0.21 改造板「拾荒」：上限 4 小时
             int gain = Mathf.RoundToInt(model.state.scrapRate * counted * Balance.OfflineEfficiency);
-            if (gain <= 0) return;
-            model.state.scrap += gain; offlineAway = away; offlineCounted = counted; offlineGain = gain;
+            int shards = Mathf.RoundToInt(model.state.shardRate * counted * Balance.OfflineEfficiency);
+            int rolls = Mathf.Min(Balance.OfflineMaxItems * 4, Mathf.RoundToInt(model.state.dropRate * counted * Balance.OfflineEfficiency));
+            if (gain <= 0 && shards <= 0 && rolls <= 0) return;
+            offlineItems = 0; offlineBest = Quality.Common;
+            for (int i = 0; i < rolls && offlineItems < Balance.OfflineMaxItems; i++)
+            {
+                int before = model.state.collection.Count;
+                Item it = model.Drop(false, true); if (it == null) continue;
+                bool fresh = model.state.collection.Count > before;
+                if (fresh || it.quality >= Quality.Epic || it.baseId == model.state.recoveryTarget) { offlineItems++; unseen.Add(it.uid); if (it.quality > offlineBest) offlineBest = it.quality; }   // 和自动分解一样：新的、军规以上、回收目标都留
+                else model.state.items.Remove(it);   // 普通货的分解价已经在零件里了
+            }
+            model.state.scrap += gain; model.state.shards += shards;
+            offlineAway = away; offlineCounted = counted; offlineGain = gain; offlineShards = shards;
             navigation.Open(GameModal.Offline); Save();
         }
         private static AudioClip Tone(string name, float frequency, float duration)
@@ -135,6 +161,7 @@ namespace ThreadZero
         {
             float delta = Time.unscaledDeltaTime;
             clock += delta * slowMo;   // 慢放录像时画面特效也一起慢下来
+            WakeCheck();
             if (!model.state.chipGift && model.GiftChips())   // v0.21 第一次到第五章：送一块芯片、一件改装件，让玩家知道有这个系统
             { Save(); Notify("芯片与改装件开放了：送你一块「过载 Mk1」和一件「标记」改装件，去工坊的装备台装上。", 7); }
             if (model.state.collection.Count != setCheckCount)   // v0.21 图鉴奖励：收藏数变了才检查套装（读档后第一帧也会补发以前集齐的）
@@ -155,7 +182,9 @@ namespace ThreadZero
             // 战斗按不超过 0.05 秒的小步推进；一旦击败敌人就切到行进，下一只敌人不会在行进途中挨打。
             ExhibitTick();
             AudioTick(delta);   // v0.21 按场景换曲、交叉淡化
-            float budget = paused || TitleBlocking ? 0 : Mathf.Min(.15f, delta) * speed * slowMo;   // v0.21 标题和开场期间战斗暂停
+            // 11-24 挂机条 / 小窗 / 切到后台时系统可能降帧：每帧最多补 1 秒，挂着不会变慢（前台大窗口仍是 0.15 秒，卡顿时不跳）
+            float cap = compact != CompactKind.Off || !Application.isFocused ? 1f : .15f;
+            float budget = paused || TitleBlocking ? 0 : Mathf.Min(cap, delta) * speed * slowMo;   // v0.21 标题和开场期间战斗暂停
             for (int guard = 0; guard < 64 && budget > .0001f; guard++)
             {
                 budget = Impact.Absorb(budget);   // v0.20 顿帧：重击命中后战斗停一小会儿
@@ -423,10 +452,17 @@ namespace ThreadZero
         public void TestOpenHelp() { navigation.Open(GameModal.Help); }
         public void TestOpenSettings() { navigation.Open(GameModal.Settings); }
         /// v0.21 测试：打开任意弹窗（GameModal 的序号：1 选关 4 指南 6 分解 7 离线 …）。
-        public void TestModal(int m) { if (m == (int)GameModal.Offline) { offlineAway = 5400; offlineGain = 1234; } navigation.Open((GameModal)m); }
+        public void TestModal(int m) { if (m == (int)GameModal.Offline) { offlineAway = 5400; offlineGain = 1234; offlineItems = 3; offlineBest = Quality.Epic; offlineShards = 12; } navigation.Open((GameModal)m); }
         /// 测试用（桥接 call TestStuckHint）：直接弹一条卡关提示。
         public void TestStuckHint() { model.state.retryRegion = model.state.unlockedRegion; model.state.retryStreak = 3; hintRegion = -1; StuckHint(); }
 
+        /// 11-24 近战命中按武器类别分开（原来刀、锤、矛、钩索全是拳头声）：刀刃挥砍、重锤砸击、长杆金属中击；钩索等新素材，先用原来的。
+        private string HitSound(bool critical)
+        {
+            if (critical) return "hit_crit";
+            if (!model.IsMelee) return "hit";
+            switch (LayeredRigView.Kind) { case "dagger": return "hit_blade"; case "heavy": return "hit_heavy"; case "pole": return "hit_pole"; default: return "hit_melee"; }
+        }
         private void Notify(string value, float duration = 3, string item = null)
         { toast = value; toastFrom = clock; toastUntil = clock + duration; toastItem = item; }
 
@@ -460,10 +496,11 @@ namespace ThreadZero
             ExhibitKey(current);   // v0.21 展览模式：Ctrl+Shift+E 退出
             if (titleOpen)
             {   // v0.21 标题画面：Esc 关掉上面的弹层
-                if (current.type == EventType.KeyDown && current.keyCode == KeyCode.Escape) { if (exhibitPanel || exhibitExitPanel) exhibitPanel = exhibitExitPanel = false; else if (titleConfirmNew) titleConfirmNew = false; else if (creditsOpen) creditsOpen = false; else navigation.Close(); current.Use(); }
+                if (current.type == EventType.KeyDown && current.keyCode == KeyCode.Escape) { if (exhibitPanel || exhibitExitPanel) exhibitPanel = exhibitExitPanel = false; else if (titleConfirmNew) titleConfirmNew = false; else navigation.Close(); current.Use(); }
                 TitleScreen(); ExhibitPanels(); return;
             }
             if (openingAt >= 0) { OpeningScreen(); return; }
+            if (compact != CompactKind.Off) { CompactGUI(); return; }   // 11-24 挂机条 / 小窗
             if (current.type == EventType.KeyDown && (exhibitPanel || exhibitExitPanel))
             { if (current.keyCode == KeyCode.Escape) { exhibitPanel = exhibitExitPanel = false; current.Use(); } }
             else if (current.type == EventType.KeyDown && ExhibitMode && current.keyCode >= KeyCode.F1 && current.keyCode <= KeyCode.F12) current.Use();   // v0.21 展览模式：开发键全关
@@ -535,6 +572,15 @@ namespace ThreadZero
                 if (i == 1 && unseen.Count == 0 && model.AnyImplantUpgradable) { Ui.Fill(66, y + 10, 14, 14, Ui.Ink); Ui.Fill(68, y + 12, 10, 10, Ui.Orange); }   // 11-24 整备：有义体能升级
                 if (i == 3 && (model.AnyPerkBuyable || model.AnyRobotAssemblable || model.AnyChipToSocket)) { Ui.Fill(66, y + 10, 14, 14, Ui.Ink); Ui.Fill(68, y + 12, 10, 10, Ui.Orange); }   // 11-24 工坊有东西能做（改造板节点买得起、机器人能组装、有芯片没插）：亮一个橙点
                 if (Ui.Click(0, y, 96, 84)) Go((GameScreen)i);
+            }
+            // 11-24 挂机：进上次用的那种（挂机条 / 小窗），设置的「显示」里两种都能选
+            if (!ExhibitMode)
+            {
+                bool idle = Ui.Hover(8, 724, 80, 84);
+                Ui.Fill(8, 724, 80, 84, idle ? Ui.Tile2 : Ui.Ink);
+                Ui.Frame(24, 740, 48, 30, 2, idle ? Ui.Panel : Ui.MuteOnInk); Ui.Fill(28, 760, 40, 6, idle ? Ui.Orange : Ui.MuteOnInk);   // 小图标：一个窗口，下沿一条
+                Ui.Text(8, 776, 80, 24, "挂机", 14, idle ? Ui.Panel : Ui.MuteOnInk, TextAnchor.MiddleCenter);
+                if (Ui.Click(8, 724, 80, 84)) EnterCompact(LastCompact);
             }
             bool over = Ui.Hover(20, 824, 56, 56);
             Ui.Fill(20, 824, 56, 56, over ? Ui.Tile2 : Ui.Ink); Ui.Frame(20, 824, 56, 56, 1, over ? Ui.Panel : Ui.Steel);

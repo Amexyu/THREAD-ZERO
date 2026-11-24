@@ -32,7 +32,7 @@ namespace ThreadZero
         {
             K = Mathf.Max(.25f, Mathf.Min(Screen.width / 1600f, Screen.height / 900f));
             origin = new Vector2(Mathf.Round((Screen.width - 1600 * K) / 2), Mathf.Round((Screen.height - 900 * K) / 2));
-            origins.Clear(); clipOffsets.Clear(); clipOffset = Vector2.zero;
+            origins.Clear(); clipOffsets.Clear(); clipOffset = Vector2.zero; views.Clear();
             Blocked = false;
             if (Mathf.Abs(styleScale - K) > .0001f) { styles.Clear(); styleScale = K; }
             if (textFont == null || numberFont == null) { LoadFonts(); styles.Clear(); }
@@ -96,6 +96,14 @@ namespace ThreadZero
             origin = new Vector2(origin.x + px * K * (1 - z), origin.y + py * K * (1 - z)); K *= z;
         }
         public static void ZoomEnd() { if (zoomSavedK > 0) { K = zoomSavedK; origin = zoomSavedOrigin; zoomSavedK = -1; } }
+        /// 11-24 挂机小窗：之后画的东西里，逻辑坐标 (lx, ly) 落在屏幕上的 (left, top)，缩放 k（文字也按 k 出字号）。PopView 复原。
+        private static readonly Stack<Vector3> views = new Stack<Vector3>();
+        public static void PushView(float left, float top, float lx, float ly, float k)
+        {
+            views.Push(new Vector3(origin.x, origin.y, K));
+            K = k; origin = new Vector2(Mathf.Round(left - lx * k), Mathf.Round(top - ly * k));
+        }
+        public static void PopView() { if (views.Count == 0) return; Vector3 v = views.Pop(); origin = new Vector2(v.x, v.y); K = v.z; }
         /// 在当前裁剪区域里把整块内容挪一下（震屏用；EndClip 时自动复原）。
         public static void Nudge(float dx, float dy) { origin += new Vector2(Mathf.Round(dx * K), Mathf.Round(dy * K)); }
 

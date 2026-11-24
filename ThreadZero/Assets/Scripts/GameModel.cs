@@ -97,6 +97,7 @@ namespace ThreadZero
         public int echoFloor, echoBest;
         public long savedAt;      // v0.20 上次存档的时间（UTC ticks），算离线收益
         public float scrapRate;   // v0.20 挂机时每秒（游戏时间）的零件收入：击杀给的 + 掉落装备的分解价，慢慢平均
+        public float dropRate, shardRate;   // 11-24 同样的滑动平均：每秒掉几件装备、每秒得几片织网碎片（离线收益用）
         public List<string> anomalies = new List<string>();
         public int tips, tipsVersion;   // v0.20 新手提示：看过的按位记（GameApp.Tip）；tipsVersion 0 = 还没做过老存档迁移
         public bool epilogueSeen;       // v0.20 机械飞升 100% 的尾声看过了（横幅放完后只自动弹一次）
@@ -458,7 +459,7 @@ namespace ThreadZero
         public static readonly string[,] PerkTexts = {
             { "每第 5 次普攻必定暴击", "打精英和首领伤害 +10%", "技能伤害 +20%", "生命低于一半时伤害 +25%" },
             { "每关一次：生命低于 30% 时回复 25%", "受到伤害 −8%", "每一波开始得到 15% 生命的护盾", "每关一次：被打倒时一半概率留 20% 生命继续" },
-            { "精英掉落 10% 概率高一档品质", "离线收益上限 2 小时 → 4 小时", "分解得到的零件 +25%", "芯片掉率 ×1.5" } };
+            { "精英掉落 10% 概率高一档品质", "离线收益上限 8 小时 → 12 小时", "分解得到的零件 +25%", "芯片掉率 ×1.5" } };
         public static readonly int[] PerkCores = { 1, 2, 3, 5 }, PerkChapter = { 3, 3, 4, 5 };   // 11-24 前两档都在进第三章时开（原 2 / 3）：第二章只开机库
         public static string ChipEffectText(Chip c, int level)
         {
@@ -1172,7 +1173,7 @@ namespace ThreadZero
             if (!CanBuyPerk(branch, tier)) return false;
             state.cores -= Catalog.PerkCores[tier]; state.boardPerks |= 1 << (branch * 4 + tier); return true;
         }
-        public float OfflineMax { get { return HasPerk(2, 1) ? Balance.OfflineMaxSeconds * 2 : Balance.OfflineMaxSeconds; } }
+        public float OfflineMax { get { return HasPerk(2, 1) ? Balance.OfflineMaxSeconds * 1.5f : Balance.OfflineMaxSeconds; } }   // 11-24 拾荒：8 → 12 小时
         public int SalvageGain(Item item) { int v = SalvageValue(item); return HasPerk(2, 2) ? (int)Math.Round(v * 1.25f) : v; }
         public bool ChangeRegion(int region)
         {
