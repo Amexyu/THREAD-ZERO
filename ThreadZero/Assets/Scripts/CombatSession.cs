@@ -239,13 +239,16 @@ namespace ThreadZero
 
         // ---------- 每一小步 ----------
         // v0.20 离线收益用：统计零件收入（击杀 + 掉落的分解价），每 10 秒游戏时间并进 state.scrapRate（约 100 秒的滑动平均）
-        private float incomeSince, incomeClock;
+        private float incomeSince, incomeClock, dropsSince, shardsSince;
         private void TrackIncome(float dt)
         {
             if (testDummy) return;
             incomeClock += dt; if (incomeClock < 10) return;
-            float r = incomeSince / incomeClock; incomeSince = 0; incomeClock = 0;
+            float r = incomeSince / incomeClock, d = dropsSince / incomeClock, sr = shardsSince / incomeClock;
+            incomeSince = 0; dropsSince = 0; shardsSince = 0; incomeClock = 0;
             model.state.scrapRate = model.state.scrapRate <= 0 ? r : model.state.scrapRate + (r - model.state.scrapRate) * .1f;
+            // 11-24 碎片是一阵一阵给的（过层、重打首领），平均得慢一点（约 5 分钟），刚打完首领就退出不会虚高
+            model.state.dropRate += (d - model.state.dropRate) * .1f; model.state.shardRate += (sr - model.state.shardRate) * .03f;
         }
         private float leechPool;
         private void Step(float dt)
@@ -516,7 +519,7 @@ namespace ThreadZero
                         OnMessage?.Invoke("零号深网第 " + floor + " 层：拿到深网限定「" + Catalog.Find(look.baseId).name + "」（原型），已收进衣柜");
                     }
                 }
-                model.state.shards += Balance.EchoShards(floor, Boss);   // v0.20 机械飞升材料：回声层每过一层都给（首领层多给）
+                { int got = Balance.EchoShards(floor, Boss); model.state.shards += got; shardsSince += got; }   // v0.20 机械飞升材料：回声层每过一层都给（首领层多给）
                 if (Boss) health = Math.Min(s.health, health + s.health * Balance.BossRecovery);
                 OnFloorCleared?.Invoke(floor, best);
                 OnCheckpoint?.Invoke();
@@ -558,7 +561,7 @@ namespace ThreadZero
                 bool first = model.InEcho ? model.state.echoFloor > model.state.echoBest : !model.BossCleared(ch);
                 if (first || model.Chance(Balance.RepeatCoreChance)) { model.state.cores++; OnMessage?.Invoke("回收首领核心 +1（持有 " + model.state.cores + "）"); }
                 if (!model.InEcho && first) firstBossClear = ch;
-                if (!model.InEcho && !first) model.state.shards += Balance.ShardsBossRepeat;   // v0.20 重复打主线首领也给一点织网碎片
+                if (!model.InEcho && !first) { model.state.shards += Balance.ShardsBossRepeat; shardsSince += Balance.ShardsBossRepeat; }   // v0.20 重复打主线首领也给一点织网碎片
                 model.state.bosses++; if (!model.InEcho) model.state.bossMask |= 1 << (ch - 1);
                 GrantImplant();
             }
@@ -588,7 +591,7 @@ namespace ThreadZero
             foreach (Item item in drops)
             {
                 if (item == null) continue;
-                incomeSince += model.SalvageGain(item);
+                incomeSince += model.SalvageGain(item); dropsSince++;
                 bool fresh = model.state.collection.Count > before; before = model.state.collection.Count;
                 OnDrop?.Invoke(item, fresh);
             }

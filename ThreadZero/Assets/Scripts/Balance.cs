@@ -41,7 +41,8 @@ namespace ThreadZero
         /// v0.19 变强后再挑战：在墙上倒下后回刷前一关，战力（输出 × 生存的几何平均）涨 4% 或者刷满 5 次，才自动回去再挑战。
         public const float RetryGain = .04f; public const int RetryFarms = 5;
         /// v0.20 离线收益（企划：最多 2 小时、25% 效率、只给零件）：按挂机时的零件收入（击杀 + 掉落的分解价）算，离开不到 1 分钟不算。
-        public const float OfflineMaxSeconds = 7200, OfflineEfficiency = .25f, OfflineMinSeconds = 60;
+        public const float OfflineMaxSeconds = 28800, OfflineEfficiency = .5f, OfflineMinSeconds = 60;   // 11-24 轻量化挂机：2 小时 25% → 8 小时 50%（拾荒 12 小时）
+        public const int OfflineMaxItems = 30;   // 11-24 离线一次最多带回几件装备（只留图鉴里没有的和军规以上）
         /// v0.19 节奏：分解给的零件 × 这个倍率（零件主要来自分解）。零件少一点，强化 / 训练就慢一点，整体节奏跟着慢下来。
         public const float SalvageScale = .4f;
         /// v0.20 机械飞升材料「织网碎片」：回声层每过一层 1 个、首领层 5 个、每 25 层里程碑再 20 个；重复打主线首领 2 个。

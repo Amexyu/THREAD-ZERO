@@ -124,6 +124,16 @@ re:打完主线后开放：用核心把「(.+)」突破为「(.+)」	Unlocks aft
 re:突破为「(.+)」· 多一条专属词条，属性更高	Break through to {1} · one more Unique effect, higher values
 re:已换上套装外观「(.+)」。武器外观要换成同类武器（近战 / 远程）才显示。	Now wearing the {1} set look. The weapon look only shows on a weapon of the same type (melee / ranged).
 re:已换上套装外观「(.+)」	Now wearing the {1} set look
+re:第 (\d+) / (\d+) 波	Wave {1}/{2}
+re:零件 \+([\d,]+) / 分	Parts +{1} / min
+re:掉落 (\d+) 件未看	{1} new drops
+re:离线按挂机收益的 (\d+)% 算，最多算 (\d+) 小时（这次超出的部分没算），只在离开时那一关刷，不会推关。开着挂机条或小窗收益是离线的 2 倍。	Offline time earns {1}% of your idle income, up to {2} h (time beyond that wasn't counted). You keep farming the stage you left on and won't advance. Leaving the idle bar or mini window open earns twice as much.
+re:离线按挂机收益的 (\d+)% 算，最多算 (\d+) 小时，只在离开时那一关刷，不会推关。开着挂机条或小窗收益是离线的 2 倍。	Offline time earns {1}% of your idle income, up to {2} h. You keep farming the stage you left on and won't advance. Leaving the idle bar or mini window open earns twice as much.
+re:装备 (\d+) 件（最好的是(.+)） · 织网碎片 (\d+)	{1} pieces of gear (best: {2}) · {3} Weave Shards
+re:装备 (\d+) 件（最好的是(.+)）	{1} pieces of gear (best: {2})
+re:织网碎片 (\d+)	{1} Weave Shards
+re:离线带回 ([\d,]+) 零件 · 展开看详情	Offline: {1} parts · expand for details
+/ 分	/ min
 Ame（企划、美术指导、测试）	Ame (design, art direction, testing)
 DEEP NET / 零号深网	DEEP NET
 Kenney（www.kenney.nl）：Interface Sounds、Sci-fi Sounds、Impact Sounds，CC0	Kenney (www.kenney.nl): Interface Sounds, Sci-fi Sounds, Impact Sounds, CC0
@@ -171,6 +181,7 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 主线打完了：工坊开放「回收终端」，花零件回收装备；「机密」「原型」也能花核心突破了。	Main story cleared: the Workshop's Recycle Terminal is open, so you can spend Parts to recycle gear, and Classified and Prototype gear can now break through with Cores.
 义	EYE
 义体接入 ·	Implant installed ·
+义体能升级	Implant upgrade ready
 义眼	Eye
 九	9
 二	2
@@ -209,6 +220,7 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 光纤钩索	Fiber-Optic Hook Line
 全功率绞盘：攻击 +12	Full-Power Winch: Attack +12
 全域调度：暴击再 +6%	Total Dispatch: Crit +6% more
+全屏	Fullscreen
 全屏 · 点击切回窗口	Fullscreen · Click for windowed
 全段中继：生命 +300	Full Relay: HP +300
 全部	All
@@ -307,6 +319,7 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 品质可多选；不同条件同时满足。词条／效果按钮点击切换。	You can pick several qualities; all conditions must match. Click the stat/effect buttons to toggle them.
 四	4
 回到标题	Back to Title
+回刷补给中	Farming for supplies
 回收	Salvage
 回收、改造、穿上它——直到第零号接上整张网。	Reclaim it, rebuild it, wear it, until Number Zero is wired into the whole Weave.
 回收员	Recycler
@@ -372,6 +385,7 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 对满血的敌人伤害 +25%	+25% damage to enemies at full HP
 封闭式头盔	Sealed Helmet
 小时	h
+小窗	Mini window
 尚未收藏	Not collected yet
 尾声 · 第零号	Epilogue · Number Zero
 屋顶维修	Rooftop Repair
@@ -386,6 +400,7 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 屏蔽走廊	Shielded Corridor
 屏蔽重甲	Shield Heavy
 屏蔽面罩	Shielding Mask
+展开	Expand
 展览中 · 按 Ctrl+Shift+E 退出	Exhibiting · Ctrl+Shift+E to exit
 展览模式	Exhibition Mode
 属性	Stats
@@ -401,6 +416,7 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 已恢复实际装备外观	Equipped looks restored
 已收藏	Collected
 已暂停	Paused
+已暂停 · 空格继续	Paused · Space to resume
 已有存档暂不可读，本次进度不会覆盖原文件。	Your existing save can't be read right now. This session won't overwrite the original file.
 已满级	Maxed
 已激活	Active
@@ -480,10 +496,14 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 拆解专家	Dismantling Expert
 拆解者	Dismantler
 拾荒	Scavenger
+挂机	Idle
+挂机条	Idle bar
 指定一个部位，回收一件这个部位的装备。品质和平时掉落一样，优先给图鉴里还没有的。	Pick a slot and recycle one piece of gear for it. Quality rolls like a normal drop, and pieces missing from your collection come first.
 按空格或右下角按钮继续	Press Space or the button at the bottom right to resume
 换上场	Swap in
 换上外观	Wear look
+换小窗	Mini window
+换挂机条	Idle bar
 掉装备了：去「整备」比一比，穿上更好的。左边导航上的数字是还没看过的件数。	Gear dropped: compare it in the Loadout and equip the better one. The number on the left menu counts items you haven't looked at.
 排序：	Sort:
 排污口	Outfall
@@ -513,6 +533,7 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 改装：	Mod:
 改造板	Mod Board
 改造板 ›	Mod Board ›
+改造板有节点能点	Mod Board node available
 改造板节点开放了：打首领、集齐套装给的核心，在工坊「改造板」换成节点，每个都是长期加成。后面几章很吃这个。	Mod Board nodes are unlocked: spend the Cores you get from bosses and completed sets on nodes in the Workshop's Mod Board. Each one is a permanent bonus, and the later chapters lean on them.
 改造板：火力加攻击、机体加生命、回收加零件和幸运；后面的章节还能解锁改变打法的节点。	Mod Board: Firepower adds Attack, Chassis adds HP, Salvage adds parts and Luck. Later chapters unlock nodes that change how you fight.
 攻击	Attack
@@ -576,6 +597,7 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 机库 · 第二章开放	Hangar · Unlocks in Chapter 2
 机库开放了：回收无人机成了第一台支援机，每 8 秒给你回血。打怪会掉机器人的图纸碎片，集满 10 片去工坊的机库组装。	The Hangar is open: your Recycler Drone is now your first support unit, healing you every 8 s. Enemies drop robot blueprint fragments; collect 10 and assemble the robot in the Workshop Hangar.
 机库开放时送的	Given when the Hangar opens
+机库能组装机器人	Robot ready to assemble
 机房防静电服	Anti-Static Server Suit
 机房雷达	Server Room Radar
 机械飞升	Mechanical Ascension
@@ -682,6 +704,7 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 目标标记	Target Mark
 离开零号深网	Leaving Deep Net Zero
 离线收益上限 2 小时 → 4 小时	Offline earnings cap 2 h → 4 h
+离线收益上限 8 小时 → 12 小时	Offline earnings cap 8 h → 12 h
 秒	s
 积水暗渠	Flooded Culvert
 稀有度	Rarity
@@ -697,6 +720,7 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 穿戴中的装备不可分解	Equipped gear can't be salvaged
 穿戴装备	Equip
 穿搭预览 · 只改变样子	Outfit preview · Looks only
+窗口	Windowed
 窗口 · 点击切到全屏	Windowed · Click for fullscreen
 立即保存	Save Now
 章	Chapter
@@ -760,6 +784,7 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 继续行动	Resume
 维修中 ·	Repairing ·
 缓冲	Buffer
+置顶	On top
 美术素材：Gemini（Google）生成，由制作者挑选、修整后使用	Art assets: generated with Gemini (Google), selected and touched up by the creator
 群伤	Area
 聚焦	Focus

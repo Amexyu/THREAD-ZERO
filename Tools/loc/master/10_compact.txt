@@ -1,0 +1,27 @@
+# 11-24 轻量化挂机（GameAppCompact.cs、GameApp.cs 导航栏、GameAppModals.cs 设置「显示」）
+挂机§放置§Idle§방치
+挂机条§放置バー§Idle bar§방치 바
+小窗§小窓§Mini window§작은 창
+全屏§フルスクリーン§Fullscreen§전체 화면
+窗口§ウィンドウ§Windowed§창 모드
+置顶§最前面§On top§항상 위
+换小窗§小窓へ§Mini window§작은 창으로
+换挂机条§放置バーへ§Idle bar§방치 바로
+展开§元に戻す§Expand§펼치기
+/ 分§/ 分§/ min§/ 분
+re:第 (\d+) / (\d+) 波§ウェーブ {1}/{2}§Wave {1}/{2}§{1}/{2} 웨이브
+re:零件 \+([\d,]+) / 分§パーツ +{1} / 分§Parts +{1} / min§부품 +{1} / 분
+已暂停 · 空格继续§一時停止中・スペースで再開§Paused · Space to resume§일시정지됨 · 스페이스로 재개
+回刷补给中§前のステージで補給中§Farming for supplies§이전 스테이지에서 보급 중
+re:掉落 (\d+) 件未看§未確認のドロップ {1} 件§{1} new drops§확인 안 한 드롭 {1}개
+改造板有节点能点§改造ボードにノードを取れる§Mod Board node available§개조판 노드를 찍을 수 있다
+义体能升级§義体を強化できる§Implant upgrade ready§의체를 강화할 수 있다
+机库能组装机器人§格納庫でロボットを組み立てられる§Robot ready to assemble§격납고에서 로봇을 조립할 수 있다
+# 11-24 离线收益（GameAppModals.cs OfflineModal、改造板「拾荒」）
+离线收益上限 8 小时 → 12 小时§オフライン収益の上限 8時間 → 12時間§Offline earnings cap 8 h → 12 h§오프라인 수익 상한 8시간 → 12시간
+re:离线按挂机收益的 (\d+)% 算，最多算 (\d+) 小时（这次超出的部分没算），只在离开时那一关刷，不会推关。开着挂机条或小窗收益是离线的 2 倍。§オフライン中は放置収益の {1}% として計算し、上限は {2} 時間です（今回、上限を超えた分は計算されていません）。離れたときのステージを周回するだけで、先へは進みません。放置バーや小窓で起動したままなら、オフラインの2倍稼げます。§Offline time earns {1}% of your idle income, up to {2} h (time beyond that wasn't counted). You keep farming the stage you left on and won't advance. Leaving the idle bar or mini window open earns twice as much.§오프라인 동안은 방치 수익의 {1}%로 계산하며 최대 {2}시간까지입니다(이번에 상한을 넘은 시간은 계산되지 않았습니다). 떠날 때의 스테이지만 반복하고 앞으로 나아가지는 않습니다. 방치 바나 작은 창으로 켜 두면 오프라인의 2배를 법니다.
+re:离线按挂机收益的 (\d+)% 算，最多算 (\d+) 小时，只在离开时那一关刷，不会推关。开着挂机条或小窗收益是离线的 2 倍。§オフライン中は放置収益の {1}% として計算し、上限は {2} 時間です。離れたときのステージを周回するだけで、先へは進みません。放置バーや小窓で起動したままなら、オフラインの2倍稼げます。§Offline time earns {1}% of your idle income, up to {2} h. You keep farming the stage you left on and won't advance. Leaving the idle bar or mini window open earns twice as much.§오프라인 동안은 방치 수익의 {1}%로 계산하며 최대 {2}시간까지입니다. 떠날 때의 스테이지만 반복하고 앞으로 나아가지는 않습니다. 방치 바나 작은 창으로 켜 두면 오프라인의 2배를 법니다.
+re:装备 (\d+) 件（最好的是(.+)） · 织网碎片 (\d+)§装備 {1} 個（最高は{2}）・織網片 {3}§{1} pieces of gear (best: {2}) · {3} Weave Shards§장비 {1}개 (최고 {2}) · 직조 조각 {3}
+re:装备 (\d+) 件（最好的是(.+)）§装備 {1} 個（最高は{2}）§{1} pieces of gear (best: {2})§장비 {1}개 (최고 {2})
+re:织网碎片 (\d+)§織網片 {1}§{1} Weave Shards§직조 조각 {1}
+re:离线带回 ([\d,]+) 零件 · 展开看详情§オフラインで {1} パーツ獲得・展開して詳細を見る§Offline: {1} parts · expand for details§오프라인 부품 {1}개 · 펼쳐서 자세히 보기

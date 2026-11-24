@@ -21,10 +21,11 @@ namespace ThreadZero
             Stats stats = model.Total();
             WeaponFx.SetGear(model.Equipped(Slot.Weapon));   // v0.20 装备光效：开火、命中的光按武器品质 / 等级
             // 鼠标停在上 / 下边缘或左侧导航栏 → 呼出终端；离开 1.5 秒后收回。暂停、维修、弹窗时常驻。
-            bool wantHud = Ui.Hover(0, 0, 1600, 104) || Ui.Hover(0, 724, 1600, 176) || Ui.Hover(0, 0, 104, 900)
-                || paused || combat.recovery > 0 || navigation.HasModal;
+            bool wantHud = !compactView && (Ui.Hover(0, 0, 1600, 104) || Ui.Hover(0, 724, 1600, 176) || Ui.Hover(0, 0, 104, 900)
+                || paused || combat.recovery > 0 || navigation.HasModal);   // 11-24 挂机小窗里不呼出终端
             if (wantHud) hudWantAt = clock;
-            if (Event.current.type == EventType.Repaint)
+            if (compactView) { hudShow = 0; hudWantAt = -10; }
+            else if (Event.current.type == EventType.Repaint)
             {   // 滑出约 0.3 秒、收回约 0.45 秒；进度再过一道 ease-in-out，起停都不生硬
                 bool show = clock - hudWantAt < 1.5f;
                 hudShow = Mathf.MoveTowards(hudShow, show ? 1 : 0, Mathf.Min(Time.unscaledDeltaTime, 1 / 30f) * (show ? 3.4f : 2.2f));
@@ -202,6 +203,7 @@ namespace ThreadZero
             DrawFloaters(heroFeetX);
             if (zoomed) Ui.ZoomEnd();
             Ui.EndClip();
+            if (compactView) { StageTransitionOverlay(); return; }   // 11-24 挂机小窗：只要舞台，界面由 GameAppCompact 画
 
             // 首领：屏幕上方长血条。其余信息在纯净模式只留四角细字，终端滑出时看完整界面。
             Enemy bossUnit = combat.BossEnemy;

@@ -37,11 +37,15 @@ namespace ThreadZero
             string away = hours > 0 ? hours + " 小时 " + (minutes % 60) + " 分" : minutes + " 分钟";
             Ui.Text(x + 40, y + 96, w - 80, 30, "你离开了 " + away, 18, Ui.Ink, TextAnchor.MiddleLeft, true);
             Ui.FitText(x + 40, y + 136, w - 80, 56, "回收无人机带回了 " + offlineGain + " 零件", 30, Ui.Orange, TextAnchor.MiddleLeft, true);
+            // 11-24 还有装备（只留新的和军规以上）和织网碎片
+            string extra = (offlineItems > 0 ? "装备 " + offlineItems + " 件（最好的是" + Catalog.QualityNames[(int)offlineBest] + "）" : "")
+                + (offlineItems > 0 && offlineShards > 0 ? " · " : "") + (offlineShards > 0 ? "织网碎片 " + offlineShards : "");
+            if (extra.Length > 0) Ui.FitText(x + 40, y + 190, w - 80, 28, extra, 17, Ui.Ink, TextAnchor.MiddleLeft, true);
             string rule = "离线按挂机收益的 " + Mathf.RoundToInt(Balance.OfflineEfficiency * 100) + "% 算，最多算 " + Mathf.RoundToInt(model.OfflineMax / 3600) + " 小时"
-                + (offlineAway > model.OfflineMax ? "（这次超出的部分没算）" : "") + "。挂着游戏收益是离线的 4 倍。";
-            Ui.Text(x + 40, y + 204, w - 80, 48, rule, 14, Ui.Alpha(Ui.Ink, .7f), TextAnchor.UpperLeft, false, false, true);
-            Ui.Text(x + 40, y + 252, w - 80, 24, "持有零件 " + model.state.scrap, 14, Ui.Alpha(Ui.Ink, .7f), TextAnchor.MiddleLeft, false);
-            if (Ui.Button(x + w - 220, y + 300, 180, 56, "收下", 1, true, 18)) navigation.Close();
+                + (offlineAway > model.OfflineMax ? "（这次超出的部分没算）" : "") + "，只在离开时那一关刷，不会推关。开着挂机条或小窗收益是离线的 2 倍。";
+            Ui.Text(x + 40, y + 226, w - 80, 76, rule, 14, Ui.Alpha(Ui.Ink, .7f), TextAnchor.UpperLeft, false, false, true);   // 英文要三行
+            Ui.Text(x + 40, y + 310, w - 290, 56, "持有零件 " + model.state.scrap, 14, Ui.Alpha(Ui.Ink, .7f), TextAnchor.MiddleLeft, false);   // 和「收下」按钮同一行
+            if (Ui.Button(x + w - 220, y + 310, 180, 56, "收下", 1, true, 18)) navigation.Close();
         }
 
         private void MapModal(float x, float y, float w)
@@ -123,7 +127,11 @@ namespace ThreadZero
                 if (Ui.Button(x + w - 372 + i * 115, row, 110, 48, AutoSalvageNames[i], model.state.autoSalvage == i ? 2 : 0, true, 14)) { model.state.autoSalvage = i; Save(); }
             row += 68;
             Ui.Text(x + 32, row, 300, 48, "显示", 17, Ui.Ink, TextAnchor.MiddleLeft, true);
-            if (Ui.Button(x + w - 292, row, 260, 48, Screen.fullScreen ? "全屏 · 点击切回窗口" : "窗口 · 点击切到全屏", 0, true, 15)) Screen.fullScreen = !Screen.fullScreen;
+            // 11-24 加两种挂机小窗：挂机条（屏幕底部一条）/ 小窗（右下角）
+            if (Ui.Button(x + w - 456, row, 104, 48, "全屏", Screen.fullScreen ? 2 : 0, true, 14)) Screen.fullScreen = true;
+            if (Ui.Button(x + w - 348, row, 104, 48, "窗口", Screen.fullScreen ? 0 : 2, true, 14)) Screen.fullScreen = false;
+            if (Ui.Button(x + w - 240, row, 104, 48, "挂机条", 0, !ExhibitMode && !titleOpen, 14)) EnterCompact(CompactKind.Strip);
+            if (Ui.Button(x + w - 132, row, 100, 48, "小窗", 0, !ExhibitMode && !titleOpen, 14)) EnterCompact(CompactKind.Corner);
             row += 68;
             // v0.21 展览模式（GameAppExhibit.cs）：开着的时候只显示怎么退出
             Ui.Text(x + 32, row, 300, 48, "展览模式", 17, Ui.Ink, TextAnchor.MiddleLeft, true);
