@@ -459,7 +459,7 @@ namespace ThreadZero
             { "每第 5 次普攻必定暴击", "打精英和首领伤害 +10%", "技能伤害 +20%", "生命低于一半时伤害 +25%" },
             { "每关一次：生命低于 30% 时回复 25%", "受到伤害 −8%", "每一波开始得到 15% 生命的护盾", "每关一次：被打倒时一半概率留 20% 生命继续" },
             { "精英掉落 10% 概率高一档品质", "离线收益上限 2 小时 → 4 小时", "分解得到的零件 +25%", "芯片掉率 ×1.5" } };
-        public static readonly int[] PerkCores = { 1, 2, 3, 5 }, PerkChapter = { 2, 3, 4, 5 };
+        public static readonly int[] PerkCores = { 1, 2, 3, 5 }, PerkChapter = { 3, 3, 4, 5 };   // 11-24 前两档都在进第三章时开（原 2 / 3）：第二章只开机库
         public static string ChipEffectText(Chip c, int level)
         {
             float v = ChipValue(c, level) * 100; bool minus = c.kind == 2 || c.kind == 4;
@@ -907,10 +907,13 @@ namespace ThreadZero
         public bool InEcho { get { return state.echoFloor > 0; } }
 
         // ---------- v0.19 系统按章开放：每章都有新东西，开局不一下子摆满 ----------
-        public bool RecalibrateUnlocked { get { return state.unlockedRegion >= Chapters.FirstRegion(2); } }   // 重校：进第二章
-        public bool ReforgeUnlocked { get { return state.unlockedRegion >= Chapters.FirstRegion(3); } }       // 洗炼：进第三章
+        // 11-24 按整条难度曲线重排，每章只来一样新系统：1-7 首领 义体 + 零号深网；第二章 机库；第三章 改造板节点；
+        // 第四章 重校 + 洗炼；第五章 芯片 / 改装件；打完主线 突破、回收终端。原来打完第一个首领一下子开 5 样，
+        // 突破（抢改造板节点要的核心）和部位回收在主线里都不划算。
+        public bool RecalibrateUnlocked { get { return state.unlockedRegion >= Chapters.FirstRegion(4); } }   // 重校：进第四章（原第二章）
+        public bool ReforgeUnlocked { get { return state.unlockedRegion >= Chapters.FirstRegion(4); } }       // 洗炼：进第四章（原第三章）
         public bool SpecialAffixesUnlocked { get { return state.unlockedRegion >= Chapters.FirstRegion(3); } } // 特殊词条：进第三章后才开始掉
-        public bool AscendUnlocked { get { return state.unlockedRegion >= Chapters.FirstRegion(4); } }        // 突破：进第四章
+        public bool AscendUnlocked { get { return MainCleared; } }                                             // 突破：打完主线（原第四章）
 
         /// 战力：输出 × 生存的几何平均（“变强后再挑战”用，之后也可以显示在界面上）。
         public float Power()
@@ -1215,7 +1218,7 @@ namespace ThreadZero
             return (Quality)selected;
         }
         // ---------- v0.22 回收终端：花零件抽装备 ----------
-        public bool TerminalUnlocked { get { return state.unlockedRegion >= Chapters.FirstRegion(3); } }
+        public bool TerminalUnlocked { get { return MainCleared; } }   // 11-24 部位回收也挪到打完主线（原第三章）：主线里花零件抽不如升级
         public bool DeepTerminalUnlocked { get { return MainCleared; } }
         /// 抽到的装备等级：主线打到哪、深网打到哪，取高的那个（段内中间值）。
         public int TerminalLevel

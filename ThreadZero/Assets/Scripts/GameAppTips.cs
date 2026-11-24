@@ -7,13 +7,17 @@ namespace ThreadZero
     /// 11 秒后自己收起，点一下也能关。看过的记在存档 GameState.tips（按位）；测试存档按 F9 清空后会重新出现。不影响数值。
     public sealed partial class GameApp
     {
-        public enum Tip { Start = 0, Drop = 1, Defeat = 2, Elite = 3, Echo = 4 }
+        public enum Tip { Start = 0, Drop = 1, Defeat = 2, Elite = 3, Echo = 4, Perks = 5, Affix = 6, Endgame = 7 }
         private static readonly string[] TipTexts = {
             "角色会自己往前打，不用操作。鼠标移到屏幕上沿、下沿或左边，终端界面（整备、衣柜、工坊）就会滑出来。",
             "掉装备了：去「整备」比一比，穿上更好的。左边导航上的数字是还没看过的件数。",
             "被打倒了也没关系：会先回前面的关攒零件、变强，再自动挑战这一关。",
             "精英关：每章第 3、6 关是精英，第 7 关是首领，比普通关难一截。打不过就先回刷，升升装备。",
-            "打败了第一个首领，零号深网开放了：在选关最下面，一层比一层难，还能攒织网碎片升义体。" };
+            "打败了第一个首领，零号深网开放了：在选关最下面，一层比一层难，还能攒织网碎片升义体。",
+            // 11-24 功能按章开放，每章一样：进章时提示一次（机库、芯片在 GameApp.Update 里另有开放提示）
+            "改造板节点开放了：打首领、集齐套装给的核心，在工坊「改造板」换成节点，每个都是长期加成。后面几章很吃这个。",
+            "重校和洗炼开放了：在工坊的装备台，重校把一条词条换成别的属性，洗炼锁住想留的词条、其余重抽。卡关时先把用不上的词条换掉。",
+            "主线打完了：工坊开放「回收终端」，花零件回收装备；「机密」「原型」也能花核心突破了。" };
         private const float TipLife = 11, TipStartDelay = 2.5f;
         /// 自动测试默认不弹提示（免得盖住截图）；要测提示的剧本 set GameApp.SuppressTips false。
         public static bool SuppressTips;
@@ -36,6 +40,17 @@ namespace ThreadZero
             if (clock - tipStartClock > TipStartDelay) QueueTip(Tip.Start);
             if (!model.InEcho && Chapters.Stage(model.state.region).kind == StageKind.Elite) QueueTip(Tip.Elite);
             if (model.EchoUnlocked) QueueTip(Tip.Echo);
+            if (model.PerkOpen(0, 0)) QueueTip(Tip.Perks);
+            if (model.ReforgeUnlocked) QueueTip(Tip.Affix);
+            if (model.MainCleared) QueueTip(Tip.Endgame);
+        }
+        /// 11-24 读档时已经过了的开放节点不再补弹（老存档一进游戏连弹三条没意思）。
+        private void MarkPassedUnlockTips()
+        {
+            if (model == null) return;
+            if (model.PerkOpen(0, 0)) model.state.tips |= 1 << (int)Tip.Perks;
+            if (model.ReforgeUnlocked) model.state.tips |= 1 << (int)Tip.Affix;
+            if (model.MainCleared) model.state.tips |= 1 << (int)Tip.Endgame;
         }
         // 这些时候提示先藏起来、计时停住，等画面空出来再接着放：不在行动页、开着弹窗、暂停 / 维修卡片、转场、
         // 关卡名牌（左上角）、首领义体接入和飞升阶段横幅（屏幕中间）。
@@ -76,7 +91,7 @@ namespace ThreadZero
             float top = combat.BossEnemy != null ? 196 : 112;
             float w = Mathf.Min(760, tw + 84), h = two ? 92 : 70, x = 800 - w / 2, y = top - (1 - Mathf.Clamp01(tipAge / .22f)) * 12;
             Ui.Fill(x, y, w, h, Ui.Alpha(Ui.Ink, .94f * a)); Ui.Fill(x, y, 6, h, Ui.Alpha(Ui.Orange, a));
-            Ui.Text(x + 24, y + 9, 300, 18, "新手提示 · " + (tipShown + 1) + " / " + TipTexts.Length, 12, Ui.Alpha(Ui.Orange, a), TextAnchor.MiddleLeft, true);
+            Ui.Text(x + 24, y + 9, 300, 18, tipShown >= (int)Tip.Perks ? "新功能开放" : "新手提示 · " + (tipShown + 1) + " / " + (int)Tip.Perks, 12, Ui.Alpha(Ui.Orange, a), TextAnchor.MiddleLeft, true);
             Ui.Text(x + w - 150, y + 9, 130, 18, "点一下关掉", 11, Ui.Alpha(Ui.MuteOnInk, a * .8f), TextAnchor.MiddleRight);
             Ui.Text(x + 24, y + 30, w - 48, h - 36, text, 16, Ui.Alpha(Ui.Panel, a), TextAnchor.UpperLeft, true, false, true);
             if (Ui.Click(x, y, w, h)) tipAge = Mathf.Max(tipAge, TipLife - .45f);   // 点了就开始收起

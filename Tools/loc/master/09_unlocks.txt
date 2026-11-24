@@ -1,0 +1,11 @@
+# 11-24 功能开放节点按难度曲线重排（GameAppTips.cs、GameAppWorkshop.cs、GameApp.cs 卡关提示）
+新功能开放§新機能開放§New Feature§새 기능 개방
+改造板节点开放了：打首领、集齐套装给的核心，在工坊「改造板」换成节点，每个都是长期加成。后面几章很吃这个。§改造ボードのノードが開放された。ボス撃破やセットコンプリートで手に入るコアを、工房の「改造ボード」でノードに交換しよう。どれも永続ボーナスで、この先の章ではかなり効いてくる。§Mod Board nodes are unlocked: spend the Cores you get from bosses and completed sets on nodes in the Workshop's Mod Board. Each one is a permanent bonus, and the later chapters lean on them.§개조판 노드가 개방되었다. 보스 처치와 세트 완성으로 얻는 코어를 공방의 「개조판」에서 노드로 바꾸자. 모두 영구 보너스이며, 이후 장에서는 꽤 중요해진다.
+重校和洗炼开放了：在工坊的装备台，重校把一条词条换成别的属性，洗炼锁住想留的词条、其余重抽。卡关时先把用不上的词条换掉。§再調整とリフォージが開放された。工房の装備台で、再調整は能力を1つ別の種類に入れ替え、リフォージは残したい能力をロックして残りを引き直す。行き詰まったら、まず使わない能力を入れ替えよう。§Recalibrate and Reforge are unlocked: at the Workshop Bench, Recalibrate swaps one stat for a different one, and Reforge rerolls every stat you haven't locked. When you're stuck, replace the stats you don't use first.§재조정과 재련이 개방되었다. 공방의 장비대에서 재조정은 능력치 하나를 다른 종류로 바꾸고, 재련은 남기고 싶은 능력치를 잠그고 나머지를 다시 뽑는다. 막히면 쓸모없는 능력치부터 바꾸자.
+主线打完了：工坊开放「回收终端」，花零件回收装备；「机密」「原型」也能花核心突破了。§メインストーリークリア。工房に「回収端末」が開放され、パーツで装備を回収できる。「機密」「原型」の装備もコアで突破できるようになった。§Main story cleared: the Workshop's Recycle Terminal is open, so you can spend Parts to recycle gear, and Classified and Prototype gear can now break through with Cores.§메인 스토리 클리어. 공방에 「회수 단말」이 개방되어 부품으로 장비를 회수할 수 있고, 「기밀」「프로토타입」 장비도 코어로 돌파할 수 있게 되었다.
+回收终端 · 打完主线开放§回収端末・メインクリア後に開放§Recycle Terminal · Unlocks after the main story§회수 단말 · 메인 스토리 클리어 후 개방
+洗炼 · 进入第四章后开放§リフォージ・第四章で開放§Reforge · Unlocks in Chapter 4§재련 · 4장에서 개방
+重校 · 第四章开放§再調整・第四章で開放§Recalibrate · Unlocks in Chapter 4§재조정 · 4장에서 개방
+工坊的改造板还有买得起的节点，点上再打会轻松不少。§工房の改造ボードに、まだ買えるノードがある。取ってから挑むとだいぶ楽になる。§There are Mod Board nodes you can afford in the Workshop. Grab them before you retry.§공방의 개조판에 아직 살 수 있는 노드가 있다. 찍고 나서 도전하면 훨씬 수월하다.
+整备页左边的义体可以升级了，碎片已经够了。§整備ページ左の義体が強化できる。織網片はもう足りている。§The implants on the left of the Loadout page can be upgraded. You already have enough shards.§정비 페이지 왼쪽의 의체를 강화할 수 있다. 직조 조각은 이미 충분하다.
+开着自动推进会先回刷前一关攒零件，升级装备、升改造板变强后再自动挑战。§オート進行がオンなら、前のステージを周回してパーツを貯め、装備強化や改造で強くなってから自動で挑戦する。§With auto-advance on, you'll farm the previous stage for parts and retry automatically after upgrading.§자동 진행이 켜져 있으면 이전 스테이지를 반복해 부품을 모으고, 장비와 개조판을 강화해 강해진 뒤 자동으로 도전한다.

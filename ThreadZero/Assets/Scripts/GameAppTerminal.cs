@@ -4,7 +4,7 @@ using UnityEngine;
 namespace ThreadZero
 {
     /// v0.22 回收终端：工坊第四个页签。花零件抽装备，给「卡住时只能等掉落」多一个出口。
-    ///   部位回收（第三章开放）：指定部位，品质和平时掉落一样，优先出图鉴里没有的。
+    ///   部位回收（打完主线开放，11-24 前是第三章）：指定部位，品质和平时掉落一样，优先出图鉴里没有的。
     ///   深层回收（打完主线开放）：部位随机，至少特装，有保底。
     /// 规则和价格在 GameModel.TerminalDraw / Balance.Terminal*。
     public sealed partial class GameApp

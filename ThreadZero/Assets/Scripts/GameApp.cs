@@ -58,6 +58,7 @@ namespace ThreadZero
             daggerReview = DaggerReviewRequested();
             GameState loaded = daggerReview ? null : saves.Load();
             model = new GameModel(loaded);
+            if (loaded != null) MarkPassedUnlockTips();
             if(daggerReview) PrepareDaggerReviewModel();
             combat = new CombatSession(model);
             combat.EnableMovement();
@@ -412,9 +413,11 @@ namespace ThreadZero
             bool single = w != null && !Catalog.IsGroupWeapon(w.baseId);
             bool boss = Chapters.Stage(model.state.retryRegion).kind == StageKind.Boss;
             if (single && !boss) return "卡关提示：这一关的怪成群地来，单体武器很吃亏。换一把标着「群伤」的武器（整备页武器详情里看，手炮、重锤、撞杆矛、霰弹、线圈这几类）会轻松很多。";
+            if (model.AnyPerkBuyable) return "卡关提示：工坊的改造板还有买得起的节点，点上再打会轻松不少。";   // 11-24 节点和义体是后几章最吃的两样（提升来源对照）
+            if (model.AnyImplantUpgradable) return "卡关提示：整备页左边的义体可以升级了，碎片已经够了。";
             if (model.EchoUnlocked && model.state.retryStreak >= 5) return "卡关提示：可以先去零号深网刷一会（选关最下面）——每层都有掉落，还能攒织网碎片升义体。";
             if (model.ReforgeUnlocked) return "卡关提示：工坊可以洗炼词条，把用不上的词条换成攻击、暴击或生命。";
-            return "卡关提示：开着自动推进会先回刷前一关攒零件，升级装备、训练变强后再自动挑战。";
+            return "卡关提示：开着自动推进会先回刷前一关攒零件，升级装备、升改造板变强后再自动挑战。";
         }
         /// 测试用（桥接 call TestOpenHelp）：打开行动指南。
         public void TestOpenHelp() { navigation.Open(GameModal.Help); }

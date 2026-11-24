@@ -402,6 +402,13 @@ namespace ThreadZero.EditorTools
         [MenuItem("Thread Zero/数值测试/对照：不领套装奖励")] public static void NoSets() { Variant("不领套装奖励", () => UseSets = false); }
         [MenuItem("Thread Zero/数值测试/对照：全部新系统都不用")] public static void NoNew() { Variant("全部新系统都不用", () => { UseRobots = UsePerks = UseSets = UseChips = false; }); }
         /// 调数值时用：3 个种子、不挂深网，报告另存到 Logs/BalanceSim/快速.md（约为正式报告三分之一的时间）。
+        /// 11-24 调节奏用：12 个种子只跑主线（约 7 分钟），中位数比 6 个种子稳；深网和飞升还要看「立即运行」。
+        [MenuItem("Thread Zero/数值测试/节奏（12 个种子，不挂深网）")]
+        public static void Pacing12()
+        {
+            int seeds = Seeds; float echo = EchoHours; Seeds = 12; EchoHours = 0;
+            try { RunAndReport("节奏（12 个种子）", Path.Combine(LogDir, "节奏12.md")); } finally { Seeds = seeds; EchoHours = echo; }
+        }
         [MenuItem("Thread Zero/数值测试/快速（3 个种子，不挂深网）")]
         public static void Quick()
         {
@@ -409,14 +416,13 @@ namespace ThreadZero.EditorTools
             try { RunAndReport("快速", Path.Combine(LogDir, "快速.md")); } finally { Seeds = seeds; EchoHours = echo; }
         }
         // ---------- 11-24 提升来源对照：每样东西单独关掉跑一遍，和全开比 ----------
-        private static readonly string[] ToggleNames = { "不用机库", "不买改造板节点", "不领套装奖励", "不升级义体", "卡关时不洗炼", "打完主线不突破", "不用芯片", "不用回收终端", "没有专属词条", "品质倍率全按 1", "主线也用部位回收" };
+        private static readonly string[] ToggleNames = { "不用机库", "不买改造板节点", "不领套装奖励", "不升级义体", "卡关时不洗炼", "打完主线不突破", "不用芯片", "不用回收终端", "没有专属词条", "品质倍率全按 1" };   // 11-24 回收终端挪到打完主线，「主线也用部位回收」那一行去掉了
         private static readonly Action[] ToggleOffs = {
             () => UseRobots = false, () => UsePerks = false, () => UseSets = false, () => UseImplants = false, () => UseReforge = false,
-            () => UseAscend = false, () => UseChips = false, () => UseTerminal = false, () => GameModel.TestNoTalents = true, () => GameModel.TestFlatQuality = true,
-            () => UseSlotRecycle = true };
+            () => UseAscend = false, () => UseChips = false, () => UseTerminal = false, () => GameModel.TestNoTalents = true, () => GameModel.TestFlatQuality = true };
         public static string ContribPath { get { return Path.Combine(RepoRoot, "Docs/提升来源对照.md"); } }
         [MenuItem("Thread Zero/数值测试/提升来源对照（逐项关闭，约 2 小时）")] public static void Contributions() { ContributionRun(null); }
-        [MenuItem("Thread Zero/数值测试/提升来源对照：只跑部位回收")] public static void ContribSlot() { ContributionRun(new[] { 10 }); }
+        [MenuItem("Thread Zero/数值测试/提升来源对照：只跑关键 4 项（约 45 分钟）")] public static void ContribKey() { ContributionRun(new[] { 0, 1, 3, 6 }); }   // 机库、改造板节点、义体、芯片
         private static void ContributionRun(int[] only)
         {
             var watch = System.Diagnostics.Stopwatch.StartNew();

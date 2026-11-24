@@ -59,7 +59,7 @@ namespace ThreadZero
             float titleW = Ui.Width("工坊", 30, true);   // v0.21 四语：标题变长时页签跟着往右挪
             Ui.Text(128, 16, titleW + 12, 52, "工坊", 30, Ui.Ink, TextAnchor.MiddleLeft, true);
             // v0.21 三个页签都能用：装备台、改造板（取代训练）、机库（机器人）
-            string[] tabs = { "装备台", "改造板", model.HangarUnlocked ? "机库" : "机库 · 第二章开放", model.TerminalUnlocked ? "回收终端" : "回收终端 · 第三章开放" };
+            string[] tabs = { "装备台", "改造板", model.HangarUnlocked ? "机库" : "机库 · 第二章开放", model.TerminalUnlocked ? "回收终端" : "回收终端 · 打完主线开放" };
             float tabX = Mathf.Max(250, 128 + titleW + 28);
             for (int i = 0; i < 4; i++)
             {
@@ -245,7 +245,7 @@ namespace ThreadZero
             if (item.affixes.Count > 0)
             {   // v0.18 洗炼：锁住的词条不动，其余全部重抽（换属性 + 重抽数值）
                 int locked = model.LockedCount(item);
-                if (!model.ReforgeUnlocked) Ui.Button(1196, 462, 348, 28, "洗炼 · 进入第三章后开放", 0, false, 13);
+                if (!model.ReforgeUnlocked) Ui.Button(1196, 462, 348, 28, "洗炼 · 进入第四章后开放", 0, false, 13);
                 else if (Ui.Button(1196, 462, 348, 28, "洗炼" + (locked > 0 ? "（锁 " + locked + " 条）" : "全部") + " · 零件 " + model.ReforgeCost(item), 1, model.CanReforge(item), 13))
                 { if (model.Reforge(item.uid)) { combat.ClampHealth(); Save(); Play(equipSound); } }
             }
@@ -266,7 +266,7 @@ namespace ThreadZero
                     Ui.Text(1206, y, 60, 40, Mathf.RoundToInt(roll * 100) + "%", 13, great ? Ui.OrangeInk : Ui.Mute, TextAnchor.MiddleLeft, true, true);
                 }
                 Ui.Fill(772, y + 40, 772, 1, Ui.Hair);
-                if (Ui.Button(1348, y + 4, 196, 32, model.RecalibrateUnlocked ? "重校 · 零件 " + rerollCost : "重校 · 第二章开放", 0, model.CanReroll(item, i), 13))
+                if (Ui.Button(1348, y + 4, 196, 32, model.RecalibrateUnlocked ? "重校 · 零件 " + rerollCost : "重校 · 第四章开放", 0, model.CanReroll(item, i), 13))
                 { if (model.Reroll(item.uid, i)) { combat.ClampHealth(); Save(); Play(equipSound); } }
             }
             if (item.affixes.Count > 0)
@@ -274,10 +274,10 @@ namespace ThreadZero
 
             // 突破（仅「机密」）
             if (item.quality == Quality.Legendary || item.quality == Quality.Prototype)
-            {   // v0.22 原型还能再突破一次：打完主线后变成「零号」，多一条专属词条
+            {   // v0.22 原型还能再突破一次：打完主线后变成「零号」，多一条专属词条。11-24 两次突破都挪到打完主线
                 bool second = item.quality == Quality.Prototype, open = model.AscendOpen(item); int to = second ? 6 : 5;
                 Ui.Fill(772, 756, 772, 60, Ui.Ink); Ui.Fill(772, 756, 8, 60, QualityVisual.Colors[to]);
-                string need = !open ? (second ? "打完主线后开放：用核心把「" : "进入第四章后开放：用核心把「") + Catalog.QualityNames[to - 1] + "」突破为「" + Catalog.QualityNames[to] + "」"
+                string need = !open ? "打完主线后开放：用核心把「" + Catalog.QualityNames[to - 1] + "」突破为「" + Catalog.QualityNames[to] + "」"
                     : item.level < model.AscendLevel ? "先把等级升到 Lv." + model.AscendLevel + "，再用核心突破"
                     : "突破为「" + Catalog.QualityNames[to] + (second ? "」· 多一条专属词条，属性更高" : "」· 多一条词条，属性更高");
                 Ui.FitText(796, 756, 540, 60, need, 15, !open || item.level < model.AscendLevel ? Ui.MuteOnInk : Ui.Panel, TextAnchor.MiddleLeft, true);
