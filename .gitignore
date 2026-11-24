@@ -120,6 +120,10 @@ InitTestScene*.unity*
 /Artifacts/
 /Backups/
 /Builds/
+# 11-24 打包输出不进仓库（Windows 上打到 ThreadZero\打包）
+/ThreadZero/打包*/
+/ThreadZero/[Bb]uild/
+/ThreadZero/[Bb]uilds/
 /.codex/
 /Tools/LibraryComboTransfer/
 __pycache__/
