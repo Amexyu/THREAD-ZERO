@@ -1,0 +1,10 @@
+{
+ "scale": 4,
+ "pack": {
+  "file": "pack.png",
+  "pivot": [
+   24.48,
+   32.5
+  ]
+ }
+}

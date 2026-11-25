@@ -25,3 +25,22 @@ re:装备 (\d+) 件（最好的是(.+)） · 织网碎片 (\d+)§装備 {1} 個�
 re:装备 (\d+) 件（最好的是(.+)）§装備 {1} 個（最高は{2}）§{1} pieces of gear (best: {2})§장비 {1}개 (최고 {2})
 re:织网碎片 (\d+)§織網片 {1}§{1} Weave Shards§직조 조각 {1}
 re:离线带回 ([\d,]+) 零件 · 展开看详情§オフラインで {1} パーツ獲得・展開して詳細を見る§Offline: {1} parts · expand for details§오프라인 부품 {1}개 · 펼쳐서 자세히 보기
+# 11-24 设置：帧数（GameAppModals.cs）
+帧数§フレームレート§Frame rate§프레임
+跟随屏幕§画面に合わせる§Match display§화면에 맞춤
+# 11-24 晚 透明挂机条（GameAppCompact.cs StripHud）
+零件/分§パーツ/分§parts/min§부품/분
+按住这里左右拖动§ここを押したまま左右にドラッグ§Hold here and drag sideways§여기를 누른 채 좌우로 끌기
+大小§サイズ§Size§크기
+透明§透明§Clear§투명
+# 11-24 晚 挂机条标签改成悬停才出 + 头顶气泡（GameAppCompact.cs）
+re:掉落 · (.+)§ドロップ・{1}§Drop · {1}§드롭 · {1}
+鼠标停在挂机条上会出标签和菜单§バーにマウスを乗せるとラベルとメニューが出ます§Hover over the bar to show the label and menu§바에 마우스를 올리면 라벨과 메뉴가 나타납니다
+倍速§速度§Speed§배속
+按住能拖到任何地方 · 鼠标停一下出菜单§押したままどこへでもドラッグ・マウスを乗せるとメニュー§Hold to drag anywhere · hover for the menu§누른 채 어디든 끌기 · 마우스를 올리면 메뉴
+# 11-24 21:11 窗口大小、挂机窗里退出、回刷说明（GameAppWindow.cs、GameAppCompact.cs、GameAppModals.cs）
+窗口大小§ウィンドウサイズ§Window size§창 크기
+re:当前 (\d+)×(\d+)§現在 {1}×{2}§Now {1}×{2}§현재 {1}×{2}
+退出§終了§Quit§종료
+re:回刷 · 再 (\d+) 次挑战 (\d+-\d+)§周回中・あと{1}回で{2}に再挑戦§Farming · retry {2} in {1} runs§반복 중 · {1}회 후 {2} 재도전
+re:倒在 (\d+-\d+) · 先回刷 (\d+-\d+) 变强§{1}で敗北・{2}を周回して強化§Fell at {1} · farming {2} to get stronger§{1}에서 쓰러짐 · {2} 반복으로 강화

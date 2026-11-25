@@ -9,6 +9,18 @@ namespace ThreadZero
     {
         private const string EnemyFolder = "Art/V16/Enemies/";
         private static readonly string[] StageFolders = { "Art/V16/Stage/", "Art/V16/Stage2/", "Art/V16/Stage3/", "Art/V16/Stage4/", "Art/V16/Stage5/" };   // 每章一个文件夹
+        /// v0.33 亮色方向 B「晴天涂鸦」：V17 里有这个场景的图（_far）就整套用 V17（三层 + 动效配置 + 道具），没有就用 V16。
+        /// 图是照 V16 每一层的位置重画的，所以 _fx.json 里动效的坐标照旧能用。Bright = false 全部回到 V16 的暗色版。
+        private static readonly string[] BrightFolders = { "Art/V17/Stage/", "Art/V17/Stage2/", "Art/V17/Stage3/", "Art/V17/Stage4/", "Art/V17/Stage5/" };
+        public static bool Bright = true;
+        /// 这个场景实际用的文件夹（亮色有图就用亮色）。
+        public static string FolderOf(int scene)
+        {
+            int ch = Mathf.Clamp(Mathf.Max(0, scene) / 4, 0, StageFolders.Length - 1);
+            string key = SceneKeys[Mathf.Max(0, scene) % 4];
+            if (Bright && Tex(BrightFolders[ch] + key + "_far") != null) return BrightFolders[ch];
+            return StageFolders[ch];
+        }
         public const float FarScroll = .25f, MidScroll = .6f;
         /// 测试用：设了就优先用这个文件夹里的第一章背景（比如 "Art/V16/StageProto/" 里的样板），不影响正式素材。
         /// v0.20 样板已挪到 Assets/ArtArchive/V16/StageProto（不进包），要用先挪回 Resources/Art/V16/。
@@ -29,12 +41,13 @@ namespace ThreadZero
         public static bool Background(int scene, float worldX, float stageW, float stageH, float groundY)
         {
             scene = Mathf.Max(0, scene);
-            string folder = StageFolders[Mathf.Min(StageFolders.Length - 1, scene / 4)];
+            string folder = FolderOf(scene);
             string key = SceneKeys[scene % 4];
             if (scene < 4 && !string.IsNullOrEmpty(ProtoFolder) && Tex(ProtoFolder + key + "_far") != null) folder = ProtoFolder;   // 第一章样板素材
             Texture2D far = Tex(folder + key + "_far"), mid = Tex(folder + key + "_mid"), ground = Tex(folder + key + "_ground");
             if (far == null) return false;
             StageFxConfig fx = StageFx.Config(folder + key);   // v0.17 背景动效（没有配置就不画）
+            StageFx.Daylight = folder.StartsWith("Art/V17/");   // v0.33 亮色背景：动效换白天的配色
             float time = Time.unscaledTime;
             bool arena = key == "D";
             if (arena) StageFx.DrawCover(fx, folder, 0, Cover(far, stageW, stageH), time);

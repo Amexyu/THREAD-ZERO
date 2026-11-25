@@ -94,50 +94,76 @@ namespace ThreadZero
             }
         }
 
+        // ---------- 11-24 帧数（设置里选，存在本机 PlayerPrefs）----------
+        // 30 / 60 / 120 是关掉垂直同步再限帧；「跟随屏幕」= 垂直同步（60 / 144 Hz 屏各按各的刷新率，不撕裂）。默认跟随屏幕。
+        private static readonly int[] FpsOptions = { 30, 60, 120, 0 };
+        private const string FpsKey = "tz_fps";
+        private int fpsChoice = 3;
+        private void LoadFps() { fpsChoice = Mathf.Clamp(PlayerPrefs.GetInt(FpsKey, FpsOptions.Length - 1), 0, FpsOptions.Length - 1); ApplyFps(); }
+        private void SetFps(int i) { fpsChoice = i; PlayerPrefs.SetInt(FpsKey, i); PlayerPrefs.Save(); ApplyFps(); }
+        private void ApplyFps()
+        {
+            int f = FpsOptions[fpsChoice];
+            if (f <= 0) { QualitySettings.vSyncCount = 1; Application.targetFrameRate = -1; }
+            else { QualitySettings.vSyncCount = 0; Application.targetFrameRate = f; }
+        }
+        private string FpsLabel(int i) { return FpsOptions[i] > 0 ? FpsOptions[i].ToString() : "跟随屏幕"; }
+        /// 测试用（桥接 call TestFps 0..3）
+        public void TestFps(int i) { SetFps(Mathf.Clamp(i, 0, FpsOptions.Length - 1)); }
+
+        private const float RowStep = 56;
         private void SettingsModal(float x, float y, float w)
         {
-            float row = y + 100;
+            float row = y + 96;   // 11-24 21:11 多了「窗口大小」一行：行距 60 → 56
             // v0.21 四语：语言名字本身不翻译（Loc 认得这四个），切换后立刻换字体、重新查表
             Ui.Text(x + 32, row, 300, 48, "语言", 17, Ui.Ink, TextAnchor.MiddleLeft, true);
             for (int i = 0; i < Loc.Names.Length; i++)
                 if (Ui.Button(x + w - 388 + i * 89, row, 85, 48, Loc.Names[i], (int)Loc.Get() == i ? 2 : 0, true, 14)) Loc.Set((Loc.Lang)i);
-            row += 68;
+            row += RowStep;
             // v0.21 音乐、音效分开，各 5 档
             Ui.Text(x + 32, row, 300, 48, "音乐", 17, Ui.Ink, TextAnchor.MiddleLeft, true);
             for (int i = 0; i < 5; i++)
                 if (Ui.Button(x + w - 432 + i * 80, row, 76, 48, GameAudio.LevelNames[i], gameAudio.MusicLevel == i ? 2 : 0, true, 13)) gameAudio.SetMusic(i);
-            row += 68;
+            row += RowStep;
             Ui.Text(x + 32, row, 300, 48, "音效", 17, Ui.Ink, TextAnchor.MiddleLeft, true);
             for (int i = 0; i < 5; i++)
                 if (Ui.Button(x + w - 432 + i * 80, row, 76, 48, GameAudio.LevelNames[i], gameAudio.SfxLevel == i ? 2 : 0, true, 13)) gameAudio.SetSfx(i);
-            row += 68;
+            row += RowStep;
             Ui.Text(x + 32, row, 300, 48, "装备辉光", 17, Ui.Ink, TextAnchor.MiddleLeft, true);
             string[] glow = { "关", "低强度", "完整" };   // v0.21 「关」= 关掉（「关闭」留给弹窗的关闭按钮，翻译时两个意思不一样）
             for (int i = 0; i < 3; i++)
                 if (Ui.Button(x + w - 292 + i * 88, row, 84, 48, glow[i], model.state.glowMode == i ? 2 : 0, true, 14)) { model.state.glowMode = i; Save(); }
-            row += 68;
+            row += RowStep;
             // v0.20 技能连招加了震屏，给怕晕的玩家一个开关（存的值 0 完整 / 1 减弱 / 2 关闭，老存档默认完整；顿帧不受影响）
             Ui.Text(x + 32, row, 300, 48, "震屏", 17, Ui.Ink, TextAnchor.MiddleLeft, true);
             string[] shake = { "关", "减弱", "完整" };
             for (int i = 0; i < 3; i++)
                 if (Ui.Button(x + w - 292 + i * 88, row, 84, 48, shake[i], model.state.shakeMode == 2 - i ? 2 : 0, true, 14)) { model.state.shakeMode = 2 - i; Save(); }
-            row += 68;
+            row += RowStep;
             Ui.Text(x + 32, row, 300, 48, "自动分解", 17, Ui.Ink, TextAnchor.MiddleLeft, true);
             for (int i = 0; i < 3; i++)
                 if (Ui.Button(x + w - 372 + i * 115, row, 110, 48, AutoSalvageNames[i], model.state.autoSalvage == i ? 2 : 0, true, 14)) { model.state.autoSalvage = i; Save(); }
-            row += 68;
+            row += RowStep;
             Ui.Text(x + 32, row, 300, 48, "显示", 17, Ui.Ink, TextAnchor.MiddleLeft, true);
-            // 11-24 加两种挂机小窗：挂机条（屏幕底部一条）/ 小窗（右下角）
-            if (Ui.Button(x + w - 456, row, 104, 48, "全屏", Screen.fullScreen ? 2 : 0, true, 14)) Screen.fullScreen = true;
-            if (Ui.Button(x + w - 348, row, 104, 48, "窗口", Screen.fullScreen ? 0 : 2, true, 14)) Screen.fullScreen = false;
-            if (Ui.Button(x + w - 240, row, 104, 48, "挂机条", 0, !ExhibitMode && !titleOpen, 14)) EnterCompact(CompactKind.Strip);
-            if (Ui.Button(x + w - 132, row, 100, 48, "小窗", 0, !ExhibitMode && !titleOpen, 14)) EnterCompact(CompactKind.Corner);
-            row += 68;
+            // 11-24 挂机条：贴在任务栏上方的透明条（大小、置顶、透明在挂机条自己的菜单里调）。原来的「小窗」去掉了
+            // 21:11 「全屏」按所在屏幕的原生分辨率；「窗口」用上次的窗口大小（GameAppWindow.cs）
+            if (Ui.Button(x + w - 456, row, 136, 48, "全屏", Screen.fullScreen ? 2 : 0, !windowBusy, 14)) SetFullscreen();
+            if (Ui.Button(x + w - 312, row, 136, 48, "窗口", Screen.fullScreen ? 0 : 2, !windowBusy, 14)) SetWindowedMode();
+            if (Ui.Button(x + w - 168, row, 136, 48, "挂机条", 0, !ExhibitMode && !titleOpen, 14)) EnterCompact(CompactKind.Strip);
+            row += RowStep;
+            // 21:11 用户：窗口大小没法调 → 常用尺寸里挑（点了就切成窗口）；窗口模式下也能拖边框
+            WindowSizeRow(x, row, w);
+            row += RowStep;
+            // 11-24 帧数（用户：帧数设置也加进设置里）：存在本机；挂机条 / 小窗也按这个，不再自己降帧
+            Ui.Text(x + 32, row, 300, 48, "帧数", 17, Ui.Ink, TextAnchor.MiddleLeft, true);
+            for (int i = 0; i < FpsOptions.Length; i++)
+                if (Ui.Button(x + w - 456 + i * 96, row, i < FpsOptions.Length - 1 ? 92 : 136, 48, FpsLabel(i), fpsChoice == i ? 2 : 0, true, 14)) SetFps(i);
+            row += RowStep;
             // v0.21 展览模式（GameAppExhibit.cs）：开着的时候只显示怎么退出
             Ui.Text(x + 32, row, 300, 48, "展览模式", 17, Ui.Ink, TextAnchor.MiddleLeft, true);
             if (ExhibitMode) Ui.Text(x + w - 392, row, 360, 48, "展览中 · 按 Ctrl+Shift+E 退出", 14, Ui.Orange, TextAnchor.MiddleRight, true);
             else if (Ui.Button(x + w - 292, row, 260, 48, "开启…", 0, true, 15)) exhibitPanel = true;
-            row += 68;
+            row += RowStep;
             Ui.Fill(x + 32, row, w - 64, 1, Ui.Rule);
             Ui.Text(x + 32, row + 14, w - 64, 44, "自动分解不会处理第一次获得的外观和当前回收目标。进度每 30 秒和关键操作后自动保存。", 14, Ui.Mute, TextAnchor.UpperLeft, false, false, true);
             row += 72;
@@ -154,7 +180,7 @@ namespace ThreadZero
             // v0.20 更新：原来写的“每个街区第 5 波是首领”早就不对了；加上回声层 / 机械飞升和离线收益。
             string[] titles = { "自动行动", "装备与外观", "有目标地回收", "设备联动", "零号深网与机械飞升" };
             string[] body = {
-                "角色会自动战斗、自动推进。每章 7 关，x-3、x-6 是精英，x-7 是首领。倒下只要维修几秒：先回刷前面的关攒零件，变强后自动再挑战。关掉游戏也有离线收益（最多算 2 小时）。",
+                "角色会自动战斗、自动推进。每章 7 关，x-3、x-6 是精英，x-7 是首领。倒下只要维修几秒：先回刷前面的关攒零件，变强后自动再挑战。关掉游戏也有离线收益（最多算 8 小时）。",
                 "在整备里穿戴装备改变属性；在衣柜里应用外观只改变样子（武器外观只能套在同类武器上）。锁定或穿戴中的装备不能分解。",
                 "在衣柜里把想要的装备设为回收目标并查看产地：在它那一章打精英和首领，最多 8 次必得；品质和随机属性另行抽取。",
                 "无人机自动射击；标记会强化无人机和电弧；推进器搭配近战武器冲击更强；护盾会为下一次攻击蓄能。成群的关用手炮、重锤这类群伤武器更轻松。",

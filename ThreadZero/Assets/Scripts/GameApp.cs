@@ -42,9 +42,10 @@ namespace ThreadZero
 
         private void Awake()
         {
-            Application.targetFrameRate = 60;
+            LoadFps();   // 11-24 帧数改成设置里选（原来固定 60）
             Application.runInBackground = true;   // 11-24 放置游戏：切到别的窗口也要接着打（原来失焦就停了）
-            LoadCompactPrefs(); FixTinyWindowOnStart();
+            LoadCompactPrefs(); FixWindowOnStart();   // 11-24 21:11 上次在挂机窗里退出：按进挂机前的全屏 / 窗口恢复（GameAppWindow.cs）
+            Application.wantsToQuit += WantsToQuit;    // 挂机窗里退出：先摆回全屏 / 窗口再退，下次直接按原样开
             if (Camera.main == null)
             {
                 var camera = new GameObject("Main Camera").AddComponent<Camera>(); camera.tag = "MainCamera";
@@ -89,6 +90,7 @@ namespace ThreadZero
                 }
                 recentDrops.Insert(0, item.uid); if (recentDrops.Count > 5) recentDrops.RemoveAt(5);
                 unseen.Add(item.uid); QueueTip(Tip.Drop);
+                if ((int)item.quality >= (int)Quality.Epic) StripToast("掉落 · " + Catalog.QualityNames[(int)item.quality]);   // 11-24 挂机条：军规以上在主角头顶冒气泡
                 Play((int)item.quality >= 2 ? rareSound : dropSound); Save();
             };
             selectedItem = model.state.items.Last().uid;
@@ -162,6 +164,8 @@ namespace ThreadZero
             float delta = Time.unscaledDeltaTime;
             clock += delta * slowMo;   // 慢放录像时画面特效也一起慢下来
             WakeCheck();
+            StripTick();   // 11-24 挂机条：悬停出标签、拖动跟着挪、冒气泡
+            WindowTick();  // 11-24 21:11 窗口模式下记住窗口大小；挂机窗退出卡住的保险
             if (!model.state.chipGift && model.GiftChips())   // v0.21 第一次到第五章：送一块芯片、一件改装件，让玩家知道有这个系统
             { Save(); Notify("芯片与改装件开放了：送你一块「过载 Mk1」和一件「标记」改装件，去工坊的装备台装上。", 7); }
             if (model.state.collection.Count != setCheckCount)   // v0.21 图鉴奖励：收藏数变了才检查套装（读档后第一帧也会补发以前集齐的）
@@ -187,7 +191,8 @@ namespace ThreadZero
             float budget = paused || TitleBlocking ? 0 : Mathf.Min(cap, delta) * speed * slowMo;   // v0.21 标题和开场期间战斗暂停
             for (int guard = 0; guard < 64 && budget > .0001f; guard++)
             {
-                budget = Impact.Absorb(budget);   // v0.20 顿帧：重击命中后战斗停一小会儿
+                if (compact != CompactKind.Off) Impact.Clear();   // 11-24 挂机条里不顿帧、不震屏（小画面里一顿一顿像卡）
+                else budget = Impact.Absorb(budget);   // v0.20 顿帧：重击命中后战斗停一小会儿
                 if (budget <= .0001f) break;
                 if (transitionLeft > 0)
                 {
@@ -514,6 +519,8 @@ namespace ThreadZero
                 else if (!navigation.HasModal && current.keyCode == KeyCode.Alpha4) { Go(GameScreen.Workshop); current.Use(); }
                 else if (!navigation.HasModal && current.keyCode == KeyCode.F2) { GrantTestOutfit(); current.Use(); }
                 else if (navigation.Screen == GameScreen.Action && !navigation.HasModal && current.keyCode == KeyCode.F4) { PreviewTransition(); current.Use(); }
+                else if ((navigation.Screen == GameScreen.Loadout || navigation.Screen == GameScreen.Wardrobe) && !navigation.HasModal && current.keyCode == KeyCode.F4)
+                { UiV2 = !UiV2; Notify(UiV2 ? "界面：新版皮肤（F4 切回旧版）" : "界面：旧版（F4 切到新版皮肤）", 2.5f); current.Use(); }   // 11-24 v0.29
                 else if (current.keyCode == KeyCode.F6) { GameModel.TestPower = !GameModel.TestPower; combat.ClampHealth(); if (GameModel.TestPower) combat.health = model.Total().health; Notify(GameModel.TestPower ? "测试：无敌 + 攻击 ×10（再按 F6 关闭）" : "测试模式已关闭", 2.5f); current.Use(); }
                 else if (current.keyCode == KeyCode.F7) { TestNextAscension(); current.Use(); }
                 else if (current.keyCode == KeyCode.F10) { GrantAllGear(); current.Use(); }
@@ -618,7 +625,12 @@ namespace ThreadZero
         private void PreviewHero(float feetX, float feetY, float canvas, float oldX, float oldY, float oldW, float oldH)
         {
             if(model.AscensionStage>=2)feetX+=canvas*.025f;   // v0.20 飞升 60% 起背后有散热鳍，人往右挪一点，鳍不出框
-            if(LayeredRigView.CanDraw(model)){LayeredRigView.Draw(model,feetX,feetY,canvas/HeroCanvas,LayeredRigView.Anim.Idle,clock/1.2f,Color.white);return;}
+            if(LayeredRigView.CanDraw(model))
+            {
+                // v0.31 高帽子（路锥头盔这种）：整个人按帽子多出来的高度缩小一点，帽尖不出镜框、不压标题
+                float rise=LayeredRigView.HeadRiseFor(model), fit=rise>8?Mathf.Max(.72f,150f/(150f+rise-8)):1f;
+                LayeredRigView.Draw(model,feetX,feetY,canvas*fit/HeroCanvas,LayeredRigView.Anim.Idle,clock/1.2f,Color.white);return;
+            }
             if(DaggerActorView.Draw(model,feetX,feetY,canvas,0,Color.white))return;
             bool blade = model.Appearance(Slot.Weapon).attackStyle == AttackStyle.Melee;
             string headId = model.Equipped(Slot.Head) == null && model.state.appearance[(int)Slot.Head] == null

@@ -12,6 +12,7 @@ namespace ThreadZero
         private void LoadoutPage()
         {
             if (implantNew != null) { if (implantNewSeenAt < 0) implantNewSeenAt = clock; else if (clock - implantNewSeenAt > 6) { implantNew = null; implantNewSeenAt = -1; } }
+            if (UiV2) { LoadoutPageV2(); return; }   // 11-24 v0.29 新皮肤（F4 切换）
             LoadoutCharacter();
             LoadoutInventory();
             Item chosen = FindItem(selectedItem);

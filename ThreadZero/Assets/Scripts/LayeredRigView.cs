@@ -58,6 +58,14 @@ namespace ThreadZero
         private static readonly Dictionary<string, Look> looks = new Dictionary<string, Look>();
         private static readonly HashSet<string> missingReported = new HashSet<string>();
         private static string weaponClass = "dagger";
+        /// v0.31 卡 32 测试外观：按部位（Slot 顺序：武器、头、外套、背包、下装）强行换成某个部件文件夹（Resources/Art/V13/Parts/<id>），
+        /// 不进装备表、不存档，只给桥截图 / 看效果用；空 = 不覆盖。
+        public static readonly string[] TestLook = new string[5];
+        /// 当前头部外观比初始头高出多少（部件单位）。路锥这种高帽子，战斗里的血条要跟着往上挪，不然压在帽子上。
+        public static float HeadRise { get; private set; }
+        /// 先按当前穿着换好外观再读 HeadRise（整备 / 衣柜预览画之前要知道帽子有多高）。
+        public static float HeadRiseFor(GameModel model) { if (!Ready()) return 0; ApplyLook(model); return HeadRise; }
+        private static string LookId(GameModel model, Slot slot) { string t = TestLook[(int)slot]; return string.IsNullOrEmpty(t) ? model.Appearance(slot).id : t; }
         public const float PixelsPerUnit = 1.5f;   // ~140 units tall -> ~210 logical px (v0.13 battle scale)
         private static bool loaded, failed;
         public static Vector2 Muzzle, MuzzleDir = Vector2.right;
@@ -118,7 +126,7 @@ namespace ThreadZero
         public static string WeaponClass(GameModel model)
         {
             EquipmentBase w = model.Appearance(Slot.Weapon);
-            Look l = LoadLook(w.id);
+            Look l = LoadLook(LookId(model, Slot.Weapon));
             if (l != null && !string.IsNullOrEmpty(l.cls)) return l.cls;
             if (Catalog.ArtOf(w.id) == "w4") return "heavy";
             return w.attackStyle == AttackStyle.Melee ? "dagger" : "gun";
@@ -126,15 +134,16 @@ namespace ThreadZero
         /// 按当前穿着（含幻化）换上各部位的外观；缺图的部位用初始外观顶替。
         private static void ApplyLook(GameModel model)
         {
-            bool bareHead = model.Equipped(Slot.Head) == null && string.IsNullOrEmpty(model.state.appearance[(int)Slot.Head]);
-            Look h = bareHead ? null : LoadLook(model.Appearance(Slot.Head).id);
-            Look c = LoadLook(model.Appearance(Slot.Coat).id);
-            Look b = LoadLook(model.Appearance(Slot.Back).id);
-            Look w = LoadLook(model.Appearance(Slot.Weapon).id);
-            Look lg = LoadLook(model.Appearance(Slot.Legs).id);   // v0.16 下装：近侧腿 + 远侧腿，缺图用初始裤子
+            bool bareHead = string.IsNullOrEmpty(TestLook[(int)Slot.Head]) && model.Equipped(Slot.Head) == null && string.IsNullOrEmpty(model.state.appearance[(int)Slot.Head]);
+            Look h = bareHead ? null : LoadLook(LookId(model, Slot.Head));
+            Look c = LoadLook(LookId(model, Slot.Coat));
+            Look b = LoadLook(LookId(model, Slot.Back));
+            Look w = LoadLook(LookId(model, Slot.Weapon));
+            Look lg = LoadLook(LookId(model, Slot.Legs));   // v0.16 下装：近侧腿 + 远侧腿，缺图用初始裤子
             bool pants = lg != null && lg.legN != null && lg.legF != null;
             legN = pants ? lg.legN : starter.legN; legF = pants ? lg.legF : starter.legF;
             head = h != null && h.head != null ? h.head : starter.head;
+            HeadRise = Mathf.Max(0, head.pivot.y - starter.head.pivot.y);
             EyeInHead = h != null && h.head != null && h.hasEye ? h.eye : DefaultEye;
             bool coat = c != null && c.torso != null;
             torso = coat ? c.torso : starter.torso;

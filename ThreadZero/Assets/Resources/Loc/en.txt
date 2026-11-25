@@ -133,6 +133,26 @@ re:装备 (\d+) 件（最好的是(.+)） · 织网碎片 (\d+)	{1} pieces of ge
 re:装备 (\d+) 件（最好的是(.+)）	{1} pieces of gear (best: {2})
 re:织网碎片 (\d+)	{1} Weave Shards
 re:离线带回 ([\d,]+) 零件 · 展开看详情	Offline: {1} parts · expand for details
+re:掉落 · (.+)	Drop · {1}
+re:当前 (\d+)×(\d+)	Now {1}×{2}
+re:回刷 · 再 (\d+) 次挑战 (\d+-\d+)	Farming · retry {2} in {1} runs
+re:倒在 (\d+-\d+) · 先回刷 (\d+-\d+) 变强	Fell at {1} · farming {2} to get stronger
+re:每 (\d+) 次普攻发动	Every {1} basic attacks
+re:冷却 ([\d.]+) 秒	Cooldown {1}s
+re:每次出手 (\d+)% 概率发动	{1}% chance per attack
+re:(\d+) 段	{1}-hit
+re:弹跳 (\d+) 次	Bounces ×{1}
+re:合计 (\d+)% 攻击	{1}% Attack total
+re:套装 · (.+)（(\d+) / 5）	Set · {1} ({2} / 5)
+re:未收藏 · (.+)	Not collected · {1}
+re:产地 · (.+)	Source · {1}
+re:深网第 (\d+) 层	Deep Net F{1}
+re:(\d+)-7 首领必掉	{1}-7 boss guaranteed
+re:第(.)章全关	All Chapter {1} stages
+re:零号深网第 (\d+) 层 · 限定	Deep Net Zero F{1} · Exclusive
+re:(.+) · 第(.)章（(\d+)-7 首领必掉）	{1} · Chapter {2} ({3}-7 boss guaranteed)
+re:(.+) · (\d+)-7 首领必掉	{1} · {2}-7 boss guaranteed
+re:(.+) · 零号深网	{1} · Deep Net Zero
 / 分	/ min
 Ame（企划、美术指导、测试）	Ame (design, art direction, testing)
 DEEP NET / 零号深网	DEEP NET
@@ -203,6 +223,7 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 侦察天线模块	Recon Antenna Module
 保存失败：	Save failed:
 保存暂不可用，原有存档会保留。	Saving isn't available right now. Your existing save is kept.
+保底进度	Guarantee progress
 信号员长衣	Signalman's Long Coat
 信号员风衣	Signalman's Trench Coat
 信号员马裤	Signalman's Breeches
@@ -216,6 +237,7 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 信号禁区之上，是从来不下雨的镜面上城	Above the Dead Zone is Mirror Uptown, where it never rains
 信号禁区断讯者	Dead Zone Silencer
 修好后撤回上一关补给，变强后自动再挑战	After repairs you'll fall back a stage to resupply, then retry automatically once you're stronger
+倍速	Speed
 先手	Opener
 光纤钩索	Fiber-Optic Hook Line
 全功率绞盘：攻击 +12	Full-Power Winch: Attack +12
@@ -252,6 +274,7 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 击杀敌人回复 1.5% 最大生命	Killing an enemy heals 1.5% of max HP
 击败 1-7 闸门看守后开放	Unlocks after defeating the Gatekeeper at 1-7
 击败敌人后，回收到的装备会出现在这里	Gear you recover from defeated enemies shows up here
+击退	Knockback
 分拣仓	Sorting Bay
 分拣仓内	Inside the Sorting Bay
 分拣仓把一切都当作货物处理，包括人	The sorting bay treats everything as cargo, people included
@@ -290,6 +313,7 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 压力管廊	Pressure Gallery
 厚甲	Thick Armor
 原型	Prototype
+去工坊\n装备台	Workshop\nGear Bench
 去衣柜挑一件想要的装备	Pick something you want in the Wardrobe
 去零号深网	Go to Deep Net Zero
 叉臂装卸机	Forklift Loader
@@ -336,6 +360,7 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 回收终端 · 第三章开放	Recycle Terminal · Unlocks in Chapter 3
 回收结果	Results
 回旋切割	Spin Cutter
+固定效果	Fixed effect
 图纸不够	Not enough blueprints
 在整备里穿戴装备改变属性；在衣柜里应用外观只改变样子（武器外观只能套在同类武器上）。锁定或穿戴中的装备不能分解。	Equip gear in the Loadout to change your stats; applying a look in the Wardrobe only changes how you look (weapon looks only fit weapons of the same type). Locked or equipped gear can't be salvaged.
 在衣柜里把想要的装备设为回收目标并查看产地：在它那一章打精英和首领，最多 8 次必得；品质和随机属性另行抽取。	In the Wardrobe, set the gear you want as your recovery target and check where it drops: beat elites and bosses in its chapter and it's guaranteed within 8 tries (quality and random stats are rolled separately).
@@ -351,6 +376,7 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 外观类别不同	Different look type
 夜行侦察	Night Scout
 夜行面罩	Night Mask
+大小	Size
 天线兵马裤	Antenna Trooper Breeches
 天线屋顶	Antenna Rooftop
 天线束	Antenna Bundle
@@ -362,12 +388,14 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 失去战斗能力，修好后撤回上一关补给；变强后自动再挑战。	Knocked out. After repairs you'll fall back to resupply, then retry automatically once stronger.
 失控巡逻机	Rogue Patroller
 头部	Head
+套装	Set
 字体	Fonts
 存档损坏，原文件已保留；本次为临时进度	The save is damaged; the original file is kept. This session's progress is temporary
 存档版本较新，已保护原文件；本次为临时进度	This save is from a newer version, so the original file is protected; this session's progress is temporary
 存档结构不完整	The save data is incomplete
 存档缺少版本号	Save data has no version number
 完整	Full
+定向回收订单	Targeted Recovery Order
 定向干扰塔	Directional Jammer Tower
 定向干扰枪	Directional Jammer Gun
 定时锁定目标，目标多受伤害，联动无人机与电弧	Periodically locks a target so it takes more damage; boosts Drone and Arc
@@ -427,6 +455,7 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 已锁定	Locked
 已锁定 · 不会被分解	Locked · Won't be salvaged
 已锁定的装备不可分解	Locked gear can't be salvaged
+帧数	Frame rate
 常规攻击	Basic attacks
 干扰中继	Jamming Relay
 干扰无人机舱	Jammer Drone Pod
@@ -471,12 +500,14 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 想要这一款？设为回收目标	Want this one? Set it as your recovery target
 感谢游玩。	Thanks for playing.
 我的病没有药可治。能换掉的零件，都在封锁区里。	There's no cure for what I have. Every part I could replace is inside the lockdown zone.
+战力	Power
 手	ARM
 手臂	Arm
 打完主线后开放	Unlocks after the main story
 打精英和首领伤害 +10%	+10% damage to elites and bosses
 打败了第一个首领，零号深网开放了：在选关最下面，一层比一层难，还能攒织网碎片升义体。	You beat your first boss and Deep Net Zero is open: it's at the bottom of stage select. Each floor is harder than the last, and you'll collect Weave Shards to upgrade implants.
 打过第一个首领后，选关最下面可以进零号深网：一层层往上刷，每层都有掉落和织网碎片。织网碎片在整备页左边升级义体，义体越多越强，主角一步步机械飞升。	After your first boss, you can enter Deep Net Zero from the bottom of stage select: climb floor by floor, with drops and Weave Shards on every floor. Spend Weave Shards on the left side of the Loadout page to upgrade implants; the more implants, the stronger you get, step by step toward Mechanical Ascension.
+技能	Skill
 技能伤害 +20%	Skill damage +20%
 技能冷却	Skill Cooldown
 折光步枪	Refraction Rifle
@@ -499,6 +530,8 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 挂机	Idle
 挂机条	Idle bar
 指定一个部位，回收一件这个部位的装备。品质和平时掉落一样，优先给图鉴里还没有的。	Pick a slot and recycle one piece of gear for it. Quality rolls like a normal drop, and pieces missing from your collection come first.
+按住能拖到任何地方 · 鼠标停一下出菜单	Hold to drag anywhere · hover for the menu
+按住这里左右拖动	Hold here and drag sideways
 按空格或右下角按钮继续	Press Space or the button at the bottom right to resume
 换上场	Swap in
 换上外观	Wear look
@@ -590,6 +623,7 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 未解锁	Locked
 未解锁 ·	Locked ·
 未锁定	Unlocked
+末段穿透	Last hit pierces
 本地自动保存	Autosaved locally
 机体	Chassis
 机密	Classified
@@ -637,6 +671,7 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 每三次攻击追加伤害	Bonus damage every third attack
 每关一次：生命低于 30% 时回复 25%	Once per stage: heal 25% when below 30% HP
 每关一次：被打倒时一半概率留 20% 生命继续	Once per stage: 50% chance to survive a knockdown with 20% HP
+每段穿透	Every hit pierces
 每波冲锋怪 +50%；零件 ×1.5	+50% chargers per wave; parts ×1.5
 每秒攻击	Attacks/s
 每第 4 次普攻追加 40% 攻击的伤害	Every 4th basic attack deals +40% Attack as bonus damage
@@ -667,6 +702,7 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 深网 · 织网长衣	Deep Net · Weave Longcoat
 深网 · 零号视界	Deep Net · Zero Vision
 深网限定 · 不能定向	Deep Net exclusive · Can't target
+清空	Clear
 清空并开始	Clear and start
 清空筛选	Clear filters
 清除异常	Clear anomalies
@@ -694,6 +730,8 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 电弧	Arc
 电弧：每三次攻击追加伤害	Arc: bonus damage every third attack
 电池组信号塔	Battery Signal Mast
+界面：新版皮肤（F4 切回旧版）	UI: new skin (F4 for the old layout)
+界面：旧版（F4 切到新版皮肤）	UI: old layout (F4 for the new skin)
 留空不限 · 1–	Leave blank for any · 1–
 白噪研究	White Noise Lab
 白噪研究长衣	White-Noise Lab Coat
@@ -707,11 +745,13 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 离线收益上限 8 小时 → 12 小时	Offline earnings cap 8 h → 12 h
 秒	s
 积水暗渠	Flooded Culvert
+称号	Titles
 稀有度	Rarity
 程序与系统设计：Claude（Anthropic）	Programming and systems design: Claude (Anthropic)
 空 · 制作	Empty · Craft
 空 · 装上	Empty · Install
 空中花园	Sky Garden
+空位	Empty
 空位 · 在下面选一台「上场」	Empty · Pick a robot below and Deploy it
 空存档	Empty save data
 空槽	Empty
@@ -722,6 +762,7 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 穿搭预览 · 只改变样子	Outfit preview · Looks only
 窗口	Windowed
 窗口 · 点击切到全屏	Windowed · Click for fullscreen
+窗口大小	Window size
 立即保存	Save Now
 章	Chapter
 第一章首领回收完成 · 零号深网与第二章已开放	Chapter 1 boss reclaimed · Deep Net Zero and Chapter 2 are open
@@ -800,10 +841,12 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 自动推进 · 开	Auto-advance · On
 自动行动	Auto Action
 芯片	Chips
+芯片 · 改装	Chips · Mods
 芯片与改装件开放了：送你一块「过载 Mk1」和一件「标记」改装件，去工坊的装备台装上。	Chips and mods are unlocked: here's an Overload Mk1 chip and a Mark mod. Install them at the Workshop Bench.
 芯片嗅探	Chip Sniffer
 芯片掉率 ×1.5	Chip drop rate ×1.5
 芯片植入后不能拆。以后往这个槽里植入新的，旧的会被销毁。数值随这件装备的等级上涨。	Chips can't be removed once installed. Installing a new chip in this slot destroys the old one. Values grow with this gear's level.
+范围伤害	Area damage
 荧光雨裤	Hi-Vis Rain Pants
 获得称号「零号」	Title "Zero" obtained
 获得顺序	Order acquired
@@ -823,10 +866,11 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 装备数据无效	Invalid equipment data
 装备词条无效	Invalid equipment affixes
 装备辉光	Gear Glow
+装备鉴定单	Inspection sheet
 装甲	Armor
 装甲片	Armor Plates
 装甲运输机	Armored Hauler
-角色会自动战斗、自动推进。每章 7 关，x-3、x-6 是精英，x-7 是首领。倒下只要维修几秒：先回刷前面的关攒零件，变强后自动再挑战。关掉游戏也有离线收益（最多算 2 小时）。	Your character fights and advances on their own. Each chapter has 7 stages: x-3 and x-6 are elite stages, x-7 is the boss. Getting knocked down only costs a few seconds of repairs: you farm earlier stages for parts, then retry automatically once you're stronger. You also earn offline while the game is closed (up to 2 hours).
+角色会自动战斗、自动推进。每章 7 关，x-3、x-6 是精英，x-7 是首领。倒下只要维修几秒：先回刷前面的关攒零件，变强后自动再挑战。关掉游戏也有离线收益（最多算 8 小时）。	Your character fights and advances on their own. Each chapter has 7 stages: x-3 and x-6 are elite stages, x-7 is the boss. Getting knocked down only costs a few seconds of repairs: you farm earlier stages for parts, then retry automatically once you're stronger. You also earn offline while the game is closed (up to 8 hours).
 角色会自己往前打，不用操作。鼠标移到屏幕上沿、下沿或左边，终端界面（整备、衣柜、工坊）就会滑出来。	Your character fights forward on their own. Move the mouse to the top, bottom or left edge of the screen to slide out the terminal (Loadout, Wardrobe, Workshop).
 解锁	Unlock
 设为回收目标	Set as recovery target
@@ -846,6 +890,7 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 贯穿突刺	Piercing Thrust
 贴脸轰击	Point-Blank Blast
 起重机甲	Crane Mech
+跟随屏幕	Match display
 跳过 ›	Skip ›
 身上又多了一根「线」。	One more "thread" runs through your body.
 轨道检修	Track Inspector
@@ -877,6 +922,7 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 连击校准	Combo Calibration
 连锁放电	Chain Discharge
 迷你集装箱背架	Mini Container Frame
+退出	Quit
 退出后回到正式存档，开发键恢复。展览起点会留着，下次开启还能用。	Exiting returns you to your real save and restores the dev keys. The exhibition starting point is kept for next time.
 退出展览模式	Exit Exhibition Mode
 退出展览模式？	Exit Exhibition Mode?
@@ -887,6 +933,7 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 选一个档位，仓库里这个品质及以下的装备会全部换成零件。穿戴中和已锁定的不会动，收藏的外观保留。	Pick a tier and every piece of gear at or below that quality turns into parts. Equipped and locked gear is untouched, and collected looks are kept.
 选择一件装备\n查看属性与替换效果	Select a piece of gear\nto see its stats and what changes if you swap
 选择街区	Districts
+透明	Clear
 通关后	After clear
 通过上一关后开放	Unlocks after clearing the previous stage
 造成伤害恢复生命	Heal from the damage you deal
@@ -937,6 +984,7 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 雨幕信号员	Rain Signalman
 雨幕全息面罩	Rain-Curtain Holo Mask
 零件	Parts
+零件/分	parts/min
 零件不足	Not enough parts
 零件回收	Parts Recovery
 零号	Zero
@@ -979,6 +1027,7 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 黑白橙 · 中灰	Black/White/Orange · Mid gray
 黑白橙 · 浅（原版）	Black/White/Orange · Light (original)
 黑白橙 · 深灰	Black/White/Orange · Dark gray
+鼠标停在挂机条上会出标签和菜单	Hover over the bar to show the label and menu
 鼠标移到边缘 · 呼出终端	Move the mouse to an edge to open the terminal
 （点击升级）	(click to upgrade)
 ？？？	???

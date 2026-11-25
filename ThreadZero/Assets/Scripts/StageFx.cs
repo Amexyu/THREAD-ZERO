@@ -68,6 +68,9 @@ namespace ThreadZero
         private static readonly List<int> tiles = new List<int>();   // spots 里每个位置属于第几张平铺（用来让每张图上的同一处东西各自错开）
         private static Texture2D disc, soft;
         private static bool cover;      // 首领场地：图层不平铺、不卷动，铺满一个固定矩形
+        /// v0.33 亮色背景（V17）：白天的配色。灯不再压暗周围（白天墙是亮的），水面反光、水帘亮纹、蒸汽换成白色，
+        /// 水滴换成浅天蓝（白色水滴在浅色墙上看不见）。StageArt.Background 每次画之前按用的文件夹设好。
+        public static bool Daylight;
         private static float coverX;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -136,7 +139,8 @@ namespace ThreadZero
                 float k = Mathf.Repeat(time + phase * 3.1f, 9f);
                 bool off = (k > 8.3f && k < 8.38f) || (k > 8.5f && k < 8.56f);
                 float x = spots[s];
-                SoftEllipse(x, by + r * .5f, r * 1.6f, r * 1.4f, new Color(.02f, .05f, .04f, off ? .32f : .08f * (1 - breathe)));
+                float dim = Daylight ? .18f : 1f;   // 白天：灯光区只压暗一点点，不然亮墙上会出现一块脏斑
+                SoftEllipse(x, by + r * .5f, r * 1.6f, r * 1.4f, new Color(.02f, .05f, .04f, (off ? .32f : .08f * (1 - breathe)) * dim));
                 if (!off) Ellipse(x, by, r * .1f, r * .08f, l.color.a > 0 ? new Color(l.color.r, l.color.g, l.color.b, .3f + .35f * breathe) : new Color(1f, .95f, .75f, .3f + .35f * breathe));   // 灯泡
             }
         }
@@ -146,7 +150,7 @@ namespace ThreadZero
         {
             float top = y + w.v0 * h, bottom = y + w.v1 * h;
             if (!cover) W = Mathf.Max(W, 1700f);   // 地面图很窄，反光如果跟着它平铺会一眼看出重复
-            Color tint = w.color.a > 0 ? w.color : new Color(.78f, .9f, .86f, 1);
+            Color tint = w.color.a > 0 ? w.color : Daylight ? new Color(1f, 1f, 1f, 1.25f) : new Color(.78f, .9f, .86f, 1);
             for (int d = 0; d < w.count; d++)
             {
                 int seed = i * 101 + d * 13;
@@ -165,7 +169,7 @@ namespace ThreadZero
         {
             const float g = 1900, swell = .35f, splash = .4f;   // 逻辑像素 / 秒²
             float fall = p.fall * h, tf = Mathf.Sqrt(2 * fall / g), every = Mathf.Max(tf + swell + splash + .2f, p.every), sy = y + p.v * h;
-            Color c = new Color(.8f, .92f, .88f, .85f);
+            Color c = Daylight ? new Color(.58f, .84f, .98f, .92f) : new Color(.8f, .92f, .88f, .85f);
             Spots(p.u, W, scroll, 40);
             for (int s = 0; s < spots.Count; s++)
             {
@@ -198,7 +202,7 @@ namespace ThreadZero
                     float a = k - j * .22f;
                     if (a < 0 || a > life) continue;
                     float s = a / life, rad = 5 + 15 * s;
-                    Ellipse(x + 10 * s + 4 * Mathf.Sin(a * 3 + j), sy - 70 * s, rad, rad * .85f, new Color(.85f, .9f, .87f, .3f * (1 - s)));
+                    Ellipse(x + 10 * s + 4 * Mathf.Sin(a * 3 + j), sy - 70 * s, rad, rad * .85f, Daylight ? new Color(1f, 1f, 1f, .5f * (1 - s)) : new Color(.85f, .9f, .87f, .3f * (1 - s)));
                 }
             }
         }
@@ -235,7 +239,7 @@ namespace ThreadZero
                 if (wheel != null)
                 {
                     float ws = p.wheelSize * bh, wx = left + p.wheelU * bw, wy = top + p.wheelV * bh;
-                    if (p.hubR > 0) Ellipse(wx, wy, p.hubR * bh, p.hubR * bh, new Color(.2f, .24f, .22f, 1));   // 盖住原图上画死的轴座
+                    if (p.hubR > 0) Ellipse(wx, wy, p.hubR * bh, p.hubR * bh, Daylight ? new Color(.44f, .5f, .58f, 1) : new Color(.2f, .24f, .22f, 1));   // 盖住原图上画死的轴座（白天的浅色水泵上用钢灰色）
                     Rect wr = Ui.R(wx - ws / 2, wy - ws / 2, ws, ws);
                     Matrix4x4 m = GUI.matrix;
                     GUIUtility.RotateAroundPivot(time * p.wheelSpeed + n * 37, wr.center);
@@ -265,12 +269,12 @@ namespace ThreadZero
                     float y0 = Mathf.Max(0, k), y1 = Mathf.Min(span, k + len);
                     if (y1 <= y0) continue;
                     float lx = left + (.06f + .88f * Hash(seed)) * width;
-                    Box(lx, top + y0, 2 + 2 * Hash(seed + 4), y1 - y0, new Color(.74f, .9f, .84f, .22f + .14f * Hash(seed + 5)));
+                    Box(lx, top + y0, 2 + 2 * Hash(seed + 4), y1 - y0, Daylight ? new Color(1f, 1f, 1f, .3f + .16f * Hash(seed + 5)) : new Color(.74f, .9f, .84f, .22f + .14f * Hash(seed + 5)));
                 }
                 for (int j = 0; j < 4; j++)
                 {   // 水花：小扁圆往上冒、变大、变淡
                     float q = Mathf.Repeat(time * 1.6f + j * .27f + Hash(i * 5 + j), 1f), ex = left + width * (.15f + .23f * j);
-                    Ellipse(ex, top + span - 2 - 10 * q, 5 + 7 * q, 2.5f + 2 * q, new Color(.8f, .93f, .88f, .3f * (1 - q)));
+                    Ellipse(ex, top + span - 2 - 10 * q, 5 + 7 * q, 2.5f + 2 * q, Daylight ? new Color(1f, 1f, 1f, .45f * (1 - q)) : new Color(.8f, .93f, .88f, .3f * (1 - q)));
                 }
             }
         }
@@ -297,6 +301,7 @@ namespace ThreadZero
             if (ww <= 0 || wh <= 0) return;
             const float walk = 3.2f;
             Color c = new Color(.17f, .09f, .05f, .62f);   // 隔着玻璃的暖色暗影，不用纯黑（纯黑像界面上的头像图标）
+            if (Daylight) c = new Color(.2f, .27f, .4f, .32f);   // v0.33 白天：屋里比外面暗，人影是淡淡的蓝灰色
             Spots(w.u0, W, scroll, ww);
             for (int s = 0; s < spots.Count; s++)
             {
@@ -322,7 +327,7 @@ namespace ThreadZero
         {
             float bottom = y + r.v1 * h, slope = Mathf.Tan(r.angle * Mathf.Deg2Rad), len = Mathf.Max(4, r.len), span = bottom - y + len;
             if (span <= len) return;
-            Color c = new Color(.78f, .86f, .92f, r.alpha);
+            Color c = Daylight ? new Color(1f, 1f, 1f, Mathf.Min(1, r.alpha * 1.5f)) : new Color(.78f, .86f, .92f, r.alpha);   // v0.33 白天：太阳雨，亮白的细丝
             for (int d = 0; d < r.count; d++)
             {
                 int seed = i * 977 + d * 29;

@@ -1,0 +1,37 @@
+# 11-24 v0.29 新界面皮肤：整备页（GameAppLoadoutV2.cs）、收藏卡和技能说明（GameAppSkinCards.cs）、F4 切换（GameApp.cs）
+战力§戦力§Power§전투력
+空位§空き§Empty§빈 칸
+芯片 · 改装§チップ・改造§Chips · Mods§칩 · 개조
+去工坊\n装备台§工房の\n装備台へ§Workshop\nGear Bench§공방\n장비대로
+清空§クリア§Clear§초기화
+技能§スキル§Skill§스킬
+固定效果§固定効果§Fixed effect§고정 효과
+re:每 (\d+) 次普攻发动§通常攻撃{1}回ごとに発動§Every {1} basic attacks§일반 공격 {1}회마다 발동
+re:冷却 ([\d.]+) 秒§クールダウン {1}秒§Cooldown {1}s§재사용 대기 {1}초
+re:每次出手 (\d+)% 概率发动§攻撃ごとに{1}%で発動§{1}% chance per attack§공격마다 {1}% 확률로 발동
+re:(\d+) 段§{1}ヒット§{1}-hit§{1}타
+re:弹跳 (\d+) 次§{1}回バウンド§Bounces ×{1}§{1}회 튕김
+每段穿透§全段貫通§Every hit pierces§모든 타격 관통
+末段穿透§最終段が貫通§Last hit pierces§마지막 타격 관통
+范围伤害§範囲ダメージ§Area damage§범위 피해
+击退§ノックバック§Knockback§넉백
+re:合计 (\d+)% 攻击§合計 攻撃力の{1}%§{1}% Attack total§총 공격력의 {1}%
+界面：新版皮肤（F4 切回旧版）§UI：新デザイン（F4で旧デザインに戻す）§UI: new skin (F4 for the old layout)§UI: 새 스킨 (F4로 이전 화면)
+界面：旧版（F4 切到新版皮肤）§UI：旧デザイン（F4で新デザイン）§UI: old layout (F4 for the new skin)§UI: 이전 화면 (F4로 새 스킨)
+装备鉴定单§装備鑑定書§Inspection sheet§장비 감정서
+# 11-24 v0.29 衣柜新皮肤（GameAppWardrobeV2.cs）
+定向回收订单§狙って回収・指令書§Targeted Recovery Order§목표 회수 주문서
+保底进度§確定までの進み§Guarantee progress§확정 진행도
+称号§称号§Titles§칭호
+re:套装 · (.+)（(\d+) / 5）§セット・{1}（{2} / 5）§Set · {1} ({2} / 5)§세트 · {1} ({2} / 5)
+# 产地（Catalog.SourceShort / SourceStages）：旧版衣柜在日 / 英 / 韩里也只翻了一半，这里补上整句模板（更具体的写在前面）
+套装§セット§Set§세트
+re:未收藏 · (.+)§未収集・{1}§Not collected · {1}§미수집 · {1}
+re:产地 · (.+)§入手場所・{1}§Source · {1}§획득처 · {1}
+re:深网第 (\d+) 层§深網 {1} 層§Deep Net F{1}§딥넷 {1}층
+re:(\d+)-7 首领必掉§{1}-7 ボス確定ドロップ§{1}-7 boss guaranteed§{1}-7 보스 확정 드롭
+re:第(.)章全关§第{1}章 全ステージ§All Chapter {1} stages§{1}장 전 스테이지
+re:零号深网第 (\d+) 层 · 限定§零号深網 {1} 層・限定§Deep Net Zero F{1} · Exclusive§제로 딥넷 {1}층 · 한정
+re:(.+) · 第(.)章（(\d+)-7 首领必掉）§{1}・第{2}章（{3}-7 ボス確定）§{1} · Chapter {2} ({3}-7 boss guaranteed)§{1} · {2}장 ({3}-7 보스 확정)
+re:(.+) · (\d+)-7 首领必掉§{1}・{2}-7 ボス確定§{1} · {2}-7 boss guaranteed§{1} · {2}-7 보스 확정
+re:(.+) · 零号深网§{1}・零号深網§{1} · Deep Net Zero§{1} · 제로 딥넷

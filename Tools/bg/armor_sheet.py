@@ -5,7 +5,7 @@
 #   图标：  python3 armor_sheet.py icons <出图> <id1> … <id5>          头部单品图（不带人头），按空白缝切开，各存 384×384 的 icon.png
 import sys, os, json, numpy as np
 from PIL import Image
-ROOT = os.path.expanduser('~/mnt/THREAD-ZERO/'); ART = ROOT + 'ThreadZero/Assets/Resources/Art/V13/'
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')) + '/'; ART = ROOT + 'ThreadZero/Assets/Resources/Art/V13/'
 W, H, CW = 2752, 1536, 550
 #        左 上 右 下 留白（部件像素）, 放大
 SPEC = {'head': (60, 70, 60, 50, 1.18), 'torso': (60, 30, 60, 130, 1.5), 'arm': (40, 30, 40, 50, 2.5), 'arm_far': (30, 30, 30, 30, 3.0),

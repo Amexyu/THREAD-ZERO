@@ -36,13 +36,14 @@ namespace ThreadZero
             bool nearCombat = combat.HeroInRange || combat.EnemyInRange;
             float hit = moving || !nearCombat ? 0 : combat.hitFlash, dash = moving || !nearCombat ? 0 : combat.dashFlash;
 
-            Ui.Fill(StageX, StageY, StageW, StageH, deep ? Ui.Hex(0xE9EAE5) : Ui.Stage);
+            if (bareStage != 3) Ui.Fill(StageX, StageY, StageW, StageH, deep ? Ui.Hex(0xE9EAE5) : Ui.Stage);   // 11-24 透明挂机条不铺底色
             Ui.BeginClip(StageX, StageY, StageW, StageH, 0);
-            { Impact.Scale = model.state.shakeMode == 0 ? 1 : model.state.shakeMode == 1 ? .5f : 0; Vector2 q = Impact.Offset(clock); Ui.Nudge(q.x, q.y); }   // v0.20 震屏：舞台里的东西整体抖，界面不抖
-            float camZoom = LayeredRigView.SkillZoom; bool zoomed = Mathf.Abs(camZoom - 1) > .002f;   // v0.20 技能镜头推近（用上一帧的值）
+            { Impact.Scale = compactView ? 0 : model.state.shakeMode == 0 ? 1 : model.state.shakeMode == 1 ? .5f : 0; Vector2 q = Impact.Offset(clock); Ui.Nudge(q.x, q.y); }   // 11-24 挂机条里不震（用户：进了透明条就默认不开）   // v0.20 震屏：舞台里的东西整体抖，界面不抖
+            float camZoom = LayeredRigView.SkillZoom; bool zoomed = !compactView && Mathf.Abs(camZoom - 1) > .002f;   // 挂机条里技能也不推镜头（整条一缩一放像在抖）   // v0.20 技能镜头推近（用上一帧的值）
             if (zoomed) Ui.ZoomBegin(lastHeroFeetX, GroundY - 100, camZoom);
             Backdrop(region, district, deep);
             TransitionUnder();
+            Ui.OnBright = StageFx.Daylight;   // v0.33 亮色背景（晴天涂鸦）：舞台上带投影的字改成「白字 + 深蓝描边」，画完舞台再关
 
             // v0.14 群怪：每只怪各自的世界坐标 → 屏幕坐标。depth 让怪群前后错开、互相重叠。
             Enemy target = combat.Target;
@@ -163,20 +164,21 @@ namespace ThreadZero
                 float hp01 = Mathf.Clamp01(combat.health / Mathf.Max(1, stats.health));
                 SkillDef skill = combat.EquippedSkill;
                 int chargeMax = skill != null && skill.trigger == SkillTrigger.EveryNAttacks ? skill.attacks : 0;
-                HudBars.Hero(heroFeetX, GroundY + rise - 224, hp01, HudBars.Ghost(-1, hp01, clock), combat.SkillCharge, chargeMax,
+                float hr = LayeredRigView.HeadRise, lift = (hr + Mathf.Min(hr, 11)) * LayeredRigView.PixelsPerUnit;   // v0.31 高帽子（路锥 / 扭蛋帽）：血条跟着往上挪；再多留最多 11 单位，走路上下颠时帽顶也不钻进血条
+                HudBars.Hero(heroFeetX, GroundY + rise - 224 - lift, hp01, HudBars.Ghost(-1, hp01, clock), combat.SkillCharge, chargeMax,
                     skill != null ? combat.SkillReadiness : 0, combat.health, stats.health, clock, combat.shield / Mathf.Max(1, stats.health));
-                SkillCallout(heroFeetX, GroundY + rise - 262);
+                SkillCallout(heroFeetX, GroundY + rise - 262 - lift);
                 if (combat.JamLeft > 0)
                 {   // 第三章首领的断讯脉冲：头顶挂一个闪烁的标签，提醒现在出手变慢了
                     float a = .65f + .35f * Mathf.Abs(Mathf.Sin(clock * 9));
-                    Ui.Fill(heroFeetX - 80, GroundY + rise - 300, 160, 26, Ui.Alpha(Ui.Ink, .85f * a));
-                    Ui.Text(heroFeetX - 80, GroundY + rise - 300, 160, 26, "断讯 · 出手变慢 " + combat.JamLeft.ToString("F1"), 13, Ui.Alpha(Ui.Orange, a), TextAnchor.MiddleCenter, true);
+                    Ui.Fill(heroFeetX - 80, GroundY + rise - 300 - lift, 160, 26, Ui.Alpha(Ui.Ink, .85f * a));
+                    Ui.Text(heroFeetX - 80, GroundY + rise - 300 - lift, 160, 26, "断讯 · 出手变慢 " + combat.JamLeft.ToString("F1"), 13, Ui.Alpha(Ui.Orange, a), TextAnchor.MiddleCenter, true);
                 }
                 if (combat.MirrorLeft > 0)
                 {   // 第四章首领的镜面反射：打它会反伤
                     float a = .65f + .35f * Mathf.Abs(Mathf.Sin(clock * 7));
-                    Ui.Fill(heroFeetX - 80, GroundY + rise - 330, 160, 26, Ui.Alpha(Ui.Ink, .85f * a));
-                    Ui.Text(heroFeetX - 80, GroundY + rise - 330, 160, 26, "镜面 · 打它会反伤 " + combat.MirrorLeft.ToString("F1"), 13, Ui.Alpha(new Color(.75f, .95f, 1f), a), TextAnchor.MiddleCenter, true);
+                    Ui.Fill(heroFeetX - 80, GroundY + rise - 330 - lift, 160, 26, Ui.Alpha(Ui.Ink, .85f * a));
+                    Ui.Text(heroFeetX - 80, GroundY + rise - 330 - lift, 160, 26, "镜面 · 打它会反伤 " + combat.MirrorLeft.ToString("F1"), 13, Ui.Alpha(new Color(.75f, .95f, 1f), a), TextAnchor.MiddleCenter, true);
                 }
             }
 
@@ -203,7 +205,7 @@ namespace ThreadZero
             DrawFloaters(heroFeetX);
             if (zoomed) Ui.ZoomEnd();
             Ui.EndClip();
-            if (compactView) { StageTransitionOverlay(); return; }   // 11-24 挂机小窗：只要舞台，界面由 GameAppCompact 画
+            if (compactView) { StageTransitionOverlay(); Ui.OnBright = false; return; }   // 11-24 挂机条：只要舞台，界面由 GameAppCompact 画
 
             // 首领：屏幕上方长血条。其余信息在纯净模式只留四角细字，终端滑出时看完整界面。
             Enemy bossUnit = combat.BossEnemy;
@@ -223,6 +225,7 @@ namespace ThreadZero
                 Ui.Text(StageX + StageW / 2 - 180, StageY + 212, 380, 24, note, 13, Ui.MuteOnInk, TextAnchor.MiddleLeft);
             }
             StageTransitionOverlay();
+            Ui.OnBright = false;
             // 终端界面：上下两条实心带滑入，盖在画面上（画面本身不动）。
             if (hudShow > .001f)
             {
@@ -297,7 +300,7 @@ namespace ThreadZero
         // 画在背景之上、角色之下：旧场景的残影。
         private void TransitionUnder()
         {
-            if (transitionLeft <= 0 || !transitionSwapped) return;
+            if (transitionLeft <= 0 || !transitionSwapped || bareStage == 3) return;   // 11-24 透明挂机条：不画旧关卡的背景
             int oldScene = SceneOf(transitionFrom);
             float p = TransitionP;
             if (transitionKind == TransPush)
@@ -326,7 +329,7 @@ namespace ThreadZero
             StageTag();
             AscensionBanner(); AscensionStageBanner(); ShardTicker();
             AnomalyOffer();
-            if (transitionLeft <= 0) return;
+            if (transitionLeft <= 0 || bareStage == 3) return;   // 11-24 透明挂机条：闸门 / 织线带这种整块的转场不画（会糊住桌面）
             float p = TransitionP;
             if (transitionKind == TransPush)
             {
@@ -433,6 +436,7 @@ namespace ThreadZero
         // 正式背景图到位后替换这里，滚动系数保持不变。
         private void Backdrop(int region, int district, bool deep)
         {
+            if (bareStage > 0) { if (bareStage < 3) Ui.Fill(StageX, StageY, StageW, StageH, bareStage == 1 ? Color.black : Color.white); return; }   // 11-24 透明挂机：不画背景（1 / 2 填黑 / 白，抠样图用）
             if (StageArt.Background(SceneOf(CurrentCode), worldX, StageW, StageH, GroundY)) return;   // v0.16 正式分层背景
             float far = worldX * .25f, mid = worldX * .6f;
             int firstBlock = Mathf.FloorToInt(far / 190);

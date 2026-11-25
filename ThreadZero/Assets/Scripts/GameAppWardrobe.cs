@@ -7,6 +7,7 @@ namespace ThreadZero
     {
         private void WardrobePage()
         {
+            if (UiV2) { WardrobePageV2(); return; }   // 11-24 v0.29 新皮肤（F4 切换）
             int owned = model.state.collection.Count, total = Catalog.All.Length;
 
             // 左：穿搭预览与收集进度

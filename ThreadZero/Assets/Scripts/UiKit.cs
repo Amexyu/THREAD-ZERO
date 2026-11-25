@@ -17,6 +17,12 @@ namespace ThreadZero
 
         public static float K = 1;
         public static bool Blocked;
+        /// 11-24 画的位置要不要对齐整像素：平时对齐（细线不发虚）；挂机条缩得很小时关掉，不然走动一跳一跳的。
+        public static bool Snap = true;
+        /// v0.33 舞台是亮色背景（晴天涂鸦）时由行动页打开：ShadowText 的投影换成一圈描边（浅色字配深蓝描边，深色字配白描边），
+        /// 关卡名、波次、伤害数字、血量数字在浅色墙上也看得清。每帧 Begin 时关掉，只在画舞台那一段打开。
+        public static bool OnBright;
+        private static readonly Color BrightOutline = Hex(0x1B2140);
         private static Vector2 origin;
         private static readonly Stack<Vector2> origins = new Stack<Vector2>();
         private static readonly Dictionary<int, GUIStyle> styles = new Dictionary<int, GUIStyle>();
@@ -33,7 +39,7 @@ namespace ThreadZero
             K = Mathf.Max(.25f, Mathf.Min(Screen.width / 1600f, Screen.height / 900f));
             origin = new Vector2(Mathf.Round((Screen.width - 1600 * K) / 2), Mathf.Round((Screen.height - 900 * K) / 2));
             origins.Clear(); clipOffsets.Clear(); clipOffset = Vector2.zero; views.Clear();
-            Blocked = false;
+            Blocked = false; OnBright = false;
             if (Mathf.Abs(styleScale - K) > .0001f) { styles.Clear(); styleScale = K; }
             if (textFont == null || numberFont == null) { LoadFonts(); styles.Clear(); }
         }
@@ -71,8 +77,8 @@ namespace ThreadZero
 
         public static Rect R(float x, float y, float w, float h)
         {
-            float x0 = Mathf.Round(origin.x + x * K), y0 = Mathf.Round(origin.y + y * K);
-            float x1 = Mathf.Round(origin.x + (x + w) * K), y1 = Mathf.Round(origin.y + (y + h) * K);
+            float x0 = origin.x + x * K, y0 = origin.y + y * K, x1 = origin.x + (x + w) * K, y1 = origin.y + (y + h) * K;
+            if (Snap) { x0 = Mathf.Round(x0); y0 = Mathf.Round(y0); x1 = Mathf.Round(x1); y1 = Mathf.Round(y1); }
             if (w > 0 && x1 - x0 < 1) x1 = x0 + 1;
             if (h > 0 && y1 - y0 < 1) y1 = y0 + 1;
             return new Rect(x0, y0, x1 - x0, y1 - y0);
@@ -221,11 +227,32 @@ namespace ThreadZero
             TextAnchor anchor = TextAnchor.UpperLeft, bool bold = false, bool numeric = false, float strength = .6f)
         {
             if (string.IsNullOrEmpty(value)) return;
+            if (OnBright) { OutlineText(x, y, w, h, value, size, color, anchor, bold, numeric, strength); return; }
             float d = Mathf.Max(1.1f, size * .045f);
             Color shade = new Color(.02f, .02f, .03f, color.a * strength);
             Text(x + d, y + d, w, h, value, size, shade, anchor, bold, numeric);
             if (size >= 24) Text(x - d * .5f, y - d * .5f, w, h, value, size, Alpha(shade, shade.a * .45f), anchor, bold, numeric);   // 大字左上再补一圈淡的，读起来像描边
             Text(x, y, w, h, value, size, color, anchor, bold, numeric);
+        }
+        /// 描边字：在字的四周（小字 4 个方向、大字 8 个方向）各画一遍描边色，再画字。描边色按字的实际颜色（换配色以后的）挑：
+        /// 浅色字用深蓝，深色字用白色。描边稍微往下偏一点，像贴纸的厚度。
+        public static void OutlineText(float x, float y, float w, float h, string value, float size, Color color,
+            TextAnchor anchor = TextAnchor.UpperLeft, bool bold = false, bool numeric = false, float strength = .6f)
+        {
+            if (string.IsNullOrEmpty(value)) return;
+            Color shown = UiTheme.Map(color, UiTheme.Role.Text);
+            bool lightText = shown.r * .3f + shown.g * .59f + shown.b * .11f > .5f;
+            Color line = lightText ? BrightOutline : new Color(1, 1, 1);
+            line.a = color.a * Mathf.Clamp01(strength + .35f);
+            float o = Mathf.Max(1.3f, size * .06f), drop = o * .35f;
+            int n = size >= 24 ? 8 : 4;
+            for (int i = 0; i < n; i++)
+            {
+                float an = (n == 4 ? Mathf.PI / 4 : 0) + i * Mathf.PI * 2 / n;
+                Text(x + Mathf.Cos(an) * o, y + Mathf.Sin(an) * o + drop, w, h, value, size, line, anchor, bold, numeric);
+            }
+            Color fill = color; fill.a = Mathf.Min(1, color.a * 1.18f);   // 字本身稍微实一点，不让描边透出来发灰
+            Text(x, y, w, h, value, size, fill, anchor, bold, numeric);
         }
         public static float Width(string value, float size, bool bold = false, bool numeric = false)
         {

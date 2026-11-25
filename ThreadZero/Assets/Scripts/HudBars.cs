@@ -91,11 +91,10 @@ namespace ThreadZero
             // 血量数字：框右上
             string a = Mathf.Max(0, hpNow).ToString("F0"), b = " / " + hpMax.ToString("F0");
             float wb = Ui.Width(b, 11, false, true), wa = Ui.Width(a, 15, true, true);
-            Color shadow = Ui.Alpha(Color.black, .6f);
             float tx = x + W - 6 - wa - wb, ty = top - 17;
-            Ui.Text(tx + 1, ty + 1, wa + 4, 18, a, 15, shadow, TextAnchor.LowerLeft, true, true);
-            Ui.Text(tx, ty, wa + 4, 18, a, 15, hp01 < .3f ? Ui.Hex(0xFF8A6A) : Ui.Panel, TextAnchor.LowerLeft, true, true);
-            Ui.Text(tx + wa, ty, wb + 4, 17, b, 11, Ui.Alpha(Ui.Panel, .75f), TextAnchor.LowerLeft, false, true);
+            // v0.33 改用 ShadowText：暗色背景上和原来一样是 1 像素投影，亮色背景上自动换成深蓝描边
+            Ui.ShadowText(tx, ty, wa + 4, 18, a, 15, hp01 < .3f ? Ui.Hex(0xFF8A6A) : Ui.Panel, TextAnchor.LowerLeft, true, true);
+            Ui.ShadowText(tx + wa, ty, wb + 4, 17, b, 11, Ui.Alpha(Ui.Panel, .75f), TextAnchor.LowerLeft, false, true);
         }
 
         // ---------- 敌人：头顶细条；精英加粗带警示徽章 ----------
