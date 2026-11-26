@@ -23,14 +23,14 @@ namespace ThreadZero
         }
         private static float Lin(float t, float[] k) { if (t <= k[0]) return k[1]; for (int i = 0; i + 3 < k.Length; i += 2) if (t <= k[i + 2]) return k[i + 1] + (k[i + 3] - k[i + 1]) * (t - k[i]) / (k[i + 2] - k[i]); return k[k.Length - 1]; }
 
-        [Serializable] public class PartEntry { public string file; public float[] pivot; public float[] hand; public float[] tip; public float[] eye; }
-        [Serializable] public class PartSet { public PartEntry head, torso, arm, arm_far, hand, hand_far, leg_near, leg_far, pack, weapon; }
+        [Serializable] public class PartEntry { public string file; public float[] pivot; public float[] hand; public float[] tip; public float[] eye; public float[] grip; public float grip_angle = -999; }   // grip：rig 3 拳头里握孔的中心 / 武器握柄的中点；grip_angle：武器从拳头穿出去的角度（不填按武器类别，匕首 80°、枪 10°）
+        [Serializable] public class PartSet { public PartEntry head, torso, arm, arm_far, hand, hand_far, leg_near, leg_far, pack, weapon, foot, foot_far; }   // foot / foot_far：rig 3（Kid3）的鞋
         [Serializable] public class RigOffsets { public float[] hip, head, pack, leg_near, leg_far; }
-        [Serializable] public class Manifest { public float scale = 4; public string weapon_class; public float[] shoulder, shoulderF; public PartSet parts; public RigOffsets rig; }
+        [Serializable] public class Manifest { public float scale = 4; public string weapon_class; public float[] shoulder, shoulderF; public PartSet parts; public RigOffsets rig; public float far_shade = .62f; public int rig_version; public float bar_lift; public Rig3Entry rig3; }   // rig3：11-26 卡44 整条腿 / 袖子网格变形 + 跑步表（LayeredRigViewKid3.cs）   // bar_lift：血条额外往上挪多少单位（新主角的帽子比旧初始头高）   // far_shade：远侧手臂 / 手压暗多少；rig_version 2 = 11-26 新主角（约 3 头身）
         // 每件装备外观一个文件夹：Resources/Art/V13/Parts/<外观ID>/part.json + 图。只写这件装备负责的部件：
         // 头部 head；外套 torso + arm（可带 shoulder/shoulderF）；背部 pack；武器 weapon（带 tip，weapon_class = dagger/gun/heavy）。
-        [Serializable] public class LookFile { public float scale = 4; public string weapon_class, chain; public float[] shoulder, shoulderF, pack_off; public PartEntry head, torso, arm, arm_far, pack, weapon, leg_near, leg_far, hook; }   // chain：锁链类程序画的那段链子的样子（rust 铁链 / fiber 光纤 / cable 线缆，默认铁链）
-        private sealed class Look { public Part head, torso, arm, armFar, pack, weapon, legN, legF, hook; public bool hasShoulder, hasPackOff, hasEye; public Vector2 eye; public Vector2 sh, shF, tip, handPt, handPtF, packOff; public string cls, chain; }
+        [Serializable] public class LookFile { public float scale = 4; public string weapon_class, chain; public float[] shoulder, shoulderF, pack_off; public PartEntry head, torso, arm, arm_far, pack, weapon, leg_near, leg_far, hook, paint, hook_paint; }   // 11-26 paint / hook_paint：上色工具「漆」的那一层（白色），游戏里按漆色染   // chain：锁链类程序画的那段链子的样子（rust 铁链 / fiber 光纤 / cable 线缆，默认铁链）
+        private sealed class Look { public Part head, torso, arm, armFar, pack, weapon, legN, legF, hook, paint, hookPaint; public bool hasShoulder, hasPackOff, hasEye; public Vector2 eye; public Vector2 sh, shF, tip, handPt, handPtF, packOff, grip; public float gripAngle = -999; public string cls, chain; }
 
         private sealed class Part { public Texture2D tex; public Vector2 pivot, size; }
 
@@ -53,7 +53,18 @@ namespace ThreadZero
         private static Part FarHand { get { return mechOn && mechHandFar != null ? mechHandFar : handFar ?? hand; } }
         private static bool FarHandMirrored { get { return !(mechOn && mechHandFar != null) && handFar == null; } }
 
-        private const string Folder = "Art/V13/Starter/", PartsFolder = "Art/V13/Parts/";
+        private const string StarterFolder = "Art/V13/Starter/", KidFolder = "Art/V17/Kid/", PartsFolder = "Art/V13/Parts/";
+        /// 11-26 新主角「喷漆小子」（漫画涂鸦风，约 3 头身，Gemini 卡40）：Resources/Art/V17/Kid 有部件就用它；false 回到旧的初始外观。
+        public static bool UseKid = true;
+        /// 11-26 比例试验：""（默认）/ "_b"（正面身体收窄、腿拉长）/ "_c"（侧身身体）→ Resources/Art/V17/Kid、Kid_b、Kid_c。
+        public static string KidVariant = "";
+        private static string Folder = StarterFolder;
+        /// 新主角的身体比例和旧装备外观对不上：旧的头 / 外套 / 背包 / 下装外观先不画（装备按新世界观重画以后再接回来），武器照旧。
+        public static bool Kid { get; private set; }
+        private static float farShade = .62f, barLift;
+        private static Vector2 starterEye = new Vector2(17, -27);
+        /// 换了主角部件以后重新读（测试开关用）。
+        public static void Reload() { loaded = false; failed = false; looks.Clear(); missingReported.Clear(); }
         private static Look starter;
         private static readonly Dictionary<string, Look> looks = new Dictionary<string, Look>();
         private static readonly HashSet<string> missingReported = new HashSet<string>();
@@ -80,7 +91,24 @@ namespace ThreadZero
         private static void ResetCache() { loaded = false; failed = false; looks.Clear(); missingReported.Clear(); }
         private static Manifest m;
         private static Part handFar;   // 远侧手：单独的图（没有就用近侧手镜像压暗）
-        private static Part hookPart;
+        private static Part hookPart, paintPart, hookPaintPart;
+        /// 11-26 上色工具的漆色：按手上武器的效果（颜色 = 属性：红 收尾、白 护盾、蓝 推进、黄 电弧、橙 无人机、绿 汲取、紫 标记）。
+        /// PaintOverride 的 a > 0 时用它（测试截图用）。
+        public static Color PaintColor = new Color(.93f, .27f, .2f), PaintOverride;
+        public static Color PaintOf(Effect e)
+        {
+            switch (e)
+            {
+                case Effect.Guard: return new Color(.97f, .97f, .94f);
+                case Effect.Thruster: return new Color(.2f, .55f, .96f);
+                case Effect.Arc: return new Color(1f, .84f, .14f);
+                case Effect.Drone: return new Color(1f, .55f, .14f);
+                case Effect.Leech: return new Color(.3f, .84f, .36f);
+                case Effect.Mark: return new Color(.66f, .36f, .92f);
+                default: return new Color(.93f, .27f, .2f);   // 红：收尾，也是开局那罐漆
+            }
+        }
+        private static Color Paint(Color tint) { Color c = PaintOverride.a > 0 ? PaintOverride : PaintColor; return new Color(c.r * tint.r, c.g * tint.g, c.b * tint.b, tint.a); }
         private static string chainStyle;   // v0.20 卡27：光纤钩索 fiber、线缆鞭 cable，其余铁链
         private static Part head, torso, arm, armFar, hand, legN, legF, pack, weapon;   // armFar：远侧手臂单独的图（没有就用近侧镜像压暗）
         private static Vector2 starterPackOff;
@@ -110,7 +138,8 @@ namespace ThreadZero
                 var f = JsonUtility.FromJson<LookFile>(json.text);
                 string folder = PartsFolder + id + "/";
                 l = new Look { head = Load(folder, f.head, f.scale), torso = Load(folder, f.torso, f.scale), arm = Load(folder, f.arm, f.scale), armFar = Load(folder, f.arm_far, f.scale), legN = Load(folder, f.leg_near, f.scale), legF = Load(folder, f.leg_far, f.scale), hook = Load(folder, f.hook, f.scale),
-                               pack = Load(folder, f.pack, f.scale), weapon = Load(folder, f.weapon, f.scale), cls = f.weapon_class, chain = f.chain };
+                               pack = Load(folder, f.pack, f.scale), weapon = Load(folder, f.weapon, f.scale), cls = f.weapon_class, chain = f.chain,
+                               paint = Load(folder, f.paint, f.scale), hookPaint = Load(folder, f.hook_paint, f.scale) };
                 l.hasShoulder = f.shoulder != null && f.shoulder.Length >= 2;
                 l.hasEye = f.head != null && f.head.eye != null && f.head.eye.Length >= 2; if (l.hasEye) l.eye = V(f.head.eye, Vector2.zero);
                 l.hasPackOff = f.pack_off != null && f.pack_off.Length >= 2; if (l.hasPackOff) l.packOff = V(f.pack_off, Vector2.zero);
@@ -118,6 +147,7 @@ namespace ThreadZero
                 if (l.arm != null) l.handPt = f.arm.hand != null ? V(f.arm.hand, Vector2.zero) - l.arm.pivot : new Vector2(0, l.arm.size.y - 11 - l.arm.pivot.y);
                 if (l.armFar != null) l.handPtF = f.arm_far.hand != null ? V(f.arm_far.hand, Vector2.zero) - l.armFar.pivot : new Vector2(0, l.armFar.size.y - 11 - l.armFar.pivot.y);
                 if (l.weapon != null) l.tip = f.weapon.tip != null ? V(f.weapon.tip, Vector2.zero) - l.weapon.pivot : new Vector2(0, l.weapon.size.y - l.weapon.pivot.y);
+                if (l.weapon != null) { l.grip = f.weapon.grip != null && f.weapon.grip.Length >= 2 ? V(f.weapon.grip, Vector2.zero) - l.weapon.pivot : Vector2.zero; l.gripAngle = f.weapon.grip_angle; }   // rig 3 握法：没填就握在挂点上
             }
             else if (missingReported.Add(id)) Debug.Log("THREAD ZERO: no layered art for " + id + " yet (Resources/" + PartsFolder + id + "/part.json); using the starter part");
             looks[id] = l;
@@ -135,16 +165,16 @@ namespace ThreadZero
         private static void ApplyLook(GameModel model)
         {
             bool bareHead = string.IsNullOrEmpty(TestLook[(int)Slot.Head]) && model.Equipped(Slot.Head) == null && string.IsNullOrEmpty(model.state.appearance[(int)Slot.Head]);
-            Look h = bareHead ? null : LoadLook(LookId(model, Slot.Head));
-            Look c = LoadLook(LookId(model, Slot.Coat));
-            Look b = LoadLook(LookId(model, Slot.Back));
+            Look h = bareHead || Kid ? null : LoadLook(LookId(model, Slot.Head));   // 11-26 新主角：旧装备外观先不画（只留武器）
+            Look c = Kid ? null : LoadLook(LookId(model, Slot.Coat));
+            Look b = Kid ? null : LoadLook(LookId(model, Slot.Back));
             Look w = LoadLook(LookId(model, Slot.Weapon));
-            Look lg = LoadLook(LookId(model, Slot.Legs));   // v0.16 下装：近侧腿 + 远侧腿，缺图用初始裤子
+            Look lg = Kid ? null : LoadLook(LookId(model, Slot.Legs));   // v0.16 下装：近侧腿 + 远侧腿，缺图用初始裤子
             bool pants = lg != null && lg.legN != null && lg.legF != null;
             legN = pants ? lg.legN : starter.legN; legF = pants ? lg.legF : starter.legF;
             head = h != null && h.head != null ? h.head : starter.head;
-            HeadRise = Mathf.Max(0, head.pivot.y - starter.head.pivot.y);
-            EyeInHead = h != null && h.head != null && h.hasEye ? h.eye : DefaultEye;
+            HeadRise = barLift + Mathf.Max(0, head.pivot.y - starter.head.pivot.y);
+            EyeInHead = h != null && h.head != null && h.hasEye ? h.eye : starterEye;
             bool coat = c != null && c.torso != null;
             torso = coat ? c.torso : starter.torso;
             arm = coat && c.arm != null ? c.arm : starter.arm;
@@ -156,18 +186,27 @@ namespace ThreadZero
             pack = b != null && b.pack != null ? b.pack : starter.pack;
             bool wpn = w != null && w.weapon != null;
             weapon = wpn ? w.weapon : starter.weapon; tipPt = wpn ? w.tip : starter.tip;
+            weaponGrip3 = wpn ? w.grip : starterWeaponGrip3; weaponGripAngle = wpn ? w.gripAngle : starterGripAngle;   // rig 3：握柄中点相对图上挂点的偏移、武器从拳头穿出去的角度
             hookPart = wpn ? w.hook : null;   // 锁链类武器：链子程序画，末端吊钩单独一张图
+            paintPart = wpn ? w.paint : null; hookPaintPart = wpn ? w.hookPaint : null;
+            Item wi = model.Equipped(Slot.Weapon); EquipmentBase wb = wi != null ? Catalog.Find(wi.baseId) : null;
+            PaintColor = PaintOf(wb != null ? wb.effect : Effect.Execute);
             chainStyle = wpn ? w.chain : null;
             weaponClass = WeaponClass(model);
         }
         public static bool Ready()
         {
             if (loaded) return !failed;
-            loaded = true;
+            loaded = true; K3 = false;
+            string kidFolder = KidFolder.TrimEnd('/') + KidVariant + "/";
+            if (Resources.Load<TextAsset>(kidFolder + "parts") == null) kidFolder = KidFolder;
+            Folder = UseKid && Resources.Load<TextAsset>(kidFolder + "parts") != null ? kidFolder : StarterFolder;
             var json = Resources.Load<TextAsset>(Folder + "parts");
             if (json == null) { failed = true; Debug.LogError("THREAD ZERO: missing Resources/" + Folder + "parts.json"); return false; }
             m = JsonUtility.FromJson<Manifest>(json.text);
             if (m.scale <= 0) m.scale = 4;
+            Kid = m.rig_version >= 2; farShade = m.far_shade > 0 ? m.far_shade : .62f; barLift = m.bar_lift;
+            starterEye = m.parts.head != null && m.parts.head.eye != null && m.parts.head.eye.Length >= 2 ? new Vector2(m.parts.head.eye[0], m.parts.head.eye[1]) : DefaultEye;
             head = Load(m.parts.head); torso = Load(m.parts.torso); arm = Load(m.parts.arm); hand = Load(m.parts.hand);
             legN = Load(m.parts.leg_near); legF = Load(m.parts.leg_far); pack = Load(m.parts.pack); weapon = Load(m.parts.weapon);
             failed = head == null || torso == null || arm == null || hand == null || legN == null || legF == null || pack == null || weapon == null;
@@ -182,12 +221,13 @@ namespace ThreadZero
             armFar = Load(m.parts.arm_far); handFar = Load(m.parts.hand_far);
             handPtF = armFar == null ? handPt : m.parts.arm_far.hand != null ? V(m.parts.arm_far.hand, Vector2.zero) - armFar.pivot : new Vector2(0, armFar.size.y - 11 - armFar.pivot.y);
             starter = new Look { legN = legN, legF = legF, armFar = armFar, handPtF = handPtF, head = head, torso = torso, arm = arm, pack = pack, weapon = weapon, sh = sh, shF = shF, tip = tipPt, handPt = handPt, cls = "dagger" };
-            Debug.Log("THREAD ZERO: V13 layered starter rig loaded");
+            K3 = m.rig_version >= 3 && m.rig3 != null && LoadK3();
+            Debug.Log("THREAD ZERO: layered rig loaded from " + Folder + (Kid ? " (kid)" : "") + (K3 ? " (rig3: skinned limbs" + (run3 != null ? " + run table" : "") + ")" : ""));
             return true;
         }
 
         // ---------- pose (identical numbers to rig.py) ----------
-        private struct Pose { public float dx, dy, sx, sy, tilt, lean, head, pack, A, Af, L, Lf, W, shx, spin, face, wx, wy, zoom, charge, shake, reach, hook; public bool fx, ghost, glint, hookOn; }
+        private struct Pose { public float dx, dy, sx, sy, tilt, lean, head, pack, A, Af, L, Lf, W, shx, spin, face, wx, wy, zoom, charge, shake, reach, hook, KN, KF, FN, FF, E, Ef, tw, shxF, g2d; public bool fx, ghost, glint, hookOn; }   // tw 髋转（近侧胯往前）、shxF 远侧肩前后：rig 3 攻击动作表用   // KN/KF 膝弯、FN/FF 鞋相对小腿、E/Ef 手肘弯：只有 rig 3 用
         private static float Sm(float x) { x = Mathf.Clamp01(x); return x * x * (3 - 2 * x); }
         private static float Kf(float t, float[] k)   // k = t0,v0,t1,v1,...
         {
@@ -492,7 +532,7 @@ namespace ThreadZero
         private static Matrix4x4 Rm(float a) { return Matrix4x4.Rotate(Quaternion.Euler(0, 0, -a)); }   // rig.py Rm(a)
         private static Matrix4x4 S(float x, float y) { return Matrix4x4.Scale(new Vector3(x, y, 1)); }
 
-        private struct Bones { public Matrix4x4 torso, head, pack, armN, armF, hand, handF, wpn, legN, legF; }
+        private struct Bones { public Matrix4x4 torso, head, pack, armN, armF, hand, handF, wpn, legN, legF, root, parN, parF, foreN, foreF, hipN, hipF, shinN, shinF, footN, footF; }   // root 起：rig 3 的前臂、小腿、鞋和它们的父骨
         private static Bones Build(Pose p)
         {
             var b = new Bones();
@@ -563,7 +603,7 @@ namespace ThreadZero
         private static Vector2 Tip(Bones b) { Vector3 v = b.wpn.MultiplyPoint3x4(new Vector3(tipPt.x, tipPt.y, 0)); return new Vector2(v.x, v.y); }
         private static Vector2 TipAt(Anim anim, float t)
         {
-            Vector3 v = Build(Compute(anim, t)).wpn.MultiplyPoint3x4(new Vector3(tipPt.x, tipPt.y, 0));
+            Vector3 v = PoseBones(anim, t).wpn.MultiplyPoint3x4(new Vector3(tipPt.x, tipPt.y, 0));
             return new Vector2(v.x, v.y);
         }
         // 义体臂：肩、肘、腕三个发光关节，沿手臂两条青绿「线」一明一暗地流动。
@@ -707,7 +747,7 @@ namespace ThreadZero
             Vector2 tan = end - ((1 - .9f) * (1 - .9f) * hand + 2 * .1f * .9f * ctrl + .81f * end); if (tan.sqrMagnitude < .0001f) tan = dir;
             float ang = Mathf.Atan2(-tan.x, tan.y) * Mathf.Rad2Deg;
             Matrix4x4 hm = T(end) * Matrix4x4.Rotate(Quaternion.Euler(0, 0, ang)) * Matrix4x4.Scale(new Vector3(HookScale, HookScale, 1));
-            GearEdge(hm, hookPart, tint); Blit(hm, hookPart, false, tint); GearSweep(hm, hookPart, tint);
+            GearEdge(hm, hookPart, tint); Blit(hm, hookPart, false, tint); if (hookPaintPart != null) Blit(hm, hookPaintPart, false, Paint(tint)); GearSweep(hm, hookPart, tint);
             hookM = hm; hookTip = new Vector2(0, hookPart.size.y - hookPart.pivot.y);
             Vector3 tip3 = hm.MultiplyPoint3x4(new Vector3(0, hookPart.size.y - hookPart.pivot.y, 0));
             return new Vector2(tip3.x, tip3.y);   // 吊钩尖端：当作「枪口 / 锤头」位置给特效用
@@ -817,16 +857,17 @@ namespace ThreadZero
             }
             ApplyLook(model); ReadGear(model);
             t = anim == Anim.Idle || anim == Anim.Walk ? t - Mathf.Floor(t) : Mathf.Clamp01(t);
-            Pose p = Compute(anim, t);
+            Pose p = K3 ? Blend3(anim, Compute3(anim, t)) : Compute(anim, t);
             SkillZoom = p.zoom; SkillCharge = p.charge;
             RootPos = new Vector2(feetX, feetY) + new Vector2(p.dx, p.dy) * PixelsPerUnit * heightScale;   // 脚底实际位置（落地扬尘用）
-            Bones b = Build(p);
+            Bones b = K3 ? Build3(p) : Build(p);
             // logical -> GUI point -> screen pixel (accounts for groups / GUI.matrix of the caller)
             Vector2 o = GUIUtility.GUIToScreenPoint(Ui.P(feetX, feetY));
             Vector2 o2 = GUIUtility.GUIToScreenPoint(Ui.P(feetX + 100, feetY));
             float unit = (o2.x - o.x) / 100f * PixelsPerUnit * heightScale;
             screenM = T(o) * S(unit, unit);
-            Color far = new Color(tint.r * .62f, tint.g * .62f, tint.b * .62f, tint.a);
+            if (K3) { LastGripPx = P(screenM * b.hand, handGrip3); LastFarHandPx = P(screenM * b.handF, Vector2.zero); }   // 测试姿势表用：握孔 / 远侧手腕在屏幕上的位置
+            Color far = new Color(tint.r * farShade, tint.g * farShade, tint.b * farShade, tint.a);
             // v0.16b 义体装在持械的近侧手臂上（远侧手臂大多藏在身体后面，看不出来）：冷钢色 + 青绿发光关节 + 线缆。
             bool mech = model != null && model.state.implants.Contains("arm_l");
             mechStage = model != null ? model.AscensionStage : 0; mechOn = mechStage >= 1; if (mechOn) LoadMechHands();
@@ -837,25 +878,34 @@ namespace ThreadZero
             if (p.ghost)                           // afterimages while dashing: orange, electric skills cyan
             {
                 Color gc = anim == Anim.ChainArc ? new Color(.45f, 1, .92f) : qWeapon >= 4 ? QualityVisual.Colors[qWeapon] : Orange;   // v0.20 机密起冲刺残影换成武器品质色
+                if (K3) { Ghost3(PoseBones(anim, Mathf.Max(0, t - .06f)), new Color(gc.r, gc.g, gc.b, .12f * tint.a)); Ghost3(PoseBones(anim, Mathf.Max(0, t - .03f)), new Color(gc.r, gc.g, gc.b, .22f * tint.a)); }
+                else
+                {
                 Ghost(Build(Compute(anim, Mathf.Max(0, t - .06f))), new Color(gc.r, gc.g, gc.b, .12f * tint.a));
                 Ghost(Build(Compute(anim, Mathf.Max(0, t - .03f))), new Color(gc.r, gc.g, gc.b, .22f * tint.a));
+                }
             }
             if (mechStage >= 4) Motes(b, tint);   // v0.20 飞升完成：身体后面往上飘的光点
             if (mechStage >= 2 && mechFins != null) Blit(b.pack * T(finsAt), mechStage >= 4 && mechFinsZero != null ? mechFinsZero : mechFins, false, tint);   // v0.20 飞升第二阶段：散热鳍画在背包后面，从背包左边露出来
             ArmorEdges(b, tint);   // 11-23 防具的品质光边：画在整个人后面，只露出轮廓外的一圈
-            Blit(b.pack, pack, false, tint); GearScan(b.pack, pack, false, qBack, tint);
-            Blit(b.legF, legF, false, tint); GearScan(b.legF, legF, false, qLegs, tint);
-            if (mechStage >= 4) Trace(b.legF, TraceLeg, .06f, .44f, new Color(1, 1, 1, tint.a * .55f));   // 远侧腿也有一道（压暗，被近侧腿挡住一半）
-            Blit(b.armF, armFar ?? arm, armFar == null, far);   // 远侧手臂：有单独的图就用（已经画成远侧，不镜像）；没有就近侧镜像压暗
-            GearScan(b.armF, armFar ?? arm, armFar == null, qCoat, far);
-            Blit(b.handF, FarHand, FarHandMirrored, far);
-            Blit(b.legN, legN, false, tint); GearScan(b.legN, legN, false, qLegs, tint);
-            if (mechStage >= 4) Trace(b.legN, TraceLeg, 0, .38f, tint);   // 腿上的光纹画在躯干前面，上端被外套盖住
+            if (!K3) { Blit(b.pack, pack, false, tint); GearScan(b.pack, pack, false, qBack, tint); }   // rig 3 的背包在 DrawBack3 里画（压在远侧手臂上面）
+            if (K3) DrawBack3(b, tint, far);   // rig 3：整条袖子 / 腿网格变形（关节没有硬线）
+            else
+            {
+                Blit(b.legF, legF, false, tint); GearScan(b.legF, legF, false, qLegs, tint);
+                if (mechStage >= 4) Trace(b.legF, TraceLeg, .06f, .44f, new Color(1, 1, 1, tint.a * .55f));   // 远侧腿也有一道（压暗，被近侧腿挡住一半）
+                Blit(b.armF, armFar ?? arm, armFar == null, far);   // 远侧手臂：有单独的图就用（已经画成远侧，不镜像）；没有就近侧镜像压暗
+                GearScan(b.armF, armFar ?? arm, armFar == null, qCoat, far);
+                Blit(b.handF, FarHand, FarHandMirrored, handFar != null && !mechOn ? Color.Lerp(far, tint, .45f) : far);   // 单独画的远侧手（手心那面）皮肤少压暗一点
+                Blit(b.legN, legN, false, tint); GearScan(b.legN, legN, false, qLegs, tint);
+                if (mechStage >= 4) Trace(b.legN, TraceLeg, 0, .38f, tint);   // 腿上的光纹画在躯干前面，上端被外套盖住
+            }
             Blit(b.torso, torso, false, tint); GearScan(b.torso, torso, false, qCoat, tint);
             if (mechStage >= 4) { Trace(b.torso, TraceTorso, .34f, 1, tint); Trace(b.torso, TraceTorso2, .4f, 1, tint); }
             if (model != null && model.state.implants.Contains("spine")) SpineGlow(b);   // 第三章义体：后背一列发光的中继椎节
             if (mechStage >= 3) NeckCables(b, tint);   // v0.20 飞升第三阶段：后脑接出的线缆（画在身体上面、头下面，线缆根部被头盖住）
             Blit(b.head, head, false, tint); GearScan(b.head, head, false, qHead, tint);
+            if (K3) FarGrip3(b, tint, far);   // 卡48：双手武器的远侧手在身前握柄
             if (p.fx)                              // tip trail sits behind arm and blade
                 for (int i = 0; i < 9; i++)
                 {
@@ -865,10 +915,11 @@ namespace ThreadZero
                     Segment(a0, a1, w, new Color(tc.r, tc.g, tc.b, al));
                     Segment(a0, a1, w / 3, new Color(1, 1, 1, al * .8f));
                 }
-            Blit(b.armN, arm, false, armTint); GearScan(b.armN, arm, false, qCoat, armTint);
+            if (K3) DrawNearArm3(b, armTint);
+            else { Blit(b.armN, arm, false, armTint); GearScan(b.armN, arm, false, qCoat, armTint); }
             Vector2 chainEnd = Vector2.zero; bool chained = weaponClass == "chain" && hookPart != null;
             if (chained) chainEnd = DrawChain(b, anim, t, tint);
-            else { GearTrail(anim, t, tint); GearEdge(b.wpn, weapon, tint); Blit(b.wpn, weapon, false, tint); GearSweep(b.wpn, weapon, tint); }   // v0.20 装备光效
+            else { GearTrail(anim, t, tint); GearEdge(b.wpn, weapon, tint); Blit(b.wpn, weapon, false, tint); if (paintPart != null) Blit(b.wpn, paintPart, false, Paint(tint)); GearSweep(b.wpn, weapon, tint); }   // v0.20 装备光效；11-26 上色工具的漆按漆色染
             Blit(b.hand, NearHand, false, armTint);
             if (chained) GearMotes(hookM, hookTip, tint); else GearMotes(b.wpn, tipPt, tint);
             if (mech) MechArmGlow(b);
@@ -909,7 +960,7 @@ namespace ThreadZero
                     float k = (t - ComboHits[i]) / .08f;
                     if (k < 0 || k >= 1) continue;
                     float big = i == ComboHits.Length - 1 ? 1.7f : 1f, fade = 1 - k;
-                    Vector2 hp = Tip(Build(Compute(anim, ComboHits[i])));
+                    Vector2 hp = Tip(PoseBones(anim, ComboHits[i]));
                     Dot(hp, 7 * (1 - k * .6f) * big, new Color(1, 1, 1, .94f * fade));
                     for (int j = 0; j < 8; j++)
                     {

@@ -5,7 +5,9 @@ re:—  第 (\d+) / (\d+) 波 · 剩余 (\d+)  —§—  ウェーブ {1}/{2}・
 re:CHAPTER (\d) / 第(.)章§CHAPTER {1} / 第{2}章§CHAPTER {1}§CHAPTER {1} / {2}장
 re:最高 (\d+) 层 · 下个里程碑 (\d+)§最高 {1}層・次の節目 {2}層§Best F{1} · Next milestone F{2}§최고 {1}층 · 다음 마일스톤 {2}층
 re:不选 · (\d+) 秒后跳过§選ばない・{1}秒後にスキップ§Skip · auto in {1}s§선택 안 함 · {1}초 후 건너뜀
-re:义体接入 · (.+)§義体接続・{1}§Implant installed · {1}§의체 접속 · {1}
+re:飞升装备 · (.+)§昇華装備・{1}§Ascension Gear · {1}§승화 장비 · {1}
+re:装上飞升装备：(.+)§昇華装備を装着：{1}§Gear installed: {1}§승화 장비 장착: {1}
+re:(.+)  又多接上了一根「线」。§{1}  また一本、「糸」がつながった。§{1}  One more thread, connected.§{1}  또 한 가닥, '실'이 이어졌다.
 re:机械飞升  (\d+) / (\d+)§機械昇華  {1} / {2}§Mechanical Ascension  {1} / {2}§기계 승화  {1} / {2}
 re:(\d+) 件未查看§未確認 {1}件§{1} unseen§미확인 {1}개
 re:已自动分解 (\d+) 件 · \+(\d+)§自動分解 {1}件・+{2}§Auto-salvaged {1} · +{2}§자동 분해 {1}개 · +{2}
@@ -44,10 +46,7 @@ DEEP NET / 零号深网§DEEP NET / 零号深網§DEEP NET§DEEP NET / 제로 �
 叠上去更难，掉得更好（最多 3 个）§重ねるほど難しくなり、ドロップも良くなる（最大3つ）§Each one makes it harder but improves drops (up to 3)§쌓을수록 어려워지지만 드롭이 좋아진다 (최대 3개)
 接入§接続§Connect§접속
 协议异常接入：§プロトコル異常を接続：§Protocol anomaly connected:§프로토콜 이상 접속:
-义体接入 ·§義体接続・§Implant installed ·§의체 접속 ·
 机械飞升§機械昇華§Mechanical Ascension§기계 승화
-装上义体：§義体を装着：§Implant installed:§의체 장착:
-身上又多了一根「线」。§体にまた一本「線」が増えた。§One more "thread" runs through your body.§몸에 「선」이 하나 더 늘었다.
 织网碎片§織網片§Weave Shards§직조 조각
 获得称号「零号」§称号「零号」を獲得§Title "Zero" obtained§칭호 「제로」 획득
 暴击§会心§Crit§치명타
@@ -119,4 +118,3 @@ THREAD ZERO · v0.21    空格 暂停 / 1 2 3 4 切换页面 / Esc 关闭弹窗�
 在整备里穿戴装备改变属性；在衣柜里应用外观只改变样子（武器外观只能套在同类武器上）。锁定或穿戴中的装备不能分解。§整備で装備を身に着けると能力が変わります。ワードローブで外見を適用すると見た目だけが変わります（武器の外見は同じ種類の武器にしか使えません）。ロック中・装備中のものは分解できません。§Equip gear in the Loadout to change your stats; applying a look in the Wardrobe only changes how you look (weapon looks only fit weapons of the same type). Locked or equipped gear can't be salvaged.§정비에서 장비를 착용하면 능력치가 바뀝니다. 옷장에서 외형을 적용하면 모습만 바뀝니다(무기 외형은 같은 종류의 무기에만 적용 가능). 잠금 또는 착용 중인 장비는 분해할 수 없습니다.
 在衣柜里把想要的装备设为回收目标并查看产地：在它那一章打精英和首领，最多 8 次必得；品质和随机属性另行抽取。§ワードローブで欲しい装備を回収目標に設定し、入手場所を確認しましょう。その章のエリートとボスを倒せば、最大8回で必ず手に入ります（品質とランダム能力は別に抽選）。§In the Wardrobe, set the gear you want as your recovery target and check where it drops: beat elites and bosses in its chapter and it's guaranteed within 8 tries (quality and random stats are rolled separately).§옷장에서 원하는 장비를 회수 목표로 설정하고 획득처를 확인하세요. 그 장의 엘리트와 보스를 쓰러뜨리면 최대 8번 안에 반드시 얻습니다(품질과 랜덤 능력치는 따로 추첨).
 无人机自动射击；标记会强化无人机和电弧；推进器搭配近战武器冲击更强；护盾会为下一次攻击蓄能。成群的关用手炮、重锤这类群伤武器更轻松。§ドローンは自動で射撃します。マークはドローンとアークを強化し、推進器は近接武器と組み合わせると衝撃が強くなります。シールドは次の攻撃に力を蓄えます。敵の多いステージでは、ハンドキャノンやハンマーのような範囲攻撃武器が楽です。§Drones fire automatically; Mark boosts Drone and Arc; Thrusters hit harder with melee weapons; Shield charges up your next attack. Crowded stages are easier with area weapons like hand cannons and mauls.§드론은 자동으로 사격합니다. 표식은 드론과 아크를 강화하고, 추진기는 근접 무기와 함께 쓰면 충격이 강해집니다. 실드는 다음 공격에 힘을 모읍니다. 적이 많은 스테이지에서는 핸드캐논이나 해머 같은 범위 공격 무기가 수월합니다.
-打过第一个首领后，选关最下面可以进零号深网：一层层往上刷，每层都有掉落和织网碎片。织网碎片在整备页左边升级义体，义体越多越强，主角一步步机械飞升。§最初のボスを倒すと、ステージ選択の一番下から零号深網に入れます。1層ずつ登っていき、どの層にもドロップと織網片があります。織網片は整備画面の左側で義体の強化に使い、義体が増えるほど強くなり、主人公は少しずつ機械へと昇華していきます。§After your first boss, you can enter Deep Net Zero from the bottom of stage select: climb floor by floor, with drops and Weave Shards on every floor. Spend Weave Shards on the left side of the Loadout page to upgrade implants; the more implants, the stronger you get, step by step toward Mechanical Ascension.§첫 보스를 쓰러뜨리면 스테이지 선택 맨 아래에서 제로 딥넷에 들어갈 수 있습니다. 한 층씩 올라가며 층마다 드롭과 직조 조각이 있습니다. 직조 조각은 정비 화면 왼쪽에서 의체 강화에 쓰며, 의체가 많을수록 강해지고 주인공은 한 걸음씩 기계 승화에 다가갑니다.

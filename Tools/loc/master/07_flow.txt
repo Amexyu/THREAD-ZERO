@@ -6,39 +6,11 @@
 前排机器人被打坏了，10 秒后重新上场§前衛ロボットが壊れた。10秒後に復帰する§Your front-line robot was destroyed; it'll be back in 10 s§전열 로봇이 파괴되었다. 10초 후 복귀한다
 深网 ·§深網・§Deep Net ·§딥넷 ·
 精英 ·§エリート・§Elite ·§엘리트 ·
-失控巡逻机§暴走巡回機§Rogue Patroller§폭주 순찰기
-装甲运输机§装甲輸送機§Armored Hauler§장갑 수송기
-信号干扰机§信号妨害機§Signal Jammer§신호 방해기
-货运无人机§貨物ドローン§Cargo Drone§화물 드론
-叉臂装卸机§フォークアーム荷役機§Forklift Loader§포크암 하역기
-轨道炮车§軌道砲車§Rail Gun Cart§궤도 포차
-断讯飞蛾§断信モス§Static Moth§단신 나방
-屏蔽甲兵§遮断甲兵§Shield Trooper§차폐 갑병
-定向干扰塔§指向性妨害塔§Directional Jammer Tower§지향성 방해탑
-镜面无人机§鏡面ドローン§Mirror Drone§거울 드론
-审计卫兵§監査衛兵§Audit Sentry§감사 경비병
-折光炮台§屈折砲台§Prism Turret§굴절 포대
-织网线虫§織網線虫§Weave Worm§직조 선충
-母线炮§母線砲§Busbar Cannon§모선포
-拆解者§解体者§Dismantler§해체자
-起重机甲§クレーン機甲§Crane Mech§크레인 기갑
-屏蔽重甲§遮断重甲§Shield Heavy§차폐 중갑
-镜甲重卫§鏡甲重衛§Mirror-Plate Warden§거울갑 중위병
-织网重甲§織網重甲§Weave Heavy§직조 중갑
-信号塔§信号塔§Signal Tower§신호탑
-运输母机§輸送母機§Carrier Mothership§수송 모기
-干扰中继§妨害中継器§Jamming Relay§방해 중계기
-棱镜中继§プリズム中継器§Prism Relay§프리즘 중계기
-协议中继§プロトコル中継器§Protocol Relay§프로토콜 중계기
 re:首领战拖了 (\d+) 分钟还没打下来：撤回上一关补给，变强后自动再挑战。§ボス戦が {1} 分経っても終わらない。前のステージに戻って補給し、強くなったら自動で再挑戦する。§The boss fight has dragged on for {1} minutes: falling back to resupply, then retrying automatically once stronger.§보스전이 {1}분이 지나도 끝나지 않았다. 이전 스테이지로 물러나 보급하고, 강해지면 자동으로 재도전한다.
 这一关打了太久：撤回上一关补给，变强后自动再挑战。§このステージに時間がかかりすぎた。前のステージに戻って補給し、強くなったら自動で再挑戦する。§This stage is taking too long: falling back to resupply, then retrying automatically once stronger.§이 스테이지가 너무 오래 걸렸다. 이전 스테이지로 물러나 보급하고, 강해지면 자동으로 재도전한다.
 re:零号深网第 (\d+) 层里程碑：核心 \+(\d+)，织网碎片 \+(\d+)§零号深網 {1} 層の節目：コア +{2}、織網片 +{3}§Deep Net Zero F{1} milestone: +{2} Cores, +{3} Weave Shards§제로 딥넷 {1}층 마일스톤: 코어 +{2}, 직조 조각 +{3}
 re:零号深网第 (\d+) 层：拿到深网限定「(.+)」（原型），已收进衣柜§零号深網 {1} 層：深網限定「{2}」（原型）を入手、ワードローブに収納した§Deep Net Zero F{1}: got the Deep Net exclusive "{2}" (Prototype), added to your Wardrobe§제로 딥넷 {1}층: 딥넷 한정 「{2}」(프로토타입) 획득, 옷장에 보관했다
 第一章首领回收完成 · 零号深网与第二章已开放§第一章のボス回収完了・零号深網と第二章が開放された§Chapter 1 boss reclaimed · Deep Net Zero and Chapter 2 are open§1장 보스 회수 완료 · 제로 딥넷과 2장이 개방되었다
-第二章首领回收完成 · 调度义眼已装上 · 第三章已开放§第二章のボス回収完了・管制義眼を装着・第三章が開放された§Chapter 2 boss reclaimed · Dispatch Eye installed · Chapter 3 is open§2장 보스 회수 완료 · 관제 의안 장착 · 3장이 개방되었다
-第三章首领回收完成 · 中继脊柱已装上 · 第四章已开放§第三章のボス回収完了・中継脊柱を装着・第四章が開放された§Chapter 3 boss reclaimed · Relay Spine installed · Chapter 4 is open§3장 보스 회수 완료 · 중계 척추 장착 · 4장이 개방되었다
-第四章首领回收完成 · 冷核心脏已装上 · 第五章已开放§第四章のボス回収完了・冷却コア心臓を装着・第五章が開放された§Chapter 4 boss reclaimed · Cold-Core Heart installed · Chapter 5 is open§4장 보스 회수 완료 · 냉각 코어 심장 장착 · 5장이 개방되었다
-织网母体回收完成 · 织网接口已接上 · 机械飞升开始§織網の母体の回収完了・織網インターフェースを接続・機械昇華が始まる§Weave Matrix reclaimed · Weave Interface connected · Mechanical Ascension begins§직조 모체 회수 완료 · 직조 인터페이스 연결 · 기계 승화 시작
 re:开放 (\d-\d) · (.+)§開放 {1}・{2}§Unlocked {1} · {2}§개방 {1} · {2}
 re:获得芯片：(.+) Mk(\d)§チップ入手：{1} Mk{2}§Chip found: {1} Mk{2}§칩 획득: {1} Mk{2}
 re:获得改装件：(.+)§改装パーツ入手：{1}§Mod found: {1}§개조 부품 획득: {1}
@@ -66,7 +38,6 @@ re:退回 (\d+) 层§{1} 層後退§Back {1} floors§{1}층 후퇴
 织网用记忆重建的楼层，越往上越不稳定§織網が記憶から再構築したフロア。上に行くほど不安定になる§Floors the Weave rebuilt from memories; the higher you go, the less stable they get§직조망이 기억으로 다시 지은 층. 위로 갈수록 불안정해진다
 re:卡关提示：(.+)§行き詰まりのヒント：{1}§Stuck? {1}§막혔을 때 팁: {1}
 这一关的怪成群地来，单体武器很吃亏。换一把标着「群伤」的武器（整备页武器详情里看，手炮、重锤、撞杆矛、霰弹、线圈这几类）会轻松很多。§このステージの敵は群れで来るので、単体攻撃の武器は不利。「範囲攻撃」と表示された武器（整備画面の武器詳細で確認。ハンドキャノン、ハンマー、衝角槍、ショットガン、コイル系）に替えるとかなり楽になる。§Enemies here come in swarms, which is rough for single-target weapons. Switching to a weapon marked "Area" (see the weapon details in the Loadout: hand cannons, mauls, ram spears, shotguns, coils) makes it much easier.§이 스테이지의 적은 떼로 몰려와서 단일 공격 무기는 불리하다. 「범위 공격」이 표시된 무기(정비 화면의 무기 상세에서 확인: 핸드캐논, 해머, 충각창, 산탄총, 코일 계열)로 바꾸면 훨씬 수월하다.
-可以先去零号深网刷一会（选关最下面）——每层都有掉落，还能攒织网碎片升义体。§先に零号深網でしばらく稼ぐのもあり（ステージ選択の一番下）。どの層にもドロップがあり、義体を強化する織網片も貯まる。§Try farming Deep Net Zero for a while (bottom of stage select): every floor has drops, and you'll collect Weave Shards for your implants.§먼저 제로 딥넷에서 잠시 파밍해도 좋다(스테이지 선택 맨 아래). 층마다 드롭이 있고, 의체를 강화할 직조 조각도 모인다.
 工坊可以洗炼词条，把用不上的词条换成攻击、暴击或生命。§工房で能力をリフォージして、使わない能力を攻撃・会心・体力に変えられる。§The Workshop can reforge stats, swapping useless ones for Attack, Crit or HP.§공방에서 능력치를 재련해 쓸모없는 능력치를 공격, 치명타, 체력으로 바꿀 수 있다.
 开着自动推进会先回刷前一关攒零件，升级装备、训练变强后再自动挑战。§オート進行がオンなら、前のステージを周回してパーツを貯め、装備強化や改造で強くなってから自動で挑戦する。§With auto-advance on, you'll farm the previous stage for parts and retry automatically after upgrading.§자동 진행이 켜져 있으면 이전 스테이지를 반복해 부품을 모으고, 장비를 강화해 강해진 뒤 자동으로 도전한다.
 行动§行動§Action§행동
@@ -78,8 +49,6 @@ re:卡关提示：(.+)§行き詰まりのヒント：{1}§Stuck? {1}§막혔을
 这件装备只提供属性。§この装備は能力のみ。§This gear only gives stats.§이 장비는 능력치만 있다.
 初始匕首素材测试 · 本局不读写正式存档§初期ダガー素材テスト・正式セーブは読み書きしない§Starter dagger art test · Doesn't touch your real save§초기 단검 소재 테스트 · 정식 세이브를 읽고 쓰지 않음
 零号织网的最深处没有敌人，只有一颗在呼吸的核心。§零号織網の最深部に敵はいない。あるのは、呼吸する一つのコアだけ。§There are no enemies at the bottom of Weave Zero, only a core that breathes.§제로 직조망의 가장 깊은 곳에 적은 없다. 숨 쉬는 코어 하나뿐.
-回收员把最后一根线缆接上的时候，整座城的声音同时安静了下来——不是被吞没，是被听见了。§回収員が最後のケーブルを繋いだ時、街じゅうの声が一斉に静まった――呑み込まれたのではない。聞き届けられたのだ。§When the Recycler connected the last cable, every voice in the city fell quiet at once: not swallowed, but heard.§회수원이 마지막 케이블을 연결한 순간, 도시의 모든 목소리가 일제히 잠잠해졌다. 삼켜진 것이 아니라, 들린 것이다.
-零织协议不再追捕回收员。它在等第零号的下一道指令。§零織プロトコルはもう回収員を追わない。第零号の次の命令を待っている。§The Zero Weave Protocol no longer hunts the Recycler. It's waiting for Number Zero's next command.§제로 위브 프로토콜은 더 이상 회수원을 쫓지 않는다. 제0호의 다음 명령을 기다리고 있다.
 尾声 · 第零号§エピローグ・第零号§Epilogue · Number Zero§에필로그 · 제0호
 继续回收§回収を続ける§Keep reclaiming§계속 회수하기
 re:没人操作 · (\d+) 秒后回到标题重新开始（动一下鼠标就继续）§操作がありません・{1}秒後にタイトルへ戻って最初から（マウスを動かせば続行）§No input · Back to the title in {1}s to start over (move the mouse to keep playing)§조작 없음 · {1}초 후 타이틀로 돌아가 처음부터 (마우스를 움직이면 계속)
@@ -122,12 +91,8 @@ re:每次护盾 ([\d.]+)% 生命§1回ごとに体力 {1}% 分のシールド§S
 掉装备了：去「整备」比一比，穿上更好的。左边导航上的数字是还没看过的件数。§装備を拾った。「整備」で比べて、良いほうを身に着けよう。左のナビの数字はまだ見ていない件数。§Gear dropped: compare it in the Loadout and equip the better one. The number on the left menu counts items you haven't looked at.§장비를 얻었다. 「정비」에서 비교해 더 좋은 것을 착용하자. 왼쪽 메뉴의 숫자는 아직 확인하지 않은 개수다.
 被打倒了也没关系：会先回前面的关攒零件、变强，再自动挑战这一关。§倒されても大丈夫。前のステージでパーツを貯めて強くなってから、自動でこのステージに再挑戦する。§Getting knocked down is fine: you'll farm earlier stages for parts, get stronger, then retry this one automatically.§쓰러져도 괜찮다. 앞 스테이지에서 부품을 모아 강해진 뒤, 자동으로 이 스테이지에 재도전한다.
 精英关：每章第 3、6 关是精英，第 7 关是首领，比普通关难一截。打不过就先回刷，升升装备。§エリートステージ：各章の3・6ステージ目はエリート、7ステージ目はボスで、通常より手強い。勝てなければ先に周回して装備を強化しよう。§Elite stage: stages 3 and 6 of each chapter are elites and stage 7 is the boss, a notch harder than usual. If you can't win, farm a bit and upgrade your gear.§엘리트 스테이지: 각 장의 3, 6스테이지는 엘리트, 7스테이지는 보스로 보통보다 한층 어렵다. 이기지 못하면 먼저 반복해서 장비를 강화하자.
-打败了第一个首领，零号深网开放了：在选关最下面，一层比一层难，还能攒织网碎片升义体。§最初のボスを倒して、零号深網が開放された。ステージ選択の一番下にあり、層を重ねるごとに難しくなるが、義体を強化する織網片も貯まる。§You beat your first boss and Deep Net Zero is open: it's at the bottom of stage select. Each floor is harder than the last, and you'll collect Weave Shards to upgrade implants.§첫 보스를 쓰러뜨려 제로 딥넷이 개방되었다. 스테이지 선택 맨 아래에 있으며, 층마다 어려워지지만 의체를 강화할 직조 조각도 모인다.
 re:新手提示 · (\d+) / (\d+)§ヒント・{1} / {2}§Tip · {1} / {2}§팁 · {1} / {2}
 点一下关掉§クリックで閉じる§Click to close§클릭해서 닫기
-城市的自动化设备失控以后，封锁线里只剩下机器，和回收员。§街の自動化設備が暴走してから、封鎖線の内側に残ったのは機械と、回収員だけだった。§After the city's automated machines went rogue, only the machines were left inside the lockdown line. The machines, and the recyclers.§도시의 자동화 설비가 폭주한 뒤, 봉쇄선 안에 남은 것은 기계와 회수원뿐이었다.
-我的病没有药可治。能换掉的零件，都在封锁区里。§私の病気に効く薬はない。取り替えられるパーツは、全部封鎖区の中にある。§There's no cure for what I have. Every part I could replace is inside the lockdown zone.§내 병에는 약이 없다. 바꿀 수 있는 부품은 전부 봉쇄 구역 안에 있다.
-回收员编号：零。今天开始回收。§回収員番号：零。今日から回収を始める。§Recycler number: Zero. Reclamation starts today.§회수원 번호: 제로. 오늘부터 회수를 시작한다.
 零织协议§零織プロトコル§Zero Weave Protocol§제로 위브 프로토콜
 回收、改造、穿上它——直到第零号接上整张网。§回収し、改造し、身にまとう――第零号が網すべてと繋がるまで。§Reclaim it, rebuild it, wear it, until Number Zero is wired into the whole Weave.§회수하고, 개조하고, 몸에 걸친다. 제0호가 그물 전체와 이어질 때까지.
 开始体验§体験を始める§Start§체험 시작

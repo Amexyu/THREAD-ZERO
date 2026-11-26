@@ -122,11 +122,11 @@ namespace ThreadZero
         }
 
         // 每章的怪名（skin = 章节 - 1）：冲锋 / 重型 / 远程，两种精英。
-        private static readonly string[][] MobNames = { new[] { "失控巡逻机", "装甲运输机", "信号干扰机" }, new[] { "货运无人机", "叉臂装卸机", "轨道炮车" },
-                                                          new[] { "断讯飞蛾", "屏蔽甲兵", "定向干扰塔" }, new[] { "镜面无人机", "审计卫兵", "折光炮台" },
-                                                          new[] { "织网线虫", "协议守卫", "母线炮" } };
-        private static readonly string[] EliteCrusherNames = { "拆解者", "起重机甲", "屏蔽重甲", "镜甲重卫", "织网重甲" },
-                                         EliteBeaconNames = { "信号塔", "运输母机", "干扰中继", "棱镜中继", "协议中继" };
+        private static readonly string[][] MobNames = { new[] { "扫地机器狗", "冰箱大块头", "电饭锅无人机" }, new[] { "外卖箱无人机", "购物车叉车", "行李箱坦克" },
+                                                          new[] { "小风扇蜻蜓", "空调外机", "卫星锅小车" }, new[] { "粉饼盒飞弹", "玻璃展柜", "台灯炮塔" },
+                                                          new[] { "灯笼毛毛虫", "火锅推车", "爆米花炮塔" } };   // v0.40 世界观 A：离家出走的回收机器人（卡35 三姿势）
+        private static readonly string[] EliteCrusherNames = { "洗衣机", "快递柜", "双盾热水器", "穿衣镜衣柜", "毛衣机甲" },
+                                         EliteBeaconNames = { "旧电视", "吊扇运输机", "路由器", "香水瓶", "霓虹灯泡" };
 
         public CombatSession(GameModel m)
         { model = m; health = m.Total().health; loadoutSignature = Signature(); StartWave(); }
@@ -529,10 +529,10 @@ namespace ThreadZero
             {
                 health = Math.Min(s.health, health + s.health * Balance.BossRecovery);
                 if (firstBossClear == 1) OnMessage?.Invoke("第一章首领回收完成 · 零号深网与第二章已开放");   // 只在第一次通关时提示
-                else if (firstBossClear == 2) OnMessage?.Invoke("第二章首领回收完成 · 调度义眼已装上 · 第三章已开放");
-                else if (firstBossClear == 3) OnMessage?.Invoke("第三章首领回收完成 · 中继脊柱已装上 · 第四章已开放");
-                else if (firstBossClear == 4) OnMessage?.Invoke("第四章首领回收完成 · 冷核心脏已装上 · 第五章已开放");
-                else if (firstBossClear == 5) OnMessage?.Invoke("织网母体回收完成 · 织网接口已接上 · 机械飞升开始");   // v0.20 飞升是打完主线后的长线目标，这里是“开始”不是“完成”
+                else if (firstBossClear == 2) OnMessage?.Invoke("第二章首领回收完成 · 调度护目镜已装上 · 第三章已开放");
+                else if (firstBossClear == 3) OnMessage?.Invoke("第三章首领回收完成 · 中继背架已装上 · 第四章已开放");
+                else if (firstBossClear == 4) OnMessage?.Invoke("第四章首领回收完成 · 冷核喷气背包已装上 · 第五章已开放");
+                else if (firstBossClear == 5) OnMessage?.Invoke("织网母体回收完成 · 织网耳机已戴上 · 机械飞升开始");   // v0.20 飞升是打完主线后的长线目标，这里是“开始”不是“完成”
                 firstBossClear = 0;
             }
             int next = Math.Min(Chapters.ChapterCount * Chapters.StagesPerChapter - 1, region + 1);

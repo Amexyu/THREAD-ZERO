@@ -20,8 +20,6 @@
 折叠防护翼§折りたたみ防護翼§Folding Guard Wings§접이식 방호 날개
 轻量推进背架§軽量推進フレーム§Light Thruster Frame§경량 추진 프레임
 回收员工装裤§回収員ワークパンツ§Recycler Work Pants§회수원 작업 바지
-排污防水裤§排水防水パンツ§Sewer Waders§배수 방수 바지
-棚户补丁裤§バラックの継ぎはぎパンツ§Patched Shanty Pants§판자촌 누더기 바지
 护膝战术裤§ニーパッド付きタクティカルパンツ§Kneepad Tactical Pants§무릎 보호 전술 바지
 管廊液压腿甲§管廊油圧レッグアーマー§Gallery Hydraulic Greaves§관로 유압 다리갑옷
 撞杆矛§衝角槍§Ram Spear§충각창

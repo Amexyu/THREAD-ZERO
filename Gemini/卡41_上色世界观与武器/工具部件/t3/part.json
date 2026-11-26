@@ -1,0 +1,22 @@
+{
+ "scale": 5.0,
+ "weapon_class": "shotgun",
+ "weapon": {
+  "file": "weapon.png",
+  "pivot": [
+   20.93,
+   2.25
+  ],
+  "tip": [
+   9.7,
+   34.2
+  ]
+ },
+ "paint": {
+  "file": "paint.png",
+  "pivot": [
+   20.93,
+   2.25
+  ]
+ }
+}

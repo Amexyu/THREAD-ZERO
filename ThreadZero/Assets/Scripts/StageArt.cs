@@ -50,36 +50,43 @@ namespace ThreadZero
             StageFx.Daylight = folder.StartsWith("Art/V17/");   // v0.33 亮色背景：动效换白天的配色
             float time = Time.unscaledTime;
             bool arena = key == "D";
-            if (arena) StageFx.DrawCover(fx, folder, 0, Cover(far, stageW, stageH), time);
+            Fade.WorldX = worldX;   // 11-25「褪色之城」试验：颜色圈跟着每一层一起卷（Fade.On 关着时不起作用）
+            if (arena) { Fade.LayerScroll = 0; StageFx.DrawCover(fx, folder, 0, Cover(far, stageW, stageH), time); }
             else
             {
+                Fade.LayerScroll = FarScroll;
                 Layer(far, worldX * FarScroll, stageH, 0);
                 StageFx.Draw(fx, folder, 0, far, worldX * FarScroll, stageH, 0, time);
             }
             if (mid != null)
             {
+                Fade.LayerScroll = MidScroll;
                 Layer(mid, worldX * MidScroll, stageH, 0);
                 StageFx.Draw(fx, folder, 1, mid, worldX * MidScroll, stageH, 0, time);
             }
             if (ground != null)
             {   // 地面带：图高的 20% 处是地面上沿，对齐到 groundY；下沿铺到舞台底部
                 float h = (stageH - groundY) / .8f;
+                Fade.LayerScroll = 1;
                 Layer(ground, worldX, h, groundY - h * .2f);
                 StageFx.Draw(fx, folder, 2, ground, worldX, h, groundY - h * .2f, time);
             }
+            Fade.LayerScroll = 1;
             return true;
         }
         // 横向平铺的一层：按高度等比缩放，scroll 为已经乘过系数的卷动距离（逻辑像素）。
         private static void Layer(Texture2D t, float scroll, float h, float y)
         {
             float w = h * t.width / t.height;
-            GUI.DrawTextureWithTexCoords(Ui.R(0, y, 1600, h), t, new Rect(scroll / w, 0, 1600 / w, 1), true);
+            Rect uv = new Rect(scroll / w, 0, 1600 / w, 1);
+            if (!Fade.Draw(new Rect(0, y, 1600, h), t, uv, GUI.color)) GUI.DrawTextureWithTexCoords(Ui.R(0, y, 1600, h), t, uv, true);
         }
         /// 铺满舞台的一张图（不卷动），返回它实际占的矩形（逻辑像素）。
         private static Rect Cover(Texture2D t, float w, float h)
         {
             float k = Mathf.Max(w / t.width, h / t.height), tw = t.width * k, th = t.height * k;
-            GUI.DrawTextureWithTexCoords(Ui.R((w - tw) / 2, (h - th) / 2, tw, th), t, new Rect(0, 0, 1, 1), true);
+            if (!Fade.Draw(new Rect((w - tw) / 2, (h - th) / 2, tw, th), t, new Rect(0, 0, 1, 1), GUI.color))
+                GUI.DrawTextureWithTexCoords(Ui.R((w - tw) / 2, (h - th) / 2, tw, th), t, new Rect(0, 0, 1, 1), true);
             return new Rect((w - tw) / 2, (h - th) / 2, tw, th);
         }
 
@@ -91,13 +98,17 @@ namespace ThreadZero
         {
             switch (ArtKey(e))   // 按实际画出来的图判断（第三章借第二章的图时，走法跟着图）
             {
-                case "ranged": case "elite_beacon": case "swarm2": case "elite_carrier":
-                case "swarm3": case "elite_relay": case "boss_watcher": return Gait.Flying;   // 第三章：断讯飞蛾、干扰中继、断讯监视者都是飘着的
-                case "swarm4": case "elite_prism": case "elite_protocol": case "boss_weaver": case "boss_auditor": return Gait.Flying;   // v0.20 镜面审计官是飘着的（长袍下面没有腿）
-                case "ranged2": case "boss_gatekeeper": case "boss_crane": case "ranged3": case "ranged4": case "ranged5": case "swarm5": return Gait.Wheeled;   // 织网线虫贴地滑行
-                default: return Gait.Legged;   // swarm（机械狗）、brute / brute2、elite_crusher / elite_hauler
+                case "ranged": case "swarm2": case "elite_carrier": case "swarm3": case "boss_watcher":
+                case "swarm4": case "elite_protocol": case "boss_weaver": return Gait.Flying;   // v0.40 回收机器人：电饭锅无人机、外卖箱无人机、吊扇运输机、小风扇蜻蜓、监视摄像头、粉饼盒飞弹、霓虹灯泡、缝纫机首领（线轴吊在下面）
+                case "ranged2": case "boss_gatekeeper": case "boss_crane": case "ranged3": case "ranged4": case "ranged5": case "swarm5":
+                case "elite_beacon": case "elite_relay": case "elite_prism": case "brute2": case "brute5": return Gait.Wheeled;   // 轮子 / 履带 / 平底滑行：旧电视（轮座）、路由器、香水瓶、购物车叉车、火锅推车、灯笼毛毛虫
+                default: return Gait.Legged;   // 扫地机器狗、冰箱、洗衣机、快递柜、空调外机、双盾热水器、玻璃展柜、穿衣镜衣柜、收银机首领、毛衣机甲
             }
         }
+        /// v0.40 倒下「关机打瞌睡」时 z 和小星星冒出来的位置：每张待机图最上面那一截的中心（占 512 画布的比例，x 往中间收 40%）。
+        /// 数值由 Gemini/卡35 的切图结果量出来（idle 图 alpha > 60 的最上沿、上面 1/4 的横向中心）。
+        private static readonly Dictionary<string, Vector2> HeadOf = new Dictionary<string, Vector2> { { "boss_auditor", new Vector2(0.552f, 0.051f) }, { "boss_crane", new Vector2(0.349f, 0.098f) }, { "boss_gatekeeper", new Vector2(0.543f, 0.182f) }, { "boss_watcher", new Vector2(0.509f, 0.053f) }, { "boss_weaver", new Vector2(0.492f, 0.047f) }, { "brute2", new Vector2(0.605f, 0.314f) }, { "brute3", new Vector2(0.573f, 0.242f) }, { "brute4", new Vector2(0.546f, 0.326f) }, { "brute5", new Vector2(0.537f, 0.242f) }, { "brute", new Vector2(0.524f, 0.172f) }, { "elite_beacon", new Vector2(0.490f, 0.121f) }, { "elite_carrier", new Vector2(0.469f, 0.406f) }, { "elite_crusher", new Vector2(0.616f, 0.186f) }, { "elite_hauler", new Vector2(0.508f, 0.072f) }, { "elite_mirror", new Vector2(0.502f, 0.207f) }, { "elite_prism", new Vector2(0.539f, 0.232f) }, { "elite_protocol", new Vector2(0.488f, 0.283f) }, { "elite_relay", new Vector2(0.526f, 0.229f) }, { "elite_shield", new Vector2(0.500f, 0.207f) }, { "elite_weave", new Vector2(0.457f, 0.246f) }, { "ranged2", new Vector2(0.518f, 0.232f) }, { "ranged3", new Vector2(0.424f, 0.232f) }, { "ranged4", new Vector2(0.458f, 0.232f) }, { "ranged5", new Vector2(0.569f, 0.232f) }, { "ranged", new Vector2(0.535f, 0.125f) }, { "swarm2", new Vector2(0.503f, 0.293f) }, { "swarm3", new Vector2(0.521f, 0.295f) }, { "swarm4", new Vector2(0.508f, 0.291f) }, { "swarm5", new Vector2(0.518f, 0.541f) }, { "swarm", new Vector2(0.663f, 0.109f) } };
+        public static Vector2 HeadFrac(Enemy e) { Vector2 v; return HeadOf.TryGetValue(ArtKey(e), out v) ? new Vector2(Mathf.Lerp(v.x, .5f, .4f), v.y) : new Vector2(.5f, .3f); }
         /// 走路帧（可选）：有 _walk1 / _walk2 图就按步伐交替，没有就用待机图。
         public static bool HasWalk(Enemy e) { string k = ArtKey(e); return Tex(EnemyFolder + k + "_walk1") != null && Tex(EnemyFolder + k + "_walk2") != null; }
         public static string EnemyKey(Enemy e) { return KeyFor(e, e.skin); }
@@ -174,6 +185,15 @@ namespace ThreadZero
             if (t == null) t = Tex(EnemyFolder + key + "_idle");
             if (t == null) return false;
             if (key != EnemyKey(e)) tint *= BorrowedTint(e);
+            if (Fade.On)
+            {   // 11-25「褪色之城」试验：机器人是灰的，挨刷越多颜色回来越多；倒下（想起来了）就是全彩
+                float hp01 = Mathf.Clamp01(e.health / Mathf.Max(1, e.maxHealth));
+                float sat = e.Alive ? .06f + .84f * Mathf.Pow(1 - hp01, .8f) : 1;
+                Fade.NoBlooms = true;
+                bool done = Fade.Draw(new Rect(feetX - canvas / 2, feetY - canvas * .875f, canvas, canvas), t, new Rect(0, 0, 1, 1), tint, sat);
+                Fade.NoBlooms = false;
+                if (done) return true;
+            }
             Color old = GUI.color; GUI.color = tint;
             GUI.DrawTexture(Ui.R(feetX - canvas / 2, feetY - canvas * .875f, canvas, canvas), t, ScaleMode.StretchToFill, true);
             GUI.color = old; return true;

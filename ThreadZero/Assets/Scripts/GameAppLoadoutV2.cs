@@ -91,15 +91,16 @@ namespace ThreadZero
 
             // 属性（深色拉丝金属）
             const float sy0 = 620;
-            Skin.Metal(lx, sy0, lw, 152);
+            Color? statsTint = UiTheme.StatsTint; bool bright = statsTint != null;   // v0.40 / v0.41 浅色方案：属性板换成有色塑料（B 番茄橙，其余是方案的深块色）
+            if (bright) Skin.Plastic(lx, sy0, lw, 152, statsTint.Value); else Skin.Metal(lx, sy0, lw, 152);
             float[] totals = Values(model.Total());
             for (int i = 0; i < 6; i++)
             {
                 float x = lx + 22 + (i % 3) * 128, y = sy0 + 14 + (i / 3) * 70;
                 string value = i == 3 ? (1 + totals[i]).ToString("F2") : i == 4 ? (totals[i] * 100).ToString("F0") + "%" : totals[i].ToString("F0");
-                Skin.Gem(x + 4, y + 9, 3.6f, i < 3 ? Ui.Orange : Ui.Hex(0xB9BEC0), true);
-                Ui.Text(x + 14, y, 110, 18, i == 3 ? "每秒攻击" : Catalog.StatNames[i], 11, Ui.Hex(0xB9BEC0), TextAnchor.MiddleLeft, true);
-                Skin.OutlineText(x, y + 18, 120, 40, value, Skin.Fit(value, 30, 116, true, true), Color.white, Ui.Hex(0x0B0C0D), TextAnchor.MiddleLeft, true, true, 1);
+                Skin.Gem(x + 4, y + 9, 3.6f, bright ? (i < 3 ? Ui.Hex(0xFFE38A) : Color.white) : i < 3 ? Ui.Orange : Ui.Hex(0xB9BEC0), true);
+                Ui.Text(x + 14, y, 110, 18, i == 3 ? "每秒攻击" : Catalog.StatNames[i], 11, bright ? Ui.Hex(0xFFF1E6) : Ui.Hex(0xB9BEC0), TextAnchor.MiddleLeft, true);
+                Skin.OutlineText(x, y + 18, 120, 40, value, Skin.Fit(value, 30, 116, true, true), Color.white, bright ? UiTheme.StatsOutline : Ui.Hex(0x0B0C0D), TextAnchor.MiddleLeft, true, true, 1);
                 if (i % 3 < 2) Ui.Fill(x + 120, y + 4, 1.2f, 50, new Color(1, 1, 1, .1f));
             }
             Ui.Fill(lx + 16, sy0 + 82, lw - 32, 1.2f, new Color(1, 1, 1, .1f));

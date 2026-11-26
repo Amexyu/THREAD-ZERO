@@ -75,7 +75,6 @@ re:零件 (\d+)（持有 (\d+)）§パーツ {1}（所持 {2}）§{1} parts (hav
 re:升级到 Lv (\d+)§Lv {1} に強化§Upgrade to Lv {1}§Lv {1}로 강화
 织网碎片不足 · 去零号深网刷§織網片が足りない・零号深網で稼ごう§Not enough Weave Shards · Farm Deep Net Zero§직조 조각 부족 · 제로 딥넷에서 모으자
 零件不足§パーツ不足§Not enough parts§부품 부족
-这件义体已经满级。其余义体升满后机械飞升完成。§この義体は最大レベル。残りの義体も最大にすると機械昇華が完了する。§This implant is maxed. Max out the rest to complete Mechanical Ascension.§이 의체는 최대 레벨이다. 나머지 의체도 최대로 올리면 기계 승화가 완료된다.
 re:(.+) 升到 Lv (\d+) · 飞升度 (\d+)%§{1} が Lv {2} に・昇華度 {3}%§{1} reached Lv {2} · Ascension {3}%§{1} Lv {2} 달성 · 승화도 {3}%
 re:机械飞升进入「(.+)」· 回到行动页看看§機械昇華が「{1}」に到達・行動画面で確認しよう§Mechanical Ascension reached "{1}" · Check the Action page§기계 승화가 「{1}」에 도달 · 행동 화면에서 확인해 보자
 重看尾声 ›§エピローグを見る ›§Rewatch epilogue ›§에필로그 다시 보기 ›

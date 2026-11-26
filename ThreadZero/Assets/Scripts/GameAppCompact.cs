@@ -236,7 +236,7 @@ namespace ThreadZero
         {
             if (navigation.Modal == GameModal.Offline) return "离线带回 " + offlineGain.ToString("N0", System.Globalization.CultureInfo.InvariantCulture) + " 零件 · 展开看详情";
             if (model.AnyPerkBuyable) return "改造板有节点能点";
-            if (model.AnyImplantUpgradable) return "义体能升级";
+            if (model.AnyImplantUpgradable) return "飞升装备能升级";
             if (model.AnyRobotAssemblable) return "机库能组装机器人";
             return null;
         }

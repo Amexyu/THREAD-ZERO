@@ -15,9 +15,9 @@ namespace ThreadZero
         private static bool pendingOpening;   // 新游戏重载场景以后直接放开场（静态字段跨场景重载还在）
 
         private static readonly string[] OpeningLines = {
-            "城市的自动化设备失控以后，封锁线里只剩下机器，和回收员。",
-            "我的病没有药可治。能换掉的零件，都在封锁区里。",
-            "回收员编号：零。今天开始回收。" };
+            "城里的回收机器人，一夜之间全跑了。",
+            "垃圾堆成了山，只有回收社还在上班。",
+            "回收员编号：零。今天开始，把它们一只只接回家。" };   // v0.38 世界观 A
         private const float OpeningStep = 2.4f;
 
         /// Awake 读完档以后调用：决定先进标题、直接放开场，还是直接开始（测试）。
@@ -45,20 +45,22 @@ namespace ThreadZero
         // ---------- 标题 ----------
         private void TitleScreen()
         {
-            if (!titleArtTried) { titleArtTried = true; titleArt = Resources.Load<Texture2D>("Art/V16/Title/title"); }
+            bool bright = UiTheme.BrightArt;   // v0.40 B「晴天涂鸦」：晴天正午的标题画（title_b / hero_b / logo_*_b），不下雨、塔不发光，字换深色
+            Texture2D art = TitleArtNow(bright);
             float t = clock - titleAt, fade = Mathf.Clamp01(t / .9f), now = Time.unscaledTime;
-            Ui.FillScreen(Ui.Hex(0x101317));
+            Ui.FillScreen(bright ? Ui.Hex(0xFFF8E6) : Ui.Hex(0x101317));
             float dx = Mathf.Sin(now * .11f) * 14, dy = Mathf.Sin(now * .083f + 1.3f) * 8;   // v0.22 背景慢慢漂（放大 4%，来回各十几像素），不再是一张死图
-            if (titleArt != null)
+            if (art != null)
             {
-                GUI.DrawTexture(Ui.R(-32 + dx, -18 + dy, 1664, 936), titleArt, ScaleMode.ScaleAndCrop);
-                TitleFx(now, dx, dy);
+                GUI.DrawTexture(Ui.R(-32 + dx, -18 + dy, 1664, 936), art, ScaleMode.ScaleAndCrop);
+                if (bright && art == titleArtB) TitleHero(now, dx, dy, .5f); else TitleFx(now, dx, dy);
             }
             else TitleThreads(t);
-            TitleRain(now);
-            for (int i = 0; i < 36; i++) Ui.Fill(i * 24, 0, 24, 900, new Color(.05f, .06f, .08f, .88f * Mathf.Pow(1 - i / 36f, 1.6f)));   // 左边压暗，放标题和菜单
-            for (int i = 0; i < 8; i++) Ui.Fill(0, 820 + i * 10, 1600, 10, new Color(.05f, .06f, .08f, .5f * (i + 1) / 8f));            // 底边压暗，放语言和版本
-            Ui.FillScreen(new Color(0, 0, 0, 1 - fade));
+            if (!bright) TitleRain(now);
+            Color veil = bright ? new Color(1f, .985f, .935f) : new Color(.05f, .06f, .08f);
+            for (int i = 0; i < 36; i++) Ui.Fill(i * 24, 0, 24, 900, new Color(veil.r, veil.g, veil.b, (bright ? .82f : .88f) * Mathf.Pow(1 - i / 36f, 1.6f)));   // 左边压暗（B：提亮），放标题和菜单
+            for (int i = 0; i < 8; i++) Ui.Fill(0, 820 + i * 10, 1600, 10, new Color(veil.r, veil.g, veil.b, (bright ? .4f : .5f) * (i + 1) / 8f));            // 底边，放语言和版本
+            Ui.FillScreen(bright ? new Color(1, 1, 1, 1 - fade) : new Color(0, 0, 0, 1 - fade));
             bool sub = titleConfirmNew || navigation.HasModal || exhibitPanel || exhibitExitPanel;
             Ui.Blocked = sub;
 
@@ -77,13 +79,13 @@ namespace ThreadZero
                 {
                     float u = Mathf.Repeat(now * .32f + r * .37f, 1.6f); if (u > 1) continue;
                     float gx = Mathf.Lerp(-30, 96, u), ga = Mathf.Sin(u * Mathf.PI) * la;
-                    Ui.Fill(gx, 84 + rows[r] - 1.5f, 26, 3, new Color(.82f, 1, .96f, .85f * ga));
+                    Ui.Fill(gx, 84 + rows[r] - 1.5f, 26, 3, bright ? new Color(.18f, .36f, 1f, .7f * ga) : new Color(.82f, 1, .96f, .85f * ga));
                 }
             }
-            else Ui.FitText(92, 128, 760, 130, "零织协议", 104, Ui.Alpha(Ui.Panel, la), TextAnchor.MiddleLeft, true);
+            else Ui.FitText(92, 128, 760, 130, "零织协议", 104, Ui.Alpha(TitleInk, la), TextAnchor.MiddleLeft, true);
             float sy = 84 + LogoBottom[Mathf.Clamp(lang, 0, 3)] + 24;
             if (lang != 2) { Ui.Text(104, sy, 600, 36, "T H R E A D   Z E R O", 22, Ui.Alpha(Ui.Orange, la), TextAnchor.MiddleLeft, true, true); sy += 36; }
-            Ui.FitText(104, sy, 620, 26, "回收、改造、穿上它——直到第零号接上整张网。", 15, Ui.Alpha(Ui.MuteOnInk, la), TextAnchor.MiddleLeft);
+            Ui.FitText(104, sy, 620, 26, "回收、改造、穿上它——直到第零号接上整张网。", 15, Ui.Alpha(TitleMute, la), TextAnchor.MiddleLeft);
 
             // ---- 菜单：一列文字，第一项最大，带这个存档的进度 ----
             float y = 430; int row = 0;
@@ -103,7 +105,7 @@ namespace ThreadZero
 
             // ---- 底边：版本（v0.22 语言切换收回设置里）----
             float ba = Mathf.Clamp01((t - 1.1f) / .5f);
-            Ui.Text(1068, 836, 500, 26, ExhibitMode ? "v0.22 · 毕业制作 · 展览模式" : "v0.22 · 毕业制作", 12, Ui.Alpha(Ui.MuteOnInk, .7f * ba), TextAnchor.MiddleRight);
+            Ui.Text(1068, 836, 500, 26, ExhibitMode ? "v0.22 · 毕业制作 · 展览模式" : "v0.22 · 毕业制作", 12, Ui.Alpha(TitleMute, .7f * ba), TextAnchor.MiddleRight);
             Ui.Blocked = exhibitPanel || exhibitExitPanel;
             if (titleConfirmNew) NewGamePanel();
             else if (navigation.HasModal) Modal();
@@ -113,12 +115,21 @@ namespace ThreadZero
         private static readonly float[][] LogoRows = { new[] { 94f, 120f, 146.5f }, new[] { 98.5f, 116f, 133.5f }, new[] { 93.5f, 106.5f, 120f }, new[] { 102.5f, 115.5f, 129f } };
         private static readonly float[] LogoBottom = { 178, 155, 136, 146 };   // 字的下沿（同上）
         private static readonly string[] LogoFiles = { "logo_zh", "logo_ja", "logo_en", "logo_ko" };
-        private readonly Texture2D[] titleLogos = new Texture2D[4]; private readonly bool[] titleLogoTried = new bool[4];
+        private readonly Texture2D[] titleLogos = new Texture2D[4], titleLogosB = new Texture2D[4]; private readonly bool[] titleLogoTried = new bool[4];
+        private Texture2D titleArtB;
+        private Texture2D TitleArtNow(bool bright)
+        {
+            if (!titleArtTried) { titleArtTried = true; titleArt = Resources.Load<Texture2D>("Art/V16/Title/title"); titleArtB = Resources.Load<Texture2D>("Art/V16/Title/title_b"); }
+            return bright && titleArtB != null ? titleArtB : titleArt;
+        }
+        // v0.40 标题上的字：原版浅字（暗色插画），B 换成深藏青（亮色插画）
+        private static Color TitleInk { get { return UiTheme.BrightArt ? Ui.Hex(0x1B2457) : Ui.Panel; } }
+        private static Color TitleMute { get { return UiTheme.BrightArt ? Ui.Hex(0x4A5580) : Ui.MuteOnInk; } }
         private Texture2D TitleLogo(int lang)
         {
             lang = Mathf.Clamp(lang, 0, 3);
-            if (!titleLogoTried[lang]) { titleLogoTried[lang] = true; titleLogos[lang] = Resources.Load<Texture2D>("Art/V16/Title/" + LogoFiles[lang]); }
-            return titleLogos[lang];
+            if (!titleLogoTried[lang]) { titleLogoTried[lang] = true; titleLogos[lang] = Resources.Load<Texture2D>("Art/V16/Title/" + LogoFiles[lang]); titleLogosB[lang] = Resources.Load<Texture2D>("Art/V16/Title/" + LogoFiles[lang] + "_b"); }
+            return UiTheme.BrightArt && titleLogosB[lang] != null ? titleLogosB[lang] : titleLogos[lang];
         }
         /// 菜单的一行。main：最大的那一项（橙色竖条 + 大字，下面可以带两行说明）；其余是小一号的字，鼠标移上去往右挪一点、前面长出一小段线。
         // ---------- 菜单的悬停效果（11-24）：一根青线从屏幕左边穿过一个橙色针眼，接到选项上，和标志的「线穿过 0」是同一个意思 ----------
@@ -141,7 +152,7 @@ namespace ThreadZero
                 titleWasHover[r] = hover;
             }
             float p = EaseOut(titleHover[r]), since = now - titleHoverEnter[r], cy = y + (main ? 28 : h / 2);
-            Color teal = new Color(.35f, .95f, .86f), tealHi = new Color(.85f, 1f, .97f);
+            Color teal = UiTheme.BrightArt ? new Color(.18f, .36f, 1f) : new Color(.35f, .95f, .86f), tealHi = UiTheme.BrightArt ? new Color(.55f, .7f, 1f) : new Color(.85f, 1f, .97f);
             if (p > .001f)
             {
                 // 底下一条从左往右淡掉的光带，宽度跟着展开
@@ -161,9 +172,9 @@ namespace ThreadZero
                 Ui.Fill(100, y + 6, bar, note != null ? 84 : 52, Ui.Alpha(Ui.Orange, a));
                 if (p > .001f) Ui.Fill(100 + bar, cy - 1, 14 * p, 2, new Color(teal.r, teal.g, teal.b, .85f * p));   // 线接进橙色竖条
                 float lx = 126 + 10 * p;
-                TitleGlitch(lx, y, w - 30, 56, label, 34, Ui.Alpha(Ui.Panel, a), since, hover);
-                if (note != null) Ui.FitText(lx + 2, y + 52, w - 30, 22, note, 15, Ui.Alpha(Ui.Panel, a * Mathf.Lerp(.85f, 1, p)), TextAnchor.MiddleLeft, true);
-                if (note2 != null) Ui.FitText(lx + 2, y + 72, w - 30, 20, note2, 12, Ui.Alpha(Color.Lerp(Ui.MuteOnInk, Ui.Panel, p * .5f), a), TextAnchor.MiddleLeft);
+                TitleGlitch(lx, y, w - 30, 56, label, 34, Ui.Alpha(TitleInk, a), since, hover);
+                if (note != null) Ui.FitText(lx + 2, y + 52, w - 30, 22, note, 15, Ui.Alpha(TitleInk, a * Mathf.Lerp(.85f, 1, p)), TextAnchor.MiddleLeft, true);
+                if (note2 != null) Ui.FitText(lx + 2, y + 72, w - 30, 20, note2, 12, Ui.Alpha(Color.Lerp(TitleMute, TitleInk, p * .5f), a), TextAnchor.MiddleLeft);
             }
             else
             {
@@ -175,7 +186,7 @@ namespace ThreadZero
                     Ui.Fill(103, cy - 1, 10, 2, new Color(teal.r, teal.g, teal.b, .9f * p));
                 }
                 float lx = 104 + 24 * p;
-                TitleGlitch(lx, y, w - 30, h, label, 21, Color.Lerp(Ui.Alpha(Ui.MuteOnInk, a), Ui.Alpha(Ui.Panel, a), p), since, hover);
+                TitleGlitch(lx, y, w - 30, h, label, 21, Color.Lerp(Ui.Alpha(TitleMute, a), Ui.Alpha(TitleInk, a), p), since, hover);
                 // 右边一个小箭头滑进来
                 if (p > .01f) Ui.Text(lx + Ui.Width(label, 21) + 14 + 10 * (1 - p), y, 30, h, "›", 22, new Color(teal.r, teal.g, teal.b, p), TextAnchor.MiddleLeft, true);
             }
@@ -256,13 +267,14 @@ namespace ThreadZero
         }
         // ---------- 主角（11-24）：从背景里抠出来单独画，底下的背景换成「去人」的那一版，所以可以动 ----------
         // 人物层 Art/V16/Title/hero.png 是原图（2752×1536）里 (2132,566)–(2540,1480) 这一块；脚底在 y = 1036，下面是影子和倒影。
-        private Texture2D titleHero; private bool titleHeroTried; private static Material titleHeroMat;
+        private Texture2D titleHero, titleHeroB; private bool titleHeroTried; private static Material titleHeroMat;
         private const float HeroX0 = 2132, HeroY0 = 566, HeroX1 = 2540, HeroY1 = 1480, HeroFeet = 1036, ArtW = 2752, ArtH = 1536;
         private static Vector2 ArtToLogic(float x, float y, float dx, float dy) { return new Vector2(-32 + dx + x * 1664f / ArtW, -18 + dy + y * 936f / ArtH); }
         private void TitleHero(float now, float dx, float dy, float beat)
         {
-            if (!titleHeroTried) { titleHeroTried = true; titleHero = Resources.Load<Texture2D>("Art/V16/Title/hero"); }
-            if (titleHero == null) return;
+            if (!titleHeroTried) { titleHeroTried = true; titleHero = Resources.Load<Texture2D>("Art/V16/Title/hero"); titleHeroB = Resources.Load<Texture2D>("Art/V16/Title/hero_b"); }
+            Texture2D heroTex = UiTheme.BrightArt && titleHeroB != null ? titleHeroB : titleHero;
+            if (heroTex == null) return;
             float gust = Mathf.PerlinNoise(now * .18f, 1.7f);                    // 和雨用同一阵风
             float breathe = .5f + .5f * Mathf.Sin(now * Mathf.PI * 2 / 4.4f);  // 呼吸：约 4.4 秒一次，肩背起伏
             if (Event.current.type == EventType.Repaint)
@@ -292,7 +304,7 @@ namespace ThreadZero
                         pts[j * (NX + 1) + i] = new Vector3(sp.x, sp.y, 0);
                     }
                 GL.PushMatrix(); GL.LoadPixelMatrix(0, Screen.width, Screen.height, 0);
-                titleHeroMat.mainTexture = titleHero; titleHeroMat.SetPass(0);
+                titleHeroMat.mainTexture = heroTex; titleHeroMat.SetPass(0);
                 GL.Begin(GL.QUADS); GL.Color(Color.white);
                 for (int j = 0; j < NY; j++)
                     for (int i = 0; i < NX; i++)
@@ -370,18 +382,19 @@ namespace ThreadZero
         // ---------- 开场 ----------
         private void OpeningScreen()
         {
-            if (!titleArtTried) { titleArtTried = true; titleArt = Resources.Load<Texture2D>("Art/V16/Title/title"); }
+            bool bright = UiTheme.BrightArt; Texture2D art = TitleArtNow(bright);
             float t = clock - openingAt, end = 1f + OpeningLines.Length * OpeningStep;
-            Ui.FillScreen(Ui.Hex(0x0B0D10));
-            if (titleArt != null)
-            {   // 标题图压暗、慢慢推近
-                float z = 1.04f + t * .006f; Color old = GUI.color; GUI.color = new Color(.32f, .34f, .38f, Mathf.Clamp01(t / 2f));
-                GUI.DrawTexture(Ui.R(800 - 800 * z, 450 - 450 * z, 1600 * z, 900 * z), titleArt, ScaleMode.ScaleAndCrop); GUI.color = old;
+            Ui.FillScreen(bright ? Ui.Hex(0xFFF8E6) : Ui.Hex(0x0B0D10));
+            if (art != null)
+            {   // 标题图压暗、慢慢推近（B：亮色图上盖一层奶白薄纱，字用深色）
+                float z = 1.04f + t * .006f, fa = Mathf.Clamp01(t / 2f); Color old = GUI.color; GUI.color = bright ? new Color(1, 1, 1, fa) : new Color(.32f, .34f, .38f, fa);
+                GUI.DrawTexture(Ui.R(800 - 800 * z, 450 - 450 * z, 1600 * z, 900 * z), art, ScaleMode.ScaleAndCrop); GUI.color = old;
+                if (bright) Ui.FillScreen(new Color(1f, .985f, .935f, .7f * fa));
             }
             for (int i = 0; i < OpeningLines.Length; i++)
             {
                 float a = Mathf.Clamp01((t - 1f - i * OpeningStep) / .9f);
-                if (a > 0) Ui.FitText(80, 330 + i * 64, 1440, 48, OpeningLines[i], 26, Ui.Alpha(i == OpeningLines.Length - 1 ? Ui.Orange : Ui.Panel, a), TextAnchor.MiddleCenter, i == OpeningLines.Length - 1);
+                if (a > 0) Ui.FitText(80, 330 + i * 64, 1440, 48, OpeningLines[i], 26, Ui.Alpha(i == OpeningLines.Length - 1 ? Ui.Orange : TitleInk, a), TextAnchor.MiddleCenter, i == OpeningLines.Length - 1);
             }
             float ba = Mathf.Clamp01((t - end) / .6f);
             ProbeTextDraw();

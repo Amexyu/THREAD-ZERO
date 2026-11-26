@@ -1,0 +1,37 @@
+{
+ "scale": 5.0,
+ "weapon_class": "chain",
+ "weapon": {
+  "file": "weapon.png",
+  "pivot": [
+   23.55,
+   1.47
+  ],
+  "tip": [
+   23.55,
+   72.0
+  ]
+ },
+ "paint": {
+  "file": "paint.png",
+  "pivot": [
+   23.55,
+   1.47
+  ]
+ },
+ "hook": {
+  "file": "weapon.png",
+  "pivot": [
+   23.55,
+   1.47
+  ]
+ },
+ "hook_paint": {
+  "file": "paint.png",
+  "pivot": [
+   23.55,
+   1.47
+  ]
+ },
+ "chain": "cable"
+}

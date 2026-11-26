@@ -6,7 +6,9 @@ re:—  第 (\d+) / (\d+) 波 · 剩余 (\d+)  —	—  Wave {1}/{2} · {3} left
 re:CHAPTER (\d) / 第(.)章	CHAPTER {1}
 re:最高 (\d+) 层 · 下个里程碑 (\d+)	Best F{1} · Next milestone F{2}
 re:不选 · (\d+) 秒后跳过	Skip · auto in {1}s
-re:义体接入 · (.+)	Implant installed · {1}
+re:飞升装备 · (.+)	Ascension Gear · {1}
+re:装上飞升装备：(.+)	Gear installed: {1}
+re:(.+)  又多接上了一根「线」。	{1}  One more thread, connected.
 re:机械飞升  (\d+) / (\d+)	Mechanical Ascension  {1} / {2}
 re:(\d+) 件未查看	{1} unseen
 re:已自动分解 (\d+) 件 · \+(\d+)	Auto-salvaged {1} · +{2}
@@ -176,47 +178,49 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 · 群伤	· Area
 ✓ 已激活	✓ Active
 一	1
+一根根毛线从云里拉出来，把整座城织在了一起	Strands of yarn reach down from the clouds, knitting the city together
 一键分解	Salvage All
 七	7
 三	3
+三层喷泉准点喷水，连水花都排得整整齐齐	The three-tier fountain sprays on schedule, every splash in line
 上场	Deploy
 上城玻璃	Uptown Glass
-上城的一切都靠冷却中枢维持体温	Everything in Uptown keeps its temperature thanks to the Cooling Core
-上城的地板下面，是把整座城织在一起的网	Beneath Uptown's floors is the web that weaves the whole city together
+上城的一切都靠冷却中枢的五台大风扇吹着	All of Uptown is kept cool by the Cooling Core's five giant fans
+上城的机器人只认通行证，闸机一个比一个挑剔	Uptown bots only trust passes, and every ticket gate is picky
 上城礼帽	Uptown Top Hat
 下一级：	Next level:
 下装	Legs
 不屈	Unyielding
 不屈：留下 20% 生命继续战斗	Unyielding: hanging on with 20% HP
 不支持此版本存档：	Unsupported save version: 
-中继塔之间的走廊被屏蔽甲兵封死了	The corridors between the relay towers are sealed off by Shield Troopers
 中继塔廊	Relay Tower Walk
 中继头环	Relay Circlet
-中继屋顶	Relay Rooftop
 中继弩枪	Relay Crossbow Gun
 中继护膝	Relay Knee Guards
 中继电池箱	Relay Battery Box
+中继背架	Relay Backframe
 中继脊柱	Relay Spine
 主存档损坏，已从备份恢复	The main save was damaged and has been restored from the backup
 主线打完了：工坊开放「回收终端」，花零件回收装备；「机密」「原型」也能花核心突破了。	Main story cleared: the Workshop's Recycle Terminal is open, so you can spend Parts to recycle gear, and Classified and Prototype gear can now break through with Cores.
 义	EYE
-义体接入 ·	Implant installed ·
 义体能升级	Implant upgrade ready
 义眼	Eye
 九	9
 二	2
+云上线轴	Spools in the Clouds
 五	5
 产地 ·	Source ·
 仅使用外观	Use look only
 仅量产	Standard only
 从低到高 ↑	Low to high ↑
+从天桥的格栅往下看，整座城都在晒太阳	Look down through the grating: the whole city is sunbathing
 从左边选一件装备\n在这里升级、重校词条或突破	Pick gear on the left\nto upgrade, recalibrate or break it through here
 从织网深处捞一件装备：部位随机，至少是特装。出不出货都算一次保底。	Pull one piece of gear from deep in the weave: random slot, at least Special. Every pull counts toward the guarantee.
 从高到低 ↓	High to low ↓
 伞架无人机	Umbrella-Frame Drone
 传感件	Sensor Parts
+传送带的尽头亮着总调度塔的灯	At the end of the conveyor, the Dispatch Tower's lights are on
 传送干线	Conveyor Trunk
-传送干线的尽头亮着总调度塔的灯	At the end of the conveyor trunk, the lights of the Dispatch Tower are on
 伤害回血	Life Steal
 低强度	Low
 使用	Use
@@ -227,14 +231,13 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 信号员长衣	Signalman's Long Coat
 信号员风衣	Signalman's Trench Coat
 信号员马裤	Signalman's Breeches
-信号塔	Signal Tower
-信号干扰机	Signal Jammer
+信号屋顶	Signal Rooftops
+信号屋顶之上，是从来不下雨的镜面上城	Above the Signal Rooftops lies Mirror Uptown, where it never rains
 信号弩	Signal Crossbow
 信号护目镜	Signal Goggles
 信号爆矢	Signal Burst Bolt
 信号目镜	Signal Eyepiece
 信号禁区	Dead Zone
-信号禁区之上，是从来不下雨的镜面上城	Above the Dead Zone is Mirror Uptown, where it never rains
 信号禁区断讯者	Dead Zone Silencer
 修好后撤回上一关补给，变强后自动再挑战	After repairs you'll fall back a stage to resupply, then retry automatically once you're stronger
 倍速	Speed
@@ -252,32 +255,30 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 八	8
 六	6
 关	Off
-关节换成了织网的标准件，背上多了一对散热鳍。全力运转的时候，它们烧得通红。	The joints are standard Weave parts now, and a pair of heat fins juts from the back. At full power, they glow red-hot.
 关闭	Close
 写展览起点失败：	Couldn't write the exhibition starting point: 
 军规	Military
+冰箱大块头	Fridge Bruiser
 冲锋	charger
 冷光头盔	Cold-Light Helmet
 冷光折翼	Cold-Light Wings
 冷却中枢	Cooling Core
-冷却井	Cooling Well
-冷却井深处，干扰中继还在嗡嗡作响	Deep in the cooling well, a jamming relay is still humming
 冷却循环：生命 +200	Coolant Loop: HP +200
 冷却服	Coolant Suit
+冷却液咕嘟咕嘟冒泡，机器人在风扇前面乘凉	Coolant bubbles away while robots chill out in front of the fans
 冷却背罐	Coolant Tank
 冷却腿甲	Coolant Greaves
 冷却重锤	Coolant Maul
-冷核心脏	Cold-Core Heart
+冷核喷气背包	Cold-Core Jetpack
+冷核喷气背包第一次点火，回收员一下跳过了整条街——离飞起来只差一点。	The Cold-Core Jetpack fires for the first time, and the Recycler clears a whole street in one leap. Flight is so close.
 减伤蓄能，强化下一次攻击	Blocks damage and charges your next attack
 减弱	Reduced
-击杀回复	Kill Heal
-击杀敌人回复 1.5% 最大生命	Killing an enemy heals 1.5% of max HP
 击败 1-7 闸门看守后开放	Unlocks after defeating the Gatekeeper at 1-7
 击败敌人后，回收到的装备会出现在这里	Gear you recover from defeated enemies shows up here
 击退	Knockback
 分拣仓	Sorting Bay
 分拣仓内	Inside the Sorting Bay
-分拣仓把一切都当作货物处理，包括人	The sorting bay treats everything as cargo, people included
+分拣机把什么都当成包裹，连回收员都被贴了快递单	The sorter treats everything as a parcel. Even the Recycler got a label
 分解	Salvage
 分解得到的零件 +25%	Parts from salvaging +25%
 分钟	min
@@ -294,10 +295,8 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 动力件	Power Parts
 勤务短铳	Duty Pistol
 协作	With help from
-协议中继	Protocol Relay
 协议发射器	Protocol Launcher
 协议回廊	Protocol Corridor
-协议回廊里巡逻的是第一代织网守卫	The Protocol Corridor is patrolled by first-generation Weave Guards
 协议外骨骼	Protocol Exoskeleton
 协议头环	Protocol Circlet
 协议守卫	Protocol Guard
@@ -309,15 +308,17 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 协议无人机	Protocol Drone
 单体	Single target
 单体伤害	Single-Target Damage
+卫星锅小车	Dish Buggy
+卷盘一直在转，却没有人在听	The reels keep turning, but no one is listening
 卸下	Remove
-压力管廊	Pressure Gallery
 厚甲	Thick Armor
 原型	Prototype
 去工坊\n装备台	Workshop\nGear Bench
 去衣柜挑一件想要的装备	Pick something you want in the Wardrobe
 去零号深网	Go to Deep Net Zero
-叉臂装卸机	Forklift Loader
+又多接上了一根「线」。	One more thread, connected.
 及以下	and below
+双盾热水器	Twin-Shield Heater
 反光机能风衣	Reflective Tech Coat
 反光雨帽	Reflective Rain Hat
 反光雨披	Reflective Poncho
@@ -329,30 +330,33 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 受到伤害 −8%	Damage taken −8%
 叠上去更难，掉得更好（最多 3 个）	Each one makes it harder but improves drops (up to 3)
 叠层棚户	Stacked Shanties
-可以先去零号深网刷一会（选关最下面）——每层都有掉落，还能攒织网碎片升义体。	Try farming Deep Net Zero for a while (bottom of stage select): every floor has drops, and you'll collect Weave Shards for your implants.
+可以先去零号深网刷一会（选关最下面）——每层都有掉落，还能攒织网碎片升飞升装备。	Try farming Deep Net Zero for a while (bottom of stage select): every floor has drops, and you'll collect Weave Shards for your Ascension Gear.
+台灯炮塔	Lamp Turret
+吊扇运输机	Ceiling Fan Carrier
 吊臂潜工	Crane Diver
 吊臂钩索	Crane Hook Line
-吊装通道	Hoist Passage
-吊装通道的探照灯一直跟着回收员	The searchlights of the hoist passage keep following the Recycler
 吊车安全盔	Crane Hard Hat
 吊钩横扫	Hook Sweep
 名称	Name
 后排	Back
-后脑接上了织网接口。每一根线缆里的声音，回收员都听得见。	A Weave interface is plugged into the back of the head. The Recycler can hear the voice in every cable.
 品质	Quality
 品质可多选；不同条件同时满足。词条／效果按钮点击切换。	You can pick several qualities; all conditions must match. Click the stat/effect buttons to toggle them.
+喷气背包	Jetpack
+喷泉、玫瑰和温室——这里连花都要排队检票	Fountains, roses, greenhouses: even the flowers queue for tickets
+喷泉广场	Fountain Plaza
 四	4
 回到标题	Back to Title
 回刷补给中	Farming for supplies
 回收	Salvage
 回收、改造、穿上它——直到第零号接上整张网。	Reclaim it, rebuild it, wear it, until Number Zero is wired into the whole Weave.
 回收员	Recycler
-回收员从沉降区最底部的排污口爬了出来	The Recycler crawled out of the outfall at the very bottom of the Sinkzone
+回收员从老城水道出发，第一只离家出走的机器人正在水里打滚	The first runaway robot is rolling around in the Old Town Canal
 回收员兜帽	Recycler Hood
 回收员工装裤	Recycler Work Pants
-回收员把最后一根线缆接上的时候，整座城的声音同时安静了下来——不是被吞没，是被听见了。	When the Recycler connected the last cable, every voice in the city fell quiet at once: not swallowed, but heard.
+回收员接上最后一根线缆，零号醒了，第一次听见了整座城——不是被吞没，是被听见了。	With the last cable connected, Zero woke and heard the whole city at last: not swallowed, but heard.
 回收员终装	Recycler's Final Outfit
-回收员编号：零。今天开始回收。	Recycler number: Zero. Reclamation starts today.
+回收员编号：零。今天开始，把它们一只只接回家。	Recycler No. Zero. Starting today, I'm bringing them home, one by one.
+回收回血	Recycle Heal
 回收无人机	Recycler Drone
 回收目标	Recovery target
 回收终端	Recycle Terminal
@@ -364,10 +368,10 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 图纸不够	Not enough blueprints
 在整备里穿戴装备改变属性；在衣柜里应用外观只改变样子（武器外观只能套在同类武器上）。锁定或穿戴中的装备不能分解。	Equip gear in the Loadout to change your stats; applying a look in the Wardrobe only changes how you look (weapon looks only fit weapons of the same type). Locked or equipped gear can't be salvaged.
 在衣柜里把想要的装备设为回收目标并查看产地：在它那一章打精英和首领，最多 8 次必得；品质和随机属性另行抽取。	In the Wardrobe, set the gear you want as your recovery target and check where it drops: beat elites and bosses in its chapter and it's guaranteed within 8 tries (quality and random stats are rolled separately).
-城市的自动化设备失控以后，封锁线里只剩下机器，和回收员。	After the city's automated machines went rogue, only the machines were left inside the lockdown line. The machines, and the recyclers.
-处决	Execute
-处决：敌人低血时提高伤害	Execute: more damage to low-HP enemies
+垃圾堆成了山，只有回收社还在上班。	Trash piled up into mountains. Only the Recycling Co-op is still at work.
+城里的回收机器人，一夜之间全跑了。	Overnight, every recycling robot in the city ran away.
 复合装甲	Composite Armor
+外卖箱无人机	Delivery Box Drone
 外套	Coat
 外观	Look
 外观使用中	Wearing
@@ -377,6 +381,7 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 夜行侦察	Night Scout
 夜行面罩	Night Mask
 大小	Size
+大水闸	Great Sluice Gate
 天线兵马裤	Antenna Trooper Breeches
 天线屋顶	Antenna Rooftop
 天线束	Antenna Bundle
@@ -386,7 +391,6 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 天线警棍	Antenna Baton
 失去战斗能力，3 秒后维修重试；无装备损失。	Knocked out. Repairs and retry in 3 s; no gear lost.
 失去战斗能力，修好后撤回上一关补给；变强后自动再挑战。	Knocked out. After repairs you'll fall back to resupply, then retry automatically once stronger.
-失控巡逻机	Rogue Patroller
 头部	Head
 套装	Set
 字体	Fonts
@@ -396,43 +400,38 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 存档缺少版本号	Save data has no version number
 完整	Full
 定向回收订单	Targeted Recovery Order
-定向干扰塔	Directional Jammer Tower
 定向干扰枪	Directional Jammer Gun
 定时锁定目标，目标多受伤害，联动无人机与电弧	Periodically locks a target so it takes more damage; boosts Drone and Arc
 审计之庭	Court of Audit
 审计制服	Auditor Uniform
-审计卫兵	Audit Sentry
 审计员	Auditor
 审计手炮	Auditor Hand Cannon
 审计数据箱	Audit Data Case
 审计耳机	Auditor Headphones
-审计长廊	Audit Gallery
-审计长廊的镜面卫兵只认通行证	The Mirror Guards of the Audit Gallery only recognize passes
 对应装备 ·	Matching gear ·
 对比当前穿戴	Compared to equipped
 对满血的敌人伤害 +25%	+25% damage to enemies at full HP
 封闭式头盔	Sealed Helmet
+小抽水站	Little Pump Station
 小时	h
 小窗	Mini window
+小风扇蜻蜓	Fan Dragonfly
 尚未收藏	Not collected yet
 尾声 · 第零号	Epilogue · Number Zero
+屋顶广播站	Rooftop Radio Station
 屋顶维修	Rooftop Repair
 屋顶维修裤	Rooftop Repair Pants
 屏蔽伞	Shielding Umbrella
 屏蔽天线兵	Shield Antenna Trooper
 屏蔽干扰	Shield Jammer
-屏蔽椎节：防御 +10	Shielded Vertebrae: Defense +10
-屏蔽甲兵	Shield Trooper
 屏蔽网刃	Shield-Mesh Blade
 屏蔽网背心	Shield-Mesh Vest
-屏蔽走廊	Shielded Corridor
-屏蔽重甲	Shield Heavy
+屏蔽背板：防御 +10	Shielded Backplate: Defense +10
 屏蔽面罩	Shielding Mask
 展开	Expand
 展览中 · 按 Ctrl+Shift+E 退出	Exhibiting · Ctrl+Shift+E to exit
 展览模式	Exhibition Mode
 属性	Stats
-巡逻机开始成群出现，封锁比传言中更严	Patrol drones start showing up in swarms. The lockdown is tighter than the rumors said
 工坊	Workshop
 工坊可以洗炼词条，把用不上的词条换成攻击、暴击或生命。	The Workshop can reforge stats, swapping useless ones for Attack, Crit or HP.
 工坊的改造板还有买得起的节点，点上再打会轻松不少。	There are Mod Board nodes you can afford in the Workshop. Grab them before you retry.
@@ -457,14 +456,12 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 已锁定的装备不可分解	Locked gear can't be salvaged
 帧数	Frame rate
 常规攻击	Basic attacks
-干扰中继	Jamming Relay
 干扰无人机舱	Jammer Drone Pod
 干扰站	Jammer Station
 干扰站内	Inside the Jammer Station
-干扰站把所有信号都切成了噪音	The jammer station chops every signal into noise
 幸运	Luck
 幸运 +	Luck +
-广播里第一次出现「零号协议」	For the first time, the broadcast mentions "Protocol Zero"
+广播站的录音机里，存着全城的声音	The station's tape machines hold the sound of the whole city
 应急维修	Emergency Repair
 应急维修：回复 25% 生命	Emergency Repair: healed 25% HP
 应用外观	Apply look
@@ -484,39 +481,45 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 当前外观	Current look
 当前穿戴	Equipped
 当前配装	Current Loadout
+录音间	Recording Room
+彩色小楼之间的水巷里，机器人在堵别人家的排水管	Between the painted houses, robots are plugging everyone's drainpipes
+彩色水巷	Painted Canal Lane
+彩虹天桥	Rainbow Skybridge
 心	HRT
 心脏	Heart
+快递柜	Parcel Locker
 快闸	Quick Gate
 思源黑体 / Noto Sans CJK（SC · JP · KR）：© Adobe，SIL Open Font License 1.1	Source Han Sans / Noto Sans CJK (SC · JP · KR): © Adobe, SIL Open Font License 1.1
 怪物出手快 25%；幸运 +15，高品质更常见	Enemies attack 25% faster; Luck +15, high quality more common
 怪物生命 +50%；普通怪掉落率 ×1.4	Enemy HP +50%; regular enemy drop rate ×1.4
 总调度吊臂	Dispatch Crane
-总调度吊臂的调度镜头改成的义眼。暴击 +6%，攻击 +4。	An artificial eye rebuilt from the Dispatch Crane's control lens. Crit +6%, Attack +4.
-总调度吊臂：整条货运线的管理者	The Dispatch Crane: warden of the whole freight line
+总调度吊臂下班回家前，把调度镜头送给了回收员。暴击 +6%，攻击 +4。	Before clocking off and heading home, the Dispatch Crane gave the Recycler its control lens. Crit +6%, Attack +4.
+总调度吊臂：下雨也坚持加班，把什么都当货物吊走，包括你	Dispatch Crane: works overtime in the rain, hauling off anything as cargo. Even you
 总调度塔	Dispatch Tower
 恢复实际装备外观	Restore equipped looks
-悬空走道上挂满无主的旧衣	The hanging walkways are full of old clothes nobody owns anymore
 想留下的装备，先在右侧详情里点「锁定」。不想每次手动点，可以在设置里打开自动分解。	To keep a piece of gear, click "Lock" in its details on the right. If you'd rather not do this by hand, turn on Auto-Salvage in Settings.
 想要这一款？设为回收目标	Want this one? Set it as your recovery target
 感谢游玩。	Thanks for playing.
-我的病没有药可治。能换掉的零件，都在封锁区里。	There's no cure for what I have. Every part I could replace is inside the lockdown zone.
 战力	Power
+戴上织网耳机，零号认出了回收员：「欢迎回来，第零号。」喷气背包全开——从今天起，城里哪里都飞得到。	With the Weave Headphones on, Zero recognizes the Recycler: "Welcome back, Number Zero." Jetpack at full power. From today, you can fly anywhere in the city.
 手	ARM
 手臂	Arm
 打完主线后开放	Unlocks after the main story
 打精英和首领伤害 +10%	+10% damage to elites and bosses
-打败了第一个首领，零号深网开放了：在选关最下面，一层比一层难，还能攒织网碎片升义体。	You beat your first boss and Deep Net Zero is open: it's at the bottom of stage select. Each floor is harder than the last, and you'll collect Weave Shards to upgrade implants.
-打过第一个首领后，选关最下面可以进零号深网：一层层往上刷，每层都有掉落和织网碎片。织网碎片在整备页左边升级义体，义体越多越强，主角一步步机械飞升。	After your first boss, you can enter Deep Net Zero from the bottom of stage select: climb floor by floor, with drops and Weave Shards on every floor. Spend Weave Shards on the left side of the Loadout page to upgrade implants; the more implants, the stronger you get, step by step toward Mechanical Ascension.
+打败了第一个首领，零号深网开放了：在选关最下面，一层比一层难，还能攒织网碎片升飞升装备。	You beat your first boss and Deep Net Zero is open: it's at the bottom of stage select. Each floor is harder than the last, and you'll collect Weave Shards to upgrade your Ascension Gear.
+打过第一个首领后，选关最下面可以进零号深网：一层层往上刷，每层都有掉落和织网碎片。织网碎片在整备页左边升级飞升装备，装得越多越强，回收员一步步飞上去。	After your first boss, you can enter Deep Net Zero from the bottom of stage select: climb floor by floor, with drops and Weave Shards on every floor. Spend Weave Shards on the left side of the Loadout page to upgrade your Ascension Gear; the more gear, the stronger you get, as the Recycler climbs toward the sky.
+扫地机器人把水渠当成了泳池，到处都是水花	Sweeper bots think the channel is a pool. Splashes everywhere
+扫地机器狗	Sweeper Pup
 技能	Skill
 技能伤害 +20%	Skill damage +20%
 技能冷却	Skill Cooldown
 折光步枪	Refraction Rifle
-折光炮台	Prism Turret
 折光翼	Refraction Wings
 折叠回收背包	Folding Recovery Pack
 折叠货梯	Folding Cargo Lift
 折叠防护翼	Folding Guard Wings
 折叠雷达碟	Folding Radar Dish
+护目镜	Goggles
 护盾	Shield
 护盾反击	Shield Counter
 护盾回路	Shield Circuit
@@ -524,8 +527,8 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 护腿件	Leg Plates
 护膝战术裤	Kneepad Tactical Pants
 抽水总闸	Main Drain Gate
+抽水站的水泵被它们拧到了最大档	They've cranked the pump station up to full blast
 拆解专家	Dismantling Expert
-拆解者	Dismantler
 拾荒	Scavenger
 挂机	Idle
 挂机条	Idle bar
@@ -539,8 +542,6 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 换挂机条	Idle bar
 掉装备了：去「整备」比一比，穿上更好的。左边导航上的数字是还没看过的件数。	Gear dropped: compare it in the Loadout and equip the better one. The number on the left menu counts items you haven't looked at.
 排序：	Sort:
-排污口	Outfall
-排污防水裤	Sewer Waders
 接	PRT
 接入	Connect
 接口	Port
@@ -552,17 +553,19 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 撤回补给	Fall back to resupply
 支援	Support
 收下	Collect
+收尾	Finisher
+收尾：敌人低血时提高伤害	Finisher: more damage to low-HP enemies
 改良	Improved
 改良及以下	Improved and below
 改装件给这件装备加一个模块效果，和装备自带的效果算在一起（同一种最多两份）。可以随时换，换下来的回到库存。	A mod adds one module effect to this gear, stacking with its built-in effect (up to 2 of the same kind). Swap anytime; removed mods go back to your stock.
 改装位	Mod Slot
-改装协议守卫	Rebuilt Protocol Guard
-改装折光炮台	Rebuilt Prism Turret
-改装母线炮	Rebuilt Busbar Cannon
-改装炮车	Rebuilt Gun Cart
-改装甲兵	Rebuilt Trooper
-改装装卸机	Rebuilt Loader
-改装镜面无人机	Rebuilt Mirror Drone
+改装叉车	Rebuilt Forklift
+改装台灯炮塔	Rebuilt Lamp Turret
+改装火锅推车	Rebuilt Hotpot Cart
+改装爆米花炮塔	Rebuilt Popcorn Turret
+改装空调外机	Rebuilt AC Unit
+改装粉饼盒	Rebuilt Compact
+改装行李箱坦克	Rebuilt Suitcase Tank
 改装：	Mod:
 改造板	Mod Board
 改造板 ›	Mod Board ›
@@ -576,31 +579,30 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 故障猫耳终端	Glitched Cat-Ear Terminal
 敌人低血时提高伤害	More damage to low-HP enemies
 整备	Loadout
-整备页左边的义体可以升级了，碎片已经够了。	The implants on the left of the Loadout page can be upgraded. You already have enough shards.
+整备页左边的飞升装备可以升级了，碎片已经够了。	The Ascension Gear on the left of the Loadout page can be upgraded. You already have enough shards.
 断讯 · 出手变慢	Jammed · Slower attacks
 断讯中继	Dead-Signal Relay
 断讯斗篷	Dead-Signal Cloak
 断讯监视者	Silent Watcher
-断讯监视者的中继骨架改成的脊柱支架。生命 +60，防御 +6。	A spinal brace rebuilt from the Silent Watcher's relay frame. HP +60, Defense +6.
-断讯监视者：切断整座城市声音的东西	The Silent Watcher: the thing that cut off the whole city's voice
-断讯网桥	Dead-Signal Bridge
-断讯飞蛾	Static Moth
+断讯监视者回家前留下的中继天线，改成了背架，全城的广播都收得到。生命 +60，防御 +6。	The relay antenna the Silent Watcher left before heading home, now a backframe that picks up every broadcast in the city. HP +60, Defense +6.
+断讯监视者：把全城的声音都收起来存着——因为零号睡着了，没人听	Silent Watcher: saves every sound in the city, since Zero is asleep and no one listens
 新	NEW
 新功能开放	New Feature
 新游戏	New Game
 无人机	Drone
 无人机自动射击；标记会强化无人机和电弧；推进器搭配近战武器冲击更强；护盾会为下一次攻击蓄能。成群的关用手炮、重锤这类群伤武器更轻松。	Drones fire automatically; Mark boosts Drone and Arc; Thrusters hit harder with melee weapons; Shield charges up your next attack. Crowded stages are easier with area weapons like hand cannons and mauls.
 无人机：每 2.4 秒自动射击，标记增伤	Drone: fires every 2.4 s, more damage to marked targets
-无人货机沿着高架轨道来回巡逻	Unmanned cargo drones patrol back and forth along the elevated track
 无协议异常	No protocol anomalies
 无固定效果	No fixed effect
 无特殊效果	No special effect
 无缝推进	Seamless
+旧电视	Old TV
 显示	Display
-晒衣走道	Laundry Walkway
 普通怪有 12% 变成精英（精英掉 2 件）	12% of regular enemies become elites (elites drop 2 items)
 晶体护目镜	Crystal Goggles
 晶格推进器	Lattice Thruster
+晾衣栈道	Laundry Boardwalk
+晾衣绳上挂满了机器人偷来的袜子	The clotheslines are full of socks the robots stole
 暂停	Pause
 暴击	Crit
 暴击 +	Crit +
@@ -610,7 +612,6 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 替主角挡下 35% 的伤害，血更厚	Takes 35% of your damage, with more HP
 替主角挡下 35% 的伤害，血最厚	Takes 35% of your damage, with the most HP
 最低等级不能大于最高等级	Min level can't be higher than max level
-最后一块零件装好的时候，零织协议认出了回收员：第零号。从今天起，这座城由你来回收。	When the last part clicked into place, the Zero Weave Protocol recognized the Recycler: Number Zero. From today, this city is yours to reclaim.
 最新优先 ↓	Newest first ↓
 最早优先 ↑	Oldest first ↑
 最近回收	Recent Finds
@@ -626,6 +627,7 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 末段穿透	Last hit pierces
 本地自动保存	Autosaved locally
 机体	Chassis
+机器人都回了家，全城办了一场涂鸦节。	The robots all went home, and the whole city threw a graffiti festival.
 机密	Classified
 机库	Hangar
 机库 · 第二章开放	Hangar · Unlocks in Chapter 2
@@ -634,17 +636,17 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 机库能组装机器人	Robot ready to assemble
 机房防静电服	Anti-Static Server Suit
 机房雷达	Server Room Radar
+机柜都穿上了毛衣——零号怕冷，也怕孤单	Even the server racks wear sweaters. Zero gets cold, and lonely
 机械飞升	Mechanical Ascension
 枪机件	Gun Parts
 查看	View
 查看产出街区	View source district
 标记	Mark
 标记：定时锁定目标，目标多受伤害，联动无人机与电弧	Mark: periodically locks a target so it takes more damage; boosts Drone and Arc
+栏杆上绑满了收音机，一台比一台开得大声	Radios tied all along the railing, each one louder than the last
 核心	Cores
-棚屋里的人都不见了，只剩下衣服	Everyone in the shacks is gone. Only their clothes are left
-棚户下层	Shanty Underlevel
-棚户补丁裤	Patched Shanty Pants
-棱镜中继	Prism Relay
+桥下小卖亭	Kiosk Under the Bridge
+检票长街	Ticket Gate Avenue
 植入	Install
 植入芯片	Install Chip
 欢迎回来	Welcome Back
@@ -652,10 +654,7 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 正在行动	In progress
 武器	Weapon
 母体冠	Matrix Crown
-母线井	Busbar Shaft
-母线井里流动的不是电，是记忆	What flows through the busbar shaft isn't electricity. It's memory
 母线机房	Busbar Room
-母线炮	Busbar Cannon
 母线线轴	Busbar Reel
 母线重锤	Busbar Maul
 每 10 秒给主角 6% 生命的护盾	Gives you a shield worth 6% HP every 10 s
@@ -665,12 +664,12 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 每 3 秒重炮一发	Fires a heavy shell every 3 s
 每 4 秒突袭，近战武器强化冲击	Dash strike every 4 s, stronger with melee weapons
 每 8 秒给主角回复 3% 生命	Heals you for 3% HP every 8 s
-每一根天线都在低声重复同一段广播	Every antenna whispers the same broadcast over and over
-每一根线缆都连着一个被回收的人	Every cable is connected to someone who was reclaimed
+每一根天线都在重复同一段广播	Every antenna is repeating the same broadcast
 每一波开始得到 15% 生命的护盾	Gain a shield worth 15% HP at the start of each wave
 每三次攻击追加伤害	Bonus damage every third attack
 每关一次：生命低于 30% 时回复 25%	Once per stage: heal 25% when below 30% HP
 每关一次：被打倒时一半概率留 20% 生命继续	Once per stage: 50% chance to survive a knockdown with 20% HP
+每回收一只机器人回复 1.5% 最大生命	Each robot recycled heals 1.5% of max HP
 每段穿透	Every hit pierces
 每波冲锋怪 +50%；零件 ×1.5	+50% chargers per wave; parts ×1.5
 每秒攻击	Attacks/s
@@ -680,22 +679,26 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 每级生命 +8	HP +8 per level
 每级零件回收 +0.4%、幸运 +0.05	+0.4% Parts, +0.05 Luck per level
 毕业制作 · v0.21	Graduation Project · v0.21
+毛衣机甲	Sweater Mech
 气动钉枪	Pneumatic Nail Gun
+水巷补丁裤	Canal Lane Patch Pants
+水道之上是高架轻轨，太阳雨下个不停	Above the canals runs the tramway, under a sun shower that won't quit
+水道防水裤	Canal Waders
 汲取	Leech
 汲取：造成伤害恢复生命	Leech: heal from the damage you deal
 沉降区	The Sinkzone
-沉降区之上，是彻夜不停的雨中货运线	Above the Sinkzone runs a freight line that never stops, all night, in the rain
 沉降区回收员	Sinkzone Recycler
 没有可分解的装备	Nothing to salvage
 没有符合条件的装备。\n可修改条件或点击「清空筛选」。	No gear matches.\nChange the filters or click "Clear filters".
 没有芯片槽（特装及以上才有）	No chip slots (Special or better only)
 没有预设存档	No preset save
-泵站入口	Pump Station Gate
 泵站管廊	Pump Gallery
 洗炼	Reforge
 洗炼 · 进入第三章后开放	Reforge · Unlocks in Chapter 3
 洗炼 · 进入第四章后开放	Reforge · Unlocks in Chapter 4
+洗衣机	Washer
 测试存档 · F8 切回正式 · F9 清空重开	Test save · F8 back to real save · F9 wipe and restart
+涂鸦水渠	Graffiti Channel
 深层回收	Deep Recycle
 深网 ·	Deep Net ·
 深网 · 母线之翼	Deep Net · Busbar Wings
@@ -707,8 +710,14 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 清空筛选	Clear filters
 清除异常	Clear anomalies
 火力	Firepower
+火锅推车	Hotpot Cart
+灯塔栈桥	Lighthouse Pier
+灯塔的红灯一闪一闪，像在给罢工的机器人打拍子	The lighthouse blinks red, keeping time for the striking robots
+灯笼毛毛虫	Lantern Caterpillar
+灯笼长廊	Lantern Gallery
 点一下关掉	Click to close
 点一件装备，回到装备台查看。	Click a piece to view it on the Bench.
+爆米花炮塔	Popcorn Turret
 物流高架	Freight Overpass
 物流高架装卸长	Overpass Loadmaster
 特效伤害	Effect Damage
@@ -716,8 +725,7 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 狂潮	Frenzy
 现在的进度会清空，从第一章重新开始。原存档会先复制一份留在存档文件夹里（文件名带 archived 和时间），不会真的丢。	Your current progress will be cleared and you'll start over from Chapter 1. A copy of the old save is kept in the save folder first (its name includes "archived" and the time), so nothing is truly lost.
 现在：	Now:
-玻璃天桥	Glass Skybridge
-玻璃天桥下面，是回收员一路爬上来的整座城	Below the glass skybridge lies the whole city the Recycler climbed up through
+玻璃展柜	Showcase Bruiser
 玻璃斗篷	Glass Cloak
 玻璃纤维靴裤	Fiberglass Boot Pants
 生命	HP
@@ -730,6 +738,7 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 电弧	Arc
 电弧：每三次攻击追加伤害	Arc: bonus damage every third attack
 电池组信号塔	Battery Signal Mast
+电饭锅无人机	Rice Cooker Drone
 界面：新版皮肤（F4 切回旧版）	UI: new skin (F4 for the old layout)
 界面：旧版（F4 切到新版皮肤）	UI: old layout (F4 for the new skin)
 留空不限 · 1–	Leave blank for any · 1–
@@ -744,7 +753,6 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 离线收益上限 2 小时 → 4 小时	Offline earnings cap 2 h → 4 h
 离线收益上限 8 小时 → 12 小时	Offline earnings cap 8 h → 12 h
 秒	s
-积水暗渠	Flooded Culvert
 称号	Titles
 稀有度	Rarity
 程序与系统设计：Claude（Anthropic）	Programming and systems design: Claude (Anthropic)
@@ -756,27 +764,31 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 空存档	Empty save data
 空槽	Empty
 空槽 · 植入	Empty · Install
+空调外机	AC Unit Bruiser
 穿戴中	Equipped
 穿戴中的装备不可分解	Equipped gear can't be salvaged
 穿戴装备	Equip
 穿搭预览 · 只改变样子	Outfit preview · Looks only
+穿衣镜衣柜	Mirror Wardrobe
 窗口	Windowed
 窗口 · 点击切到全屏	Windowed · Click for fullscreen
 窗口大小	Window size
 立即保存	Save Now
 章	Chapter
 第一章首领回收完成 · 零号深网与第二章已开放	Chapter 1 boss reclaimed · Deep Net Zero and Chapter 2 are open
-第一阶段 · 机械呼吸	Stage 1 · Mechanical Breath
-第三章首领回收完成 · 中继脊柱已装上 · 第四章已开放	Chapter 3 boss reclaimed · Relay Spine installed · Chapter 4 is open
-第三阶段 · 织网接口	Stage 3 · Weave Interface
-第二章首领回收完成 · 调度义眼已装上 · 第三章已开放	Chapter 2 boss reclaimed · Dispatch Eye installed · Chapter 3 is open
-第二阶段 · 替换关节	Stage 2 · Replaced Joints
-第四章首领回收完成 · 冷核心脏已装上 · 第五章已开放	Chapter 4 boss reclaimed · Cold-Core Heart installed · Chapter 5 is open
+第一阶段 · 装上臂套	Stage 1 · Gauntlet On
+第三章首领回收完成 · 中继背架已装上 · 第四章已开放	Chapter 3 boss reclaimed · Relay Backframe equipped · Chapter 4 is open
+第三阶段 · 喷气点火	Stage 3 · Jet Ignition
+第二章首领回收完成 · 调度护目镜已装上 · 第三章已开放	Chapter 2 boss reclaimed · Dispatch Goggles equipped · Chapter 3 is open
+第二阶段 · 背起天线	Stage 2 · Antennas Up
+第四章首领回收完成 · 冷核喷气背包已装上 · 第五章已开放	Chapter 4 boss reclaimed · Cold-Core Jetpack equipped · Chapter 5 is open
 等级	Level
 等级上限	Level Cap
 筛选	Filter
-管廊尽头就是整个沉降区的闸门	At the end of the gallery stands the gate of the whole Sinkzone
 管廊液压腿甲	Gallery Hydraulic Greaves
+管道尽头就是整条水道的总闸	At the end of the pipes is the main gate for the whole canal
+管道迷宫	Pipe Maze
+粉饼盒飞弹	Compact Missile
 精	E
 精英	Elite
 精英 ·	Elite ·
@@ -786,32 +798,33 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 精英扫描	Elite Scan
 精英掉落 10% 概率高一档品质	Elite drops have a 10% chance to be one tier higher
 红线	Redline
+纸灯笼一盏接一盏亮起来，像是有人在等谁回家	Paper lanterns light up one by one, like someone waiting up for you
+纺车一直在转，把梦纺成线	The spinning wheels never stop, spinning dreams into thread
+纺车工坊	Spinning Wheel Workshop
 线圈信号	Coil Signal
 线圈发射器	Coil Launcher
 线缆头盔	Cable Helmet
 线缆护腿	Cable Leg Guards
-线缆深渊	Cable Abyss
 线缆编织	Cable Weave
 线缆编织甲	Cable-Woven Armor
 线缆鞭	Cable Whip
 织线一扫	Thread Sweep
 织网之翼	Weave Wings
+织网在做梦，回廊的刺绣上绣满了城里人忘掉的小事	The Weave is dreaming, embroidering little things the city forgot
 织网心室	Weave Ventricle
 织网心室在模仿一颗跳动的心脏	The Weave Ventricle is imitating a beating heart
-织网接口	Weave Interface
 织网母体	Weave Matrix
-织网母体回收完成 · 织网接口已接上 · 机械飞升开始	Weave Matrix reclaimed · Weave Interface connected · Mechanical Ascension begins
-织网母体的协议接口，接在后脑。攻击 +10，暴击 +5%，幸运 +5。	The Weave Matrix's protocol port, plugged into the back of the head. Attack +10, Crit +5%, Luck +5.
-织网母体：零织协议本身	The Weave Matrix: the Zero Weave Protocol itself
+织网母体回收完成 · 织网耳机已戴上 · 机械飞升开始	Weave Matrix reclaimed · Weave Headphones on · Mechanical Ascension begins
+织网母体留下的耳机，戴上就能听见全城。攻击 +10，暴击 +5%，幸运 +5。	Headphones left by the Weave Matrix. Put them on and you can hear the whole city. Attack +10, Crit +5%, Luck +5.
+织网母体：零号的梦。这位城市管家太久没人跟它说话，睡着了	Weave Matrix: Zero's dream. No one talked to the city's caretaker, so it fell asleep
 织网用记忆重建的楼层，越往上越不稳定	Floors the Weave rebuilt from memories; the higher you go, the less stable they get
 织网碎片	Weave Shards
 织网碎片不足 · 去零号深网刷	Not enough Weave Shards · Farm Deep Net Zero
 织网纺锤	Weave Spindle
-织网线虫	Weave Worm
 织网绑腿	Weave Puttees
 织网者	Weaver
+织网耳机	Weave Headphones
 织网边缘	Weave's Edge
-织网重甲	Weave Heavy
 织网长袍	Weave Robe
 织网面纱	Weave Veil
 织针刺剑	Weaving-Needle Rapier
@@ -820,6 +833,8 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 绞盘加压：攻速再 +5%	Winch Boost: Attack Speed +5% more
 绞盘机械臂	Winch Arm
 绞盘线轴	Winch Reel
+绞盘臂套	Winch Gauntlet
+绞盘臂套和调度护目镜都戴好了，回收员单手就能把机器人拎回家。	Winch Gauntlet and Dispatch Goggles on. The Recycler can carry a robot home with one hand.
 继续	Continue
 继续回收	Keep reclaiming
 继续行动	Resume
@@ -828,13 +843,17 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 置顶	On top
 美术素材：Gemini（Google）生成，由制作者挑选、修整后使用	Art assets: generated with Gemini (Google), selected and touched up by the creator
 群伤	Area
+老城水道	Old Town Canal
+耳机	Headphones
 聚焦	Focus
-肺换成了机械的，双手也是。回收员第一次可以不戴维生面罩睡觉。	The lungs are mechanical now, and so are both hands. For the first time, the Recycler can sleep without a life-support mask.
+背上的中继背架竖起了天线，全城的广播回收员都收得到。	The Relay Backframe raises its antennas. Every broadcast in the city reaches the Recycler.
 背包中	In bag
+背架	Backframe
 背水	Last Stand
 背部	Back
 脊	SPN
 脊柱	Spine
+臂套	Gauntlet
 自动分解	Auto-Salvage
 自动分解不会处理第一次获得的外观和当前回收目标。进度每 30 秒和关键操作后自动保存。	Auto-salvage never touches a look you're getting for the first time or your current recovery target. Progress autosaves every 30 seconds and after key actions.
 自动推进 · 关	Auto-advance · Off
@@ -853,10 +872,11 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 蓄电线圈模块	Charge Coil Module
 行动	Action
 行动指南	Field Guide
+行李箱坦克	Suitcase Tank
 衣柜	Wardrobe
 被打倒了也没关系：会先回前面的关攒零件、变强，再自动挑战这一关。	Getting knocked down is fine: you'll farm earlier stages for parts, get stronger, then retry this one automatically.
 装上	Install
-装上义体：	Implant installed:
+装上飞升装备：	Gear installed:
 装卸工	Loader
 装卸工护腿	Loader's Leg Guards
 装卸工负重马甲	Loader's Load Vest
@@ -869,7 +889,6 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 装备鉴定单	Inspection sheet
 装甲	Armor
 装甲片	Armor Plates
-装甲运输机	Armored Hauler
 角色会自动战斗、自动推进。每章 7 关，x-3、x-6 是精英，x-7 是首领。倒下只要维修几秒：先回刷前面的关攒零件，变强后自动再挑战。关掉游戏也有离线收益（最多算 8 小时）。	Your character fights and advances on their own. Each chapter has 7 stages: x-3 and x-6 are elite stages, x-7 is the boss. Getting knocked down only costs a few seconds of repairs: you farm earlier stages for parts, then retry automatically once you're stronger. You also earn offline while the game is closed (up to 8 hours).
 角色会自己往前打，不用操作。鼠标移到屏幕上沿、下沿或左边，终端界面（整备、衣柜、工坊）就会滑出来。	Your character fights forward on their own. Move the mouse to the top, bottom or left edge of the screen to slide out the terminal (Loadout, Wardrobe, Workshop).
 解锁	Unlock
@@ -880,22 +899,21 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 读档失败	Failed to load
 调度	Dispatch
 调度义眼	Dispatch Eye
+调度护目镜	Dispatch Goggles
 调度耳麦	Dispatch Headset
-货柜垒到看不见顶，里面有东西在走动	The containers are stacked out of sight, and something is moving inside
+货柜垒得比灯塔还高，里面传出打呼噜的声音	Containers stacked higher than the lighthouse. Something inside is snoring
 货柜堆场	Container Yard
 货柜焊接面罩	Container Welding Mask
-货运坡道	Cargo Ramp
-货运无人机	Cargo Drone
-货运线之上是信号禁区，屋顶上长满了天线	Above the freight line lies the Dead Zone, its rooftops overgrown with antennas
+货柜码头	Container Wharf
+货运机器人集体罢工，躲在桥下的小卖亭边看雨	Freight bots on strike, watching the rain by the kiosk under the bridge
+购物车叉车	Cart Forklift
 贯穿突刺	Piercing Thrust
 贴脸轰击	Point-Blank Blast
-起重机甲	Crane Mech
 跟随屏幕	Match display
+路由器	Router
 跳过 ›	Skip ›
-身上又多了一根「线」。	One more "thread" runs through your body.
 轨道检修	Track Inspector
 轨道检修工装裤	Track Inspection Pants
-轨道炮车	Rail Gun Cart
 轨道维修夹克	Track Maintenance Jacket
 轻型装甲外套	Light Armored Coat
 轻量推进背架	Light Thruster Frame
@@ -903,17 +921,15 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 过压弹	Overvolt Shot
 过载	Overload
 过载释放	Overload Release
-运输母机	Carrier Mothership
 近战突袭	Melee Rush
 还没有芯片。精英、首领有机会掉落，深网首领层更容易。	No chips yet. Elites and bosses can drop them, and Deep Net boss floors drop them more often.
 还没有设定回收目标	No recovery target set
 这一关打了太久：撤回上一关补给，变强后自动再挑战。	This stage is taking too long: falling back to resupply, then retrying automatically once stronger.
 这一关的怪成群地来，单体武器很吃亏。换一把标着「群伤」的武器（整备页武器详情里看，手炮、重锤、撞杆矛、霰弹、线圈这几类）会轻松很多。	Enemies here come in swarms, which is rough for single-target weapons. Switching to a weapon marked "Area" (see the weapon details in the Loadout: hand cannons, mauls, ram spears, shotguns, coils) makes it much easier.
-这件义体已经满级。其余义体升满后机械飞升完成。	This implant is maxed. Max out the rest to complete Mechanical Ascension.
 这件装备只提供属性。	This gear only gives stats.
+这件飞升装备已经满级。其余飞升装备升满后机械飞升完成。	This gear is maxed. Max out the rest to complete Mechanical Ascension.
 这次是用启动参数 -exhibit 打开的：去掉参数重新启动才会退出。	This session was started with -exhibit: restart without it to exit.
 这款外观对应的装备只提供属性，没有固定模块。	This look's gear only gives stats; it has no fixed module.
-这里的人从来不往下看	People here never look down
 进入	Enter
 进入零号深网	Entering Deep Net Zero
 进度已保存	Progress saved
@@ -950,27 +966,24 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 量产	Standard
 钉射扫射	Nail Barrage
 锁定	Lock
-镜像大厅	Hall of Mirrors
-镜像大厅里，回收员有一千个倒影	In the Hall of Mirrors, the Recycler has a thousand reflections
 镜刃	Mirror Blade
-镜甲重卫	Mirror-Plate Warden
 镜面 · 打它会反伤	Mirrored · Reflects damage
 镜面上城	Mirror Uptown
+镜面上城之上，是云里的零号织网	Above Mirror Uptown, Weave Zero floats in the clouds
 镜面上城的访客	Visitor of Mirror Uptown
 镜面卫兵	Mirror Guard
 镜面审计官	Mirror Auditor
-镜面审计官的冷却核心改成的人工心脏。生命 +120，攻速 +5%。	An artificial heart rebuilt from the Mirror Auditor's cooling core. HP +120, Attack Speed +5%.
-镜面审计官：决定谁有资格留在上城的东西	The Mirror Auditor: the thing that decides who gets to stay in Uptown
+镜面审计官盖完通行章，把冷却核心改成了喷气背包。生命 +120，攻速 +5%。	After stamping your pass, the Mirror Auditor turned its cooling core into a jetpack. HP +120, Attack Speed +5%.
+镜面审计官：决定谁有资格上来——回收员得先「买票」	Mirror Auditor: decides who may come up. The Recycler needs a "ticket" first
 镜面护腿	Mirror Leg Guards
-镜面无人机	Mirror Drone
 镜面无人机舱	Mirror Drone Pod
 镜面街区	Mirror District
 镜面街口	Mirror Street
 镜面面罩	Mirror Mask
 镜面风衣	Mirror Coat
 闸门看守	Gatekeeper
-闸门看守的绞盘核心改成的机械臂。攻速 +15%。	A mechanical arm rebuilt from the Gatekeeper's winch core. Attack Speed +15%.
-闸门看守：这一层的管理者	The Gatekeeper: warden of this level
+闸门看守回家前留下的绞盘核心，改成了臂套，单手就能拎起机器人。攻速 +15%。	The winch core the Gatekeeper left before heading home, now a gauntlet. Lift robots one-handed. Attack Speed +15%.
+闸门看守：不肯开闸——它怕水一放，渠里的小鱼没地方去	Gatekeeper: keeps the gate shut so the little fish won't wash away
 防御	Defense
 防御 +	Defense +
 防水潜工夹克	Waterproof Diver Jacket
@@ -980,7 +993,7 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 降噪头盔	Noise-Canceling Helmet
 随机词条	Random stats
 集齐一章的全部 5 套就解锁那一章的称号，显示在整备页的角色脚下。	Complete all 5 sets in a chapter to unlock that chapter's title, shown under your character on the Loadout page.
-雨停了，回收员第一次看见了天色	The rain stopped. For the first time, the Recycler saw the color of the sky
+雨停了，屋顶上挂起了一道彩虹	The rain has stopped, and a rainbow hangs over the rooftops
 雨幕信号员	Rain Signalman
 雨幕全息面罩	Rain-Curtain Holo Mask
 零件	Parts
@@ -992,8 +1005,6 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 零号战衣	Zero Battle Suit
 零号战装	Zero Battle Gear
 零号战裤	Zero Combat Pants
-零号机房	Server Room Zero
-零号机房：一切协议开始的地方	Server Room Zero: where every protocol began
 零号核心	Core Zero
 零号核心包	Zero Core Pack
 零号深网	Deep Net Zero
@@ -1002,28 +1013,33 @@ v0.22 · 毕业制作 · 展览模式	v0.22 · Graduation Project · Exhibition 
 零号目镜	Zero Eyepiece
 零号织网	Weave Zero
 零号织网的最深处没有敌人，只有一颗在呼吸的核心。	There are no enemies at the bottom of Weave Zero, only a core that breathes.
+零号问回收员下一道指令。回收员说：「一起把城刷成彩色的。」	Zero asked the Recycler for the next command. The answer: "Let's paint the city in color, together."
 零号霰枪	Zero Shotgun
-零度泵：攻速 +8%	Zero-Degree Pump: Attack Speed +8%
+零度喷口：攻速 +8%	Zero-Degree Nozzle: Attack Speed +8%
 零织协议	Zero Weave Protocol
 零织协议 / THREAD ZERO	THREAD ZERO
-零织协议不再追捕回收员。它在等第零号的下一道指令。	The Zero Weave Protocol no longer hunts the Recycler. It's waiting for Number Zero's next command.
 雷达碟炮	Radar Dish Cannon
 需装备近战武器	Requires a melee weapon
 需装备远程武器	Requires a ranged weapon
 震地	Ground Quake
 震屏	Screen Shake
 霓虹切刃	Neon Edge
+霓虹灯泡	Neon Bulb
 音乐	Music
 音效	Sound FX
+风扇长廊	Fan Gallery
 飞升	Ascension
-飞升完成 · 零号	Ascension Complete · Zero
+飞升完成 · 起飞	Ascension Complete · Liftoff
+飞升装备 ·	Ascension Gear ·
+飞升装备能升级	Ascension Gear upgrade ready
 首	B
 首领	Boss
 首领伤害	Boss Damage
 首领克星	Boss Breaker
 首领关	Boss stage
+香水瓶	Perfume Bottle
 高架货轨	Elevated Freight Line
-高架轨线	Elevated Track
+高架轻轨	Elevated Tramway
 黑白橙 · 中灰	Black/White/Orange · Mid gray
 黑白橙 · 浅（原版）	Black/White/Orange · Light (original)
 黑白橙 · 深灰	Black/White/Orange · Dark gray

@@ -1,0 +1,61 @@
+{
+ "lamps": [],
+ "windows": [],
+ "flows": [],
+ "steam": [],
+ "drips": [],
+ "water": [],
+ "blinks": [
+  {
+   "layer": 1,
+   "u": 0.8785,
+   "v": 0.5195,
+   "r": 0.0055,
+   "period": 0.9,
+   "duty": 0.5,
+   "phase": 0,
+   "color": {
+    "r": 1,
+    "g": 0.62,
+    "b": 0.1,
+    "a": 1
+   }
+  }
+ ],
+ "rain": [
+  {
+   "layer": 0,
+   "count": 80,
+   "angle": 12,
+   "speed": 1400,
+   "len": 44,
+   "width": 1.4,
+   "alpha": 0.2,
+   "v1": 1
+  }
+ ],
+ "props": [
+  {
+   "layer": 1,
+   "body": "C_hang_crate",
+   "wheel": "",
+   "x0": 806,
+   "spacing": 1612.8,
+   "baseV": 0.567,
+   "height": 0.36,
+   "wheelU": 0.5,
+   "wheelV": 0.5,
+   "wheelSize": 0.3,
+   "wheelSpeed": 0,
+   "hubR": 0,
+   "gaugeU": -1,
+   "gaugeV": 0,
+   "gaugeR": 0,
+   "motion": "slide",
+   "amp": 380,
+   "period": 18,
+   "pivotU": 0.5,
+   "pivotV": 0
+  }
+ ]
+}

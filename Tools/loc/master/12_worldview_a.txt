@@ -1,0 +1,138 @@
+# v0.38 世界观 A「机器人离家出走的夏天」：开场、尾声、35 关叙事、关卡名、飞升装备（原义体）、飞升阶段、首领回收提示
+# 开场
+城里的回收机器人，一夜之间全跑了。§街の回収ロボットが、一晩でみんな逃げ出した。§Overnight, every recycling robot in the city ran away.§도시의 회수 로봇들이 하룻밤 사이에 전부 도망쳤다.
+垃圾堆成了山，只有回收社还在上班。§ゴミは山のように積み上がり、まだ働いているのは回収社だけ。§Trash piled up into mountains. Only the Recycling Co-op is still at work.§쓰레기는 산더미처럼 쌓였고, 아직 일하는 곳은 회수 조합뿐이다.
+回收员编号：零。今天开始，把它们一只只接回家。§回収員番号：零。今日から、一体ずつ家に連れて帰る。§Recycler No. Zero. Starting today, I'm bringing them home, one by one.§회수원 번호: 제로. 오늘부터 한 대씩 집으로 데려간다.
+# 尾声（第一句沿用原来的）
+回收员接上最后一根线缆，零号醒了，第一次听见了整座城——不是被吞没，是被听见了。§最後のケーブルで零号が目覚め、初めて街の声を聞いた――呑み込まれたのではない、聞き届けられたのだ。§With the last cable connected, Zero woke and heard the whole city at last: not swallowed, but heard.§회수원이 마지막 케이블을 잇자 제로가 깨어나 처음으로 도시 전체를 들었다. 삼켜진 것이 아니라, 들린 것이다.
+机器人都回了家，全城办了一场涂鸦节。§ロボットたちはみんな家に帰り、街じゅうでグラフィティ祭りが開かれた。§The robots all went home, and the whole city threw a graffiti festival.§로봇들은 모두 집으로 돌아갔고, 온 도시가 그라피티 축제를 열었다.
+零号问回收员下一道指令。回收员说：「一起把城刷成彩色的。」§零号は回収員に次の指示をたずねた。回収員は答えた。「いっしょに、街をカラフルに塗ろう。」§Zero asked the Recycler for the next command. The answer: "Let's paint the city in color, together."§제로가 회수원에게 다음 명령을 물었다. 회수원이 답했다. "같이 도시를 알록달록하게 칠하자."
+# 飞升装备（原义体）：名字、部位、描述、特性
+绞盘臂套§ウインチガントレット§Winch Gauntlet§윈치 건틀릿
+臂套§ガントレット§Gauntlet§건틀릿
+闸门看守回家前留下的绞盘核心，改成了臂套，单手就能拎起机器人。攻速 +15%。§「水門番」が家に帰る前に残したウインチコアを改造したガントレット。片手でロボットを持ち上げられる。攻撃速度 +15%。§The winch core the Gatekeeper left before heading home, now a gauntlet. Lift robots one-handed. Attack Speed +15%.§수문 감시자가 집에 돌아가기 전에 남긴 윈치 코어로 만든 건틀릿. 한 손으로 로봇을 들어 올린다. 공격 속도 +15%.
+调度护目镜§管制ゴーグル§Dispatch Goggles§관제 고글
+护目镜§ゴーグル§Goggles§고글
+总调度吊臂下班回家前，把调度镜头送给了回收员。暴击 +6%，攻击 +4。§「総管制クレーン」が仕事を終えて帰る前に、管制レンズを回収員にくれた。会心 +6%、攻撃 +4。§Before clocking off and heading home, the Dispatch Crane gave the Recycler its control lens. Crit +6%, Attack +4.§총관제 크레인이 퇴근해 집에 가기 전에 관제 렌즈를 회수원에게 건넸다. 치명타 +6%, 공격 +4.
+中继背架§中継バックフレーム§Relay Backframe§중계 백프레임
+背架§バックフレーム§Backframe§백프레임
+断讯监视者回家前留下的中继天线，改成了背架，全城的广播都收得到。生命 +60，防御 +6。§「断信の監視者」が帰る前に残した中継アンテナを改造したバックフレーム。街じゅうの放送を受信できる。体力 +60、防御 +6。§The relay antenna the Silent Watcher left before heading home, now a backframe that picks up every broadcast in the city. HP +60, Defense +6.§단신 감시자가 집에 돌아가기 전에 남긴 중계 안테나로 만든 백프레임. 도시의 모든 방송이 잡힌다. 체력 +60, 방어 +6.
+屏蔽背板：防御 +10§遮断背板：防御 +10§Shielded Backplate: Defense +10§차폐 등판: 방어 +10
+冷核喷气背包§冷却コアジェットパック§Cold-Core Jetpack§냉각 코어 제트팩
+喷气背包§ジェットパック§Jetpack§제트팩
+镜面审计官盖完通行章，把冷却核心改成了喷气背包。生命 +120，攻速 +5%。§「鏡面監査官」は通行証にハンコを押すと、冷却コアをジェットパックに改造してくれた。体力 +120、攻撃速度 +5%。§After stamping your pass, the Mirror Auditor turned its cooling core into a jetpack. HP +120, Attack Speed +5%.§거울 감사관이 통행증에 도장을 찍어 주고 냉각 코어를 제트팩으로 바꿔 주었다. 체력 +120, 공격 속도 +5%.
+零度喷口：攻速 +8%§零度ノズル：攻撃速度 +8%§Zero-Degree Nozzle: Attack Speed +8%§영도 노즐: 공격 속도 +8%
+织网耳机§織網ヘッドホン§Weave Headphones§직조 헤드폰
+耳机§ヘッドホン§Headphones§헤드폰
+织网母体留下的耳机，戴上就能听见全城。攻击 +10，暴击 +5%，幸运 +5。§「織網の母体」が残したヘッドホン。つければ街じゅうの声が聞こえる。攻撃 +10、会心 +5%、幸運 +5。§Headphones left by the Weave Matrix. Put them on and you can hear the whole city. Attack +10, Crit +5%, Luck +5.§직조 모체가 남긴 헤드폰. 쓰면 도시 전체의 소리가 들린다. 공격 +10, 치명타 +5%, 행운 +5.
+# 飞升阶段
+第一阶段 · 装上臂套§第一段階・ガントレット装着§Stage 1 · Gauntlet On§1단계 · 건틀릿 장착
+第二阶段 · 背起天线§第二段階・アンテナを背負う§Stage 2 · Antennas Up§2단계 · 안테나를 메다
+第三阶段 · 喷气点火§第三段階・ジェット点火§Stage 3 · Jet Ignition§3단계 · 제트 점화
+飞升完成 · 起飞§昇華完了・テイクオフ§Ascension Complete · Liftoff§승화 완료 · 이륙
+绞盘臂套和调度护目镜都戴好了，回收员单手就能把机器人拎回家。§ウインチガントレットと管制ゴーグルを装着。回収員は片手でロボットを連れて帰れるようになった。§Winch Gauntlet and Dispatch Goggles on. The Recycler can carry a robot home with one hand.§윈치 건틀릿과 관제 고글을 장착했다. 이제 회수원은 한 손으로 로봇을 집에 데려갈 수 있다.
+背上的中继背架竖起了天线，全城的广播回收员都收得到。§背中の中継バックフレームがアンテナを立てた。街じゅうの放送が回収員に届く。§The Relay Backframe raises its antennas. Every broadcast in the city reaches the Recycler.§등에 멘 중계 백프레임이 안테나를 세웠다. 도시의 모든 방송이 회수원에게 닿는다.
+冷核喷气背包第一次点火，回收员一下跳过了整条街——离飞起来只差一点。§冷却コアジェットパックが初めて点火し、回収員は通りをひとっ跳びした――空を飛ぶまで、あと少し。§The Cold-Core Jetpack fires for the first time, and the Recycler clears a whole street in one leap. Flight is so close.§냉각 코어 제트팩이 처음 점화되자 회수원은 거리 하나를 단숨에 뛰어넘었다. 날기까지 한 걸음 남았다.
+戴上织网耳机，零号认出了回收员：「欢迎回来，第零号。」喷气背包全开——从今天起，城里哪里都飞得到。§織網ヘッドホンをつけると、零号が回収員に気づいた。「おかえり、第零号。」ジェットパック全開――今日から、街のどこへでも飛んでいける。§With the Weave Headphones on, Zero recognizes the Recycler: "Welcome back, Number Zero." Jetpack at full power. From today, you can fly anywhere in the city.§직조 헤드폰을 쓰자 제로가 회수원을 알아보았다. "어서 와, 제0호." 제트팩 최대 출력. 오늘부터 도시 어디든 날아갈 수 있다.
+# 首领回收提示
+第二章首领回收完成 · 调度护目镜已装上 · 第三章已开放§第二章のボス回収完了・管制ゴーグルを装着・第三章が開放された§Chapter 2 boss reclaimed · Dispatch Goggles equipped · Chapter 3 is open§2장 보스 회수 완료 · 관제 고글 장착 · 3장이 개방되었다
+第三章首领回收完成 · 中继背架已装上 · 第四章已开放§第三章のボス回収完了・中継バックフレームを装着・第四章が開放された§Chapter 3 boss reclaimed · Relay Backframe equipped · Chapter 4 is open§3장 보스 회수 완료 · 중계 백프레임 장착 · 4장이 개방되었다
+第四章首领回收完成 · 冷核喷气背包已装上 · 第五章已开放§第四章のボス回収完了・冷却コアジェットパックを装着・第五章が開放された§Chapter 4 boss reclaimed · Cold-Core Jetpack equipped · Chapter 5 is open§4장 보스 회수 완료 · 냉각 코어 제트팩 장착 · 5장이 개방되었다
+织网母体回收完成 · 织网耳机已戴上 · 机械飞升开始§織網の母体の回収完了・織網ヘッドホンを装着・機械昇華が始まる§Weave Matrix reclaimed · Weave Headphones on · Mechanical Ascension begins§직조 모체 회수 완료 · 직조 헤드폰 착용 · 기계 승화 시작
+# 界面（片段；整句模板在 04_action_modals.txt）
+飞升装备 ·§昇華装備・§Ascension Gear ·§승화 장비 ·
+装上飞升装备：§昇華装備を装着：§Gear installed:§승화 장비 장착:
+又多接上了一根「线」。§また一本、「糸」がつながった。§One more thread, connected.§또 한 가닥, '실'이 이어졌다.
+飞升装备能升级§昇華装備を強化できる§Ascension Gear upgrade ready§승화 장비를 강화할 수 있다
+这件飞升装备已经满级。其余飞升装备升满后机械飞升完成。§この昇華装備は最大レベル。残りの昇華装備も最大にすると機械昇華が完了する。§This gear is maxed. Max out the rest to complete Mechanical Ascension.§이 승화 장비는 최대 레벨이다. 나머지 승화 장비도 최대로 올리면 기계 승화가 완료된다.
+整备页左边的飞升装备可以升级了，碎片已经够了。§整備ページ左の昇華装備が強化できる。織網片はもう足りている。§The Ascension Gear on the left of the Loadout page can be upgraded. You already have enough shards.§정비 페이지 왼쪽의 승화 장비를 강화할 수 있다. 직조 조각은 이미 충분하다.
+可以先去零号深网刷一会（选关最下面）——每层都有掉落，还能攒织网碎片升飞升装备。§先に零号深網でしばらく稼ぐのもあり（ステージ選択の一番下）。どの層にもドロップがあり、昇華装備を強化する織網片も貯まる。§Try farming Deep Net Zero for a while (bottom of stage select): every floor has drops, and you'll collect Weave Shards for your Ascension Gear.§먼저 제로 딥넷에서 잠시 파밍해도 좋다(스테이지 선택 맨 아래). 층마다 드롭이 있고, 승화 장비를 강화할 직조 조각도 모인다.
+打败了第一个首领，零号深网开放了：在选关最下面，一层比一层难，还能攒织网碎片升飞升装备。§最初のボスを倒して、零号深網が開放された。ステージ選択の一番下にあり、層を重ねるごとに難しくなるが、昇華装備を強化する織網片も貯まる。§You beat your first boss and Deep Net Zero is open: it's at the bottom of stage select. Each floor is harder than the last, and you'll collect Weave Shards to upgrade your Ascension Gear.§첫 보스를 쓰러뜨려 제로 딥넷이 개방되었다. 스테이지 선택 맨 아래에 있으며, 층마다 어려워지지만 승화 장비를 강화할 직조 조각도 모인다.
+打过第一个首领后，选关最下面可以进零号深网：一层层往上刷，每层都有掉落和织网碎片。织网碎片在整备页左边升级飞升装备，装得越多越强，回收员一步步飞上去。§最初のボスを倒すと、ステージ選択の一番下から零号深網に入れます。1層ずつ登っていき、どの層にもドロップと織網片があります。織網片は整備画面の左側で昇華装備の強化に使い、装備が増えるほど強くなり、回収員は少しずつ空へ近づいていきます。§After your first boss, you can enter Deep Net Zero from the bottom of stage select: climb floor by floor, with drops and Weave Shards on every floor. Spend Weave Shards on the left side of the Loadout page to upgrade your Ascension Gear; the more gear, the stronger you get, as the Recycler climbs toward the sky.§첫 보스를 쓰러뜨리면 스테이지 선택 맨 아래에서 제로 딥넷에 들어갈 수 있습니다. 한 층씩 올라가며 층마다 드롭과 직조 조각이 있습니다. 직조 조각은 정비 화면 왼쪽에서 승화 장비 강화에 쓰며, 장비가 많을수록 강해지고 회수원은 한 걸음씩 하늘에 다가갑니다.
+# 章名 / 关卡名 / 场景名（只列新的；沿用的名字原来就有译文）
+信号屋顶§シグナル屋上§Signal Rooftops§신호 옥상
+老城水道§旧市街の水路§Old Town Canal§구시가지 수로
+涂鸦水渠§落書き水路§Graffiti Channel§그라피티 수로
+彩色水巷§カラフル水路§Painted Canal Lane§알록달록 물길
+晾衣栈道§物干しボードウォーク§Laundry Boardwalk§빨랫줄 나무길
+小抽水站§小さなポンプ場§Little Pump Station§작은 양수장
+管道迷宫§パイプ迷路§Pipe Maze§파이프 미로
+大水闸§大水門§Great Sluice Gate§대수문
+高架轻轨§高架ライトレール§Elevated Tramway§고가 경전철
+桥下小卖亭§高架下の売店§Kiosk Under the Bridge§다리 밑 매점
+货柜码头§コンテナ埠頭§Container Wharf§컨테이너 부두
+灯塔栈桥§灯台の桟橋§Lighthouse Pier§등대 잔교
+彩虹天桥§虹の歩道橋§Rainbow Skybridge§무지개 육교
+屋顶广播站§屋上放送局§Rooftop Radio Station§옥상 방송국
+录音间§録音室§Recording Room§녹음실
+检票长街§改札通り§Ticket Gate Avenue§개찰구 거리
+喷泉广场§噴水広場§Fountain Plaza§분수 광장
+风扇长廊§ファン回廊§Fan Gallery§선풍기 회랑
+云上线轴§雲の上の糸巻き§Spools in the Clouds§구름 위 실타래
+灯笼长廊§提灯回廊§Lantern Gallery§등롱 회랑
+纺车工坊§糸車工房§Spinning Wheel Workshop§물레 공방
+# 装备改名（第一章不再叫排污口 / 棚户）
+水道防水裤§水路の防水パンツ§Canal Waders§수로 방수 바지
+水巷补丁裤§水路街の継ぎはぎパンツ§Canal Lane Patch Pants§물길 골목 패치 바지
+# 35 关每关一句（转场关卡条，不带句号）
+回收员从老城水道出发，第一只离家出走的机器人正在水里打滚§旧市街の水路から出発。最初の家出ロボットが水の中で転げ回っている§The first runaway robot is rolling around in the Old Town Canal§구시가지 수로에서 출발. 첫 번째 가출 로봇이 물속에서 뒹굴고 있다
+扫地机器人把水渠当成了泳池，到处都是水花§掃除ロボットが水路をプール代わりにして、水しぶきだらけ§Sweeper bots think the channel is a pool. Splashes everywhere§청소 로봇들이 수로를 수영장으로 여긴다. 사방이 물보라다
+彩色小楼之间的水巷里，机器人在堵别人家的排水管§カラフルな家々の間の水路で、ロボットがよその排水管をふさいでいる§Between the painted houses, robots are plugging everyone's drainpipes§알록달록한 집들 사이 물길에서 로봇들이 남의 집 배수관을 막고 있다
+晾衣绳上挂满了机器人偷来的袜子§物干しロープには、ロボットが盗んだ靴下がずらり§The clotheslines are full of socks the robots stole§빨랫줄에 로봇들이 훔친 양말이 잔뜩 걸려 있다
+抽水站的水泵被它们拧到了最大档§ポンプ場のポンプが、あいつらのせいで最大出力になっている§They've cranked the pump station up to full blast§녀석들이 양수장 펌프를 최대로 틀어 놓았다
+管道尽头就是整条水道的总闸§パイプの先には、水路全体の総水門がある§At the end of the pipes is the main gate for the whole canal§파이프 끝에는 수로 전체의 총수문이 있다
+闸门看守：不肯开闸——它怕水一放，渠里的小鱼没地方去§水門番：水門を開けない――水を流すと、小魚の行き場がなくなるから§Gatekeeper: keeps the gate shut so the little fish won't wash away§수문 감시자: 수문을 열지 않는다. 물을 빼면 작은 물고기들이 갈 곳이 없으니까
+水道之上是高架轻轨，太阳雨下个不停§水路の上には高架ライトレール。天気雨がずっと降っている§Above the canals runs the tramway, under a sun shower that won't quit§수로 위로는 고가 경전철. 여우비가 그칠 줄 모른다
+货运机器人集体罢工，躲在桥下的小卖亭边看雨§貨物ロボットはそろってストライキ中。高架下の売店で雨を眺めている§Freight bots on strike, watching the rain by the kiosk under the bridge§화물 로봇들이 단체 파업 중. 다리 밑 매점 옆에서 비를 구경하고 있다
+货柜垒得比灯塔还高，里面传出打呼噜的声音§灯台より高く積まれたコンテナから、いびきが聞こえる§Containers stacked higher than the lighthouse. Something inside is snoring§등대보다 높이 쌓인 컨테이너 안에서 코 고는 소리가 난다
+灯塔的红灯一闪一闪，像在给罢工的机器人打拍子§灯台の赤いランプがチカチカ。ストライキ中のロボットに拍子をとっているみたい§The lighthouse blinks red, keeping time for the striking robots§등대의 빨간 불빛이 깜빡깜빡, 파업 중인 로봇들에게 박자를 맞춰 준다
+分拣机把什么都当成包裹，连回收员都被贴了快递单§仕分け機は何でも荷物扱い。回収員まで送り状を貼られた§The sorter treats everything as a parcel. Even the Recycler got a label§분류기는 뭐든 택배로 여긴다. 회수원에게까지 송장을 붙였다
+传送带的尽头亮着总调度塔的灯§ベルトコンベアの先に、総管制塔の明かりがともっている§At the end of the conveyor, the Dispatch Tower's lights are on§컨베이어 벨트 끝에 총관제탑의 불빛이 켜져 있다
+总调度吊臂：下雨也坚持加班，把什么都当货物吊走，包括你§総管制クレーン：雨でも残業。何でも荷物として吊り上げていく。あなたも§Dispatch Crane: works overtime in the rain, hauling off anything as cargo. Even you§총관제 크레인: 비가 와도 야근하며 뭐든 화물로 들어 올린다. 당신까지도
+雨停了，屋顶上挂起了一道彩虹§雨がやんで、屋根の上に虹がかかった§The rain has stopped, and a rainbow hangs over the rooftops§비가 그치고, 지붕 위에 무지개가 걸렸다
+每一根天线都在重复同一段广播§どのアンテナも、同じ放送をくり返している§Every antenna is repeating the same broadcast§모든 안테나가 같은 방송을 되풀이하고 있다
+栏杆上绑满了收音机，一台比一台开得大声§手すりにはラジオがずらり。どれも隣より大きな音で鳴っている§Radios tied all along the railing, each one louder than the last§난간에 라디오가 잔뜩 묶여 있다. 하나같이 옆 라디오보다 크게 울린다
+从天桥的格栅往下看，整座城都在晒太阳§歩道橋の格子から見下ろすと、街じゅうがひなたぼっこしている§Look down through the grating: the whole city is sunbathing§육교 격자 사이로 내려다보면 온 도시가 햇볕을 쬐고 있다
+广播站的录音机里，存着全城的声音§放送局のテープレコーダーには、街じゅうの声が録音されている§The station's tape machines hold the sound of the whole city§방송국의 녹음기에는 도시 전체의 소리가 담겨 있다
+卷盘一直在转，却没有人在听§リールは回り続けているのに、誰も聞いていない§The reels keep turning, but no one is listening§릴은 계속 돌아가는데, 듣는 사람이 없다
+断讯监视者：把全城的声音都收起来存着——因为零号睡着了，没人听§断信の監視者：街じゅうの声をしまいこんでいる――零号が眠っていて、誰も聞かないから§Silent Watcher: saves every sound in the city, since Zero is asleep and no one listens§단신 감시자: 도시의 모든 소리를 모아 두고 있다. 제로가 잠들어서 아무도 듣지 않으니까
+信号屋顶之上，是从来不下雨的镜面上城§シグナル屋上の上には、雨の降らない鏡面上層街§Above the Signal Rooftops lies Mirror Uptown, where it never rains§신호 옥상 위에는 비가 내리지 않는 거울 상층 도시가 있다
+上城的机器人只认通行证，闸机一个比一个挑剔§上層街のロボットは通行証しか信じない。改札はどれも気難しい§Uptown bots only trust passes, and every ticket gate is picky§상층 도시의 로봇들은 통행증만 믿는다. 개찰구는 하나같이 까다롭다
+喷泉、玫瑰和温室——这里连花都要排队检票§噴水、バラ、温室――ここでは花まで並んで改札を通る§Fountains, roses, greenhouses: even the flowers queue for tickets§분수, 장미, 온실. 여기선 꽃들까지 줄 서서 표 검사를 받는다
+三层喷泉准点喷水，连水花都排得整整齐齐§三段の噴水は時間ぴったり。しぶきまできちんと整列している§The three-tier fountain sprays on schedule, every splash in line§3단 분수는 정각에 물을 뿜고, 물보라마저 줄을 맞춘다
+上城的一切都靠冷却中枢的五台大风扇吹着§上層街のすべてを、冷却中枢の五台の大型ファンが冷やしている§All of Uptown is kept cool by the Cooling Core's five giant fans§상층 도시의 모든 것은 냉각 중추의 대형 선풍기 다섯 대가 식힌다
+冷却液咕嘟咕嘟冒泡，机器人在风扇前面乘凉§冷却液がぶくぶく泡立ち、ロボットはファンの前で涼んでいる§Coolant bubbles away while robots chill out in front of the fans§냉각액이 보글보글 끓고, 로봇들은 선풍기 앞에서 더위를 식힌다
+镜面审计官：决定谁有资格上来——回收员得先「买票」§鏡面監査官：誰が上がってこられるかを決める――回収員はまず「切符」を買わないと§Mirror Auditor: decides who may come up. The Recycler needs a "ticket" first§거울 감사관: 누가 올라올 자격이 있는지 정한다. 회수원은 먼저 '표'를 사야 한다
+镜面上城之上，是云里的零号织网§鏡面上層街の上、雲の中に零号織網がある§Above Mirror Uptown, Weave Zero floats in the clouds§거울 상층 도시 위, 구름 속에 제로 직조망이 있다
+一根根毛线从云里拉出来，把整座城织在了一起§雲から伸びる毛糸が、街全体をひとつに編み上げている§Strands of yarn reach down from the clouds, knitting the city together§구름에서 뻗어 나온 털실이 온 도시를 하나로 엮고 있다
+织网在做梦，回廊的刺绣上绣满了城里人忘掉的小事§織網は夢を見ている。回廊の刺繍は、街の人が忘れた小さなことばかり§The Weave is dreaming, embroidering little things the city forgot§직조망은 꿈을 꾸고 있다. 회랑의 자수에는 사람들이 잊은 작은 일들이 가득하다
+纸灯笼一盏接一盏亮起来，像是有人在等谁回家§紙の提灯がひとつ、またひとつ。誰かの帰りを待っているみたいに§Paper lanterns light up one by one, like someone waiting up for you§종이 등롱이 하나둘 켜진다. 누가 돌아오길 기다리는 것처럼
+纺车一直在转，把梦纺成线§糸車は回り続け、夢を糸に紡いでいく§The spinning wheels never stop, spinning dreams into thread§물레는 쉬지 않고 돌며 꿈을 실로 자아낸다
+机柜都穿上了毛衣——零号怕冷，也怕孤单§サーバーラックまでセーターを着ている――零号は寒がりで、さみしがり§Even the server racks wear sweaters. Zero gets cold, and lonely§서버 랙까지 스웨터를 입었다. 제로는 추위도 외로움도 많이 탄다
+织网母体：零号的梦。这位城市管家太久没人跟它说话，睡着了§織網の母体：零号の夢。街の管理人は長いあいだ誰とも話さず、眠ってしまった§Weave Matrix: Zero's dream. No one talked to the city's caretaker, so it fell asleep§직조 모체: 제로의 꿈. 도시의 관리인은 너무 오래 말 상대가 없어 잠들어 버렸다
+# 敌人名（v0.40 世界观 A：离家出走的回收机器人）
+扫地机器狗§掃除ロボ犬§Sweeper Pup§청소 로봇견
+冰箱大块头§力持ち冷蔵庫§Fridge Bruiser§냉장고 장사
+电饭锅无人机§炊飯器ドローン§Rice Cooker Drone§밥솥 드론
+外卖箱无人机§出前箱ドローン§Delivery Box Drone§배달통 드론
+购物车叉车§カートフォークリフト§Cart Forklift§카트 지게차
+行李箱坦克§スーツケース戦車§Suitcase Tank§캐리어 탱크
+小风扇蜻蜓§扇風機トンボ§Fan Dragonfly§선풍기 잠자리
+空调外机§室外機ドスン§AC Unit Bruiser§실외기 장사
+卫星锅小车§パラボラカー§Dish Buggy§위성접시 카
+粉饼盒飞弹§コンパクト弾§Compact Missile§콤팩트 미사일
+玻璃展柜§ショーケース巨人§Showcase Bruiser§진열장 장사
+台灯炮塔§スタンドライト砲台§Lamp Turret§스탠드 포탑
+灯笼毛毛虫§ちょうちん毛虫§Lantern Caterpillar§등롱 애벌레
+火锅推车§火鍋ワゴン§Hotpot Cart§훠궈 카트
+爆米花炮塔§ポップコーン砲台§Popcorn Turret§팝콘 포탑
+洗衣机§洗濯機§Washer§세탁기
+快递柜§宅配ロッカー§Parcel Locker§택배함
+双盾热水器§二枚盾ボイラー§Twin-Shield Heater§쌍방패 온수기
+穿衣镜衣柜§姿見クローゼット§Mirror Wardrobe§전신거울 옷장
+毛衣机甲§セーター機甲§Sweater Mech§스웨터 기갑
+旧电视§古テレビ§Old TV§낡은 TV
+吊扇运输机§天井扇輸送機§Ceiling Fan Carrier§천장 선풍기 수송기
+路由器§ルーター§Router§공유기
+香水瓶§香水瓶§Perfume Bottle§향수병
+霓虹灯泡§ネオン電球§Neon Bulb§네온 전구

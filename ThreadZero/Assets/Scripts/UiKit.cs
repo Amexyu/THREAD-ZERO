@@ -14,6 +14,8 @@ namespace ThreadZero
         public static readonly Color Orange = Hex(0xFF4A12), OrangeInk = Hex(0xB5300A), Good = Hex(0x1E7A46);
         // 橙色按钮上的字、橙色按钮悬停色：单独定义，换配色时不和 Ink 混在一起
         public static readonly Color OnAccent = Hex(0x121417), OrangeHover = Hex(0xFF6A3A);
+        // v0.40 左侧导航栏单独的原色：原版 / 灰色方案里和 Ink、Tile2 一样，B「晴天涂鸦」里换成宝蓝
+        public static readonly Color RailInk = Hex(0x121415), RailHover = Hex(0x24282C);
 
         public static float K = 1;
         public static bool Blocked;
@@ -142,10 +144,31 @@ namespace ThreadZero
         }
         public static void FillScreen(Color color)
         {
+            bool ground = SameRgb(color, Ground);
             color = UiTheme.Map(color, UiTheme.Role.Fill);
             Color old = GUI.color; GUI.color = color;
             GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
             GUI.color = old;
+            if (ground && UiTheme.Stripes) Stripes(new Rect(0, 0, Screen.width, Screen.height));
+        }
+        /// v0.40 B「晴天涂鸦」的黄色斜纹底：一张 64×64 的斜条纹平铺，周期 34 逻辑单位，跟着 Ui.K 缩放。
+        private static Texture2D stripeTex;
+        public static void Stripes(Rect screenRect)
+        {
+            if (stripeTex == null)
+            {
+                const int N = 64; stripeTex = new Texture2D(N, N, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Repeat, filterMode = FilterMode.Bilinear, name = "tz_stripes" };
+                Color band = UiTheme.StripeColor; var px = new Color[N * N];
+                for (int y = 0; y < N; y++) for (int x = 0; x < N; x++)
+                {
+                    float t = Mathf.Repeat((x + y) / (float)N, 1f) * 3f;            // 一个周期里 1/3 是条纹
+                    float a = Mathf.Clamp01(Mathf.Min(t, 1.2f - t) * N / 3f + .5f); // 边缘 1 像素抗锯齿
+                    px[y * N + x] = new Color(band.r, band.g, band.b, band.a * (t < 1.2f ? a : 0));
+                }
+                stripeTex.SetPixels(px); stripeTex.Apply();
+            }
+            float period = 34 * K;
+            GUI.DrawTextureWithTexCoords(screenRect, stripeTex, new Rect(0, 0, screenRect.width / period, screenRect.height / period), true);
         }
         public static void Frame(float x, float y, float w, float h, float thickness, Color color)
         {

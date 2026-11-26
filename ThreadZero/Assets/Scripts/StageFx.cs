@@ -21,6 +21,7 @@ namespace ThreadZero
         public StageFxBlink[] blinks = new StageFxBlink[0];
         public StageFxWindow[] windows = new StageFxWindow[0];
         public StageFxRain[] rain = new StageFxRain[0];
+        public StageFxBubbles[] bubbles = new StageFxBubbles[0];   // v0.37
     }
 
     /// 灯：u, v 是灯泡位置；r 是光照区半径（按图层高度的比例）。
@@ -37,6 +38,9 @@ namespace ThreadZero
 
     /// 亮着的窗：u0..u1 × v0..v1 是窗玻璃范围；大约每 every 秒有人影从窗前走过一次（每张平铺各自错开）。
     [Serializable] public sealed class StageFxWindow { public int layer = 1; public float u0, v0, u1, v1, every = 14; }
+
+    /// v0.37 气泡：u0..u1 × v0..v1 的竖条里（冷却液柱、水缸），小气泡从底往上冒、左右轻晃，快到顶时变淡；speed 是上升速度（图层高度 / 秒）。
+    [Serializable] public sealed class StageFxBubbles { public int layer = 1; public float u0, u1, v0, v1; public int count = 5; public float speed = .06f; }
 
     /// 雨：整屏画在这一层上面。count 根雨丝；angle 倾斜角（度，正数往左下落）；speed 下落速度（逻辑像素 / 秒）；len 雨丝长度；alpha 不透明度；v1 雨落到这一层的哪里为止。
     [Serializable] public sealed class StageFxRain { public int layer = 0; public int count = 60; public float angle = 12, speed = 1400, len = 46, width = 1.5f, alpha = .22f, v1 = 1; }
@@ -119,6 +123,7 @@ namespace ThreadZero
             for (int i = 0; i < fx.steam.Length; i++) if (fx.steam[i].layer == layer) Steam(fx.steam[i], i, W, scroll, h, y, time);
             if (fx.flows != null) for (int i = 0; i < fx.flows.Length; i++) if (fx.flows[i].layer == layer) Flow(fx.flows[i], i, W, scroll, h, y, time);
             if (fx.windows != null) for (int i = 0; i < fx.windows.Length; i++) if (fx.windows[i].layer == layer) Window(fx.windows[i], i, W, scroll, h, y, time);
+            if (fx.bubbles != null) for (int i = 0; i < fx.bubbles.Length; i++) if (fx.bubbles[i].layer == layer) Bubbles(fx.bubbles[i], i, W, scroll, h, y, time);
             if (fx.blinks != null) for (int i = 0; i < fx.blinks.Length; i++) if (fx.blinks[i].layer == layer) Blink(fx.blinks[i], i, W, scroll, h, y, time);
             if (!cover) for (int i = 0; i < fx.props.Length; i++) if (fx.props[i].layer == layer) Prop(fx.props[i], folder, scroll, h, y, time);
             if (fx.rain != null) for (int i = 0; i < fx.rain.Length; i++) if (fx.rain[i].layer == layer) Rain(fx.rain[i], i, h, y, time);
@@ -228,7 +233,7 @@ namespace ThreadZero
                 if (swing != 0) GUIUtility.RotateAroundPivot(swing, Ui.R(left + p.pivotU * bw, top + dy + p.pivotV * bh, 0, 0).position);
                 top += dy;
                 GUI.color = Color.white;
-                GUI.DrawTexture(Ui.R(left, top, bw, bh), body);
+                if (!Fade.Draw(new Rect(left, top, bw, bh), body, new Rect(0, 0, 1, 1), Color.white)) GUI.DrawTexture(Ui.R(left, top, bw, bh), body);
                 if (p.gaugeU >= 0)
                 {   // 压力表指针：在 -40° 附近抖
                     float gx = left + p.gaugeU * bw, gy = top + p.gaugeV * bh, gr = p.gaugeR * bh;
@@ -244,7 +249,7 @@ namespace ThreadZero
                     Matrix4x4 m = GUI.matrix;
                     GUIUtility.RotateAroundPivot(time * p.wheelSpeed + n * 37, wr.center);
                     GUI.color = Color.white;
-                    GUI.DrawTexture(wr, wheel);
+                    if (!Fade.Draw(new Rect(wx - ws / 2, wy - ws / 2, ws, ws), wheel, new Rect(0, 0, 1, 1), Color.white)) GUI.DrawTexture(wr, wheel);
                     GUI.matrix = m;
                 }
                 GUI.matrix = pm;
@@ -275,6 +280,31 @@ namespace ThreadZero
                 {   // 水花：小扁圆往上冒、变大、变淡
                     float q = Mathf.Repeat(time * 1.6f + j * .27f + Hash(i * 5 + j), 1f), ex = left + width * (.15f + .23f * j);
                     Ellipse(ex, top + span - 2 - 10 * q, 5 + 7 * q, 2.5f + 2 * q, Daylight ? new Color(1f, 1f, 1f, .45f * (1 - q)) : new Color(.8f, .93f, .88f, .3f * (1 - q)));
+                }
+            }
+        }
+
+        // ---------- 气泡（v0.37）：液柱里的小气泡往上冒，左右轻晃，快到顶时变淡 ----------
+        private static void Bubbles(StageFxBubbles b, int i, float W, float scroll, float h, float y, float time)
+        {
+            float top = y + b.v0 * h, span = (b.v1 - b.v0) * h, width = (b.u1 - b.u0) * W, speed = Mathf.Max(.01f, b.speed) * h;
+            if (span <= 0 || width <= 0) return;
+            Spots(b.u0, W, scroll, width + 10);
+            for (int s = 0; s < spots.Count; s++)
+            {
+                float left = spots[s];
+                for (int d = 0; d < b.count; d++)
+                {
+                    int seed = i * 307 + d * 23 + tiles[s] * 5;
+                    float v = speed * (.7f + .6f * Hash(seed + 1));
+                    float k = Mathf.Repeat(time * v + Hash(seed + 2) * span, span);   // 离液柱底部多高
+                    float q = k / span, r = (1.6f + 2.2f * Hash(seed + 3)) * (1 + .35f * q);
+                    float bx = left + (.2f + .6f * Hash(seed)) * width + Mathf.Sin(time * (2 + 2 * Hash(seed + 4)) + d) * width * .08f;
+                    float by = top + span - k;
+                    float a = Mathf.Min(1, q * 6) * (1 - q * q);   // 底部淡入、顶部淡出
+                    if (a <= .02f) continue;
+                    Ellipse(bx, by, r, r, Daylight ? new Color(.86f, .96f, 1f, .6f * a) : new Color(.8f, .93f, .9f, .45f * a));
+                    Ellipse(bx - r * .3f, by - r * .3f, r * .38f, r * .38f, new Color(1f, 1f, 1f, .9f * a));   // 高光点
                 }
             }
         }
@@ -361,21 +391,21 @@ namespace ThreadZero
         private static void Box(float x, float y, float w, float h, Color c)
         {
             if (c.a <= .003f || w <= 0 || h <= 0) return;
-            GUI.color = c;
+            GUI.color = Fade.Tint(c, x + w / 2, y + h / 2);   // 11-25 褪色试验：纯色的水花、灯光也跟着褪色
             GUI.DrawTexture(Ui.R(x, y, w, h), Texture2D.whiteTexture);
         }
 
         private static void Ellipse(float cx, float cy, float rx, float ry, Color c)
         {
             if (c.a <= .003f) return;
-            GUI.color = c;
+            GUI.color = Fade.Tint(c, cx, cy);
             GUI.DrawTexture(Ui.R(cx - rx, cy - ry, rx * 2, ry * 2), Disc());
         }
 
         private static void SoftEllipse(float cx, float cy, float rx, float ry, Color c)
         {
             if (c.a <= .003f) return;
-            GUI.color = c;
+            GUI.color = Fade.Tint(c, cx, cy);
             GUI.DrawTexture(Ui.R(cx - rx, cy - ry, rx * 2, ry * 2), Soft());
         }
 

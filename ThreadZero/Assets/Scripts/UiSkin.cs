@@ -230,6 +230,7 @@ namespace ThreadZero
         /// 背景：深炭灰 + 细网格 + 两角网点。
         public static void PageBackground()
         {
+            if (UiTheme.LightPage) { Ui.FillScreen(Ui.Ground); return; }   // v0.40 B「晴天涂鸦」：和别的页一样的黄色斜纹底
             Ui.FillScreen(PageBack);
             Tile("tile_grid", 0, 0, 1600, 900, 40, 40, new Color(1, 1, 1, .04f));
             Sprite("fx_halftone_big", 0, 520, 760, 380, new Color(1, 1, 1, .06f));

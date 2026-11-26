@@ -5,6 +5,7 @@ namespace ThreadZero
 {
     public sealed partial class GameApp
     {
+        private bool lastDaggerBasic; private float lastDaggerAge;   // 卡48：认出新的一刀，普攻换下一招
         private const float StageX = 0, StageY = 0, StageW = 1600, StageH = 900, GroundY = 690;   // v0.15：战斗画面铺满全屏；界面平时隐藏（纯净模式），鼠标移到边缘才滑出
         // v0.8：镜头拉远。角色与敌人缩小，舞台里能看到更长的一段路。
         private const float HeroRestX = 428, HeroCanvas = 260, EnemyX = 1060, EnemyCanvas = 220, EnemyEliteCanvas = 260, EnemyBossCanvas = 300, PackSpacing = 136;
@@ -41,6 +42,7 @@ namespace ThreadZero
             { Impact.Scale = compactView ? 0 : model.state.shakeMode == 0 ? 1 : model.state.shakeMode == 1 ? .5f : 0; Vector2 q = Impact.Offset(clock); Ui.Nudge(q.x, q.y); }   // 11-24 挂机条里不震（用户：进了透明条就默认不开）   // v0.20 震屏：舞台里的东西整体抖，界面不抖
             float camZoom = LayeredRigView.SkillZoom; bool zoomed = !compactView && Mathf.Abs(camZoom - 1) > .002f;   // 挂机条里技能也不推镜头（整条一缩一放像在抖）   // v0.20 技能镜头推近（用上一帧的值）
             if (zoomed) Ui.ZoomBegin(lastHeroFeetX, GroundY - 100, camZoom);
+            FadeUpdate();   // 11-25「褪色之城」试验（Fade.On 关着时什么都不做）
             Backdrop(region, district, deep);
             TransitionUnder();
             Ui.OnBright = StageFx.Daylight;   // v0.33 亮色背景（晴天涂鸦）：舞台上带投影的字改成「白字 + 深蓝描边」，画完舞台再关
@@ -95,8 +97,9 @@ namespace ThreadZero
             if (layered)
             {
                 // 动作：走路 / 初始匕首（普攻+迅切连击）/ 其他武器按类别（射击、重砸）/ 待机。
+                if (!combat.DaggerActive) lastDaggerBasic = false;
                 LayeredRigView.Anim rigAnim = LayeredRigView.Anim.Idle; float rigT = clock / 1.2f;
-                if (heroWalking && !down) { rigAnim = LayeredRigView.Anim.Walk; rigT = heroWalkPhase / (2 * Mathf.PI); }
+                if (heroWalking && !down) { rigAnim = LayeredRigView.Anim.Walk; rigT = LayeredRigView.WalkT(combat.Movement.HeroTravel); }   // 11-26 rig 3 的跑步按走过的距离算进度（脚不打滑）
                 else if (!down && combat.DaggerActive && combat.ActiveSkill != null && combat.ActiveSkill != SkillBook.QuickCut)
                 {   // 其他武器的技能：有专属动作的整段播（v0.19：震地 / 贯穿突刺 / 回旋切割）；还没有的按技能每一段把普攻动作对到命中时刻
                     LayeredRigView.Anim own = LayeredRigView.SkillAnim(combat.ActiveSkill.animation);
@@ -107,7 +110,13 @@ namespace ThreadZero
                         if (combat.ActiveSkill.animation == "sweep") rigAnim = LayeredRigView.Anim.Sweep;
                     }
                 }
-                else if (!down && combat.DaggerActive) { rigAnim = LayeredRigView.DaggerAnim(combat.DaggerCombo); rigT = LayeredRigView.DaggerT(combat.DaggerAge, combat.DaggerCombo); }
+                else if (!down && combat.DaggerActive)
+                {
+                    bool basic = !combat.DaggerCombo;   // 卡48：匕首普攻三招轮流（正手斜劈 → 反手上挑 → 上步刺）
+                    if (basic && (!lastDaggerBasic || combat.DaggerAge < lastDaggerAge)) LayeredRigView.AttackVariant++;
+                    lastDaggerBasic = basic; lastDaggerAge = combat.DaggerAge;
+                    rigAnim = LayeredRigView.DaggerAnim(combat.DaggerCombo); rigT = LayeredRigView.DaggerT(combat.DaggerAge, combat.DaggerCombo);
+                }
                 else if (!down && pose.attackProgress > 0) { rigAnim = LayeredRigView.ClassAttack(model); rigT = pose.attackProgress; }
                 if (target != null) LayeredRigView.ChainReachPx = Mathf.Clamp(liveEnemyX - targetCanvas * .15f - (heroFeetX + 30), 40, 320);
                 LayeredRigView.Draw(model, heroFeetX, GroundY + 2 + rise, 1, rigAnim, rigT, heroTint);
@@ -270,21 +279,59 @@ namespace ThreadZero
             HudBars.Enemy(x, top - 18, hp01, HudBars.Ghost(e.id, hp01, clock), e.elite);
         }
 
-        // 倒下的怪：压扁、变灰，几秒后淡出（随角色前进被甩到画面左侧）。
+        // 11-25「褪色之城」试验：换关时清掉颜色圈；没打过的关从灰开始，打过的关直接全彩；
+        // 按波次和已经送回家的机器人数，把整关的颜色一点点加回来（每只送回家的机器人另外在原地晕开一圈，见 DrawEnemyWreck）。
+        private int fadeCode = -1; private readonly HashSet<int> fadeSplashed = new HashSet<int>();
+        private void FadeUpdate()
+        {
+            if (!Fade.On) return;
+            int code = CurrentCode; bool cleared = !model.InEcho && model.state.region < model.state.unlockedRegion;
+            if (code != fadeCode) { fadeCode = code; Fade.Clear(); fadeSplashed.Clear(); if (!Fade.Manual) Fade.StageSat = cleared ? 1 : .06f; }
+            Fade.WorldX = worldX;
+            if (Fade.Manual || Event.current.type != EventType.Repaint) return;
+            int down = 0, all = 0;
+            foreach (Enemy e in combat.enemies) { all++; if (!e.Alive) down++; }
+            float wave01 = all > 0 ? (float)down / all : 0, progress = Mathf.Clamp01((combat.wave - 1 + wave01) / Mathf.Max(1, combat.WaveCount));
+            float target = cleared ? 1 : .06f + .45f * progress;   // 打完以前整关最多回来一半，剩下的靠每只机器人晕开的颜色圈；打完一下子全彩
+            Fade.StageSat = Mathf.MoveTowards(Fade.StageSat, target, Time.unscaledDeltaTime * .6f);
+        }
+
+        // 倒下的怪（v0.40 世界观 A：机器人不会「死」，是关机打瞌睡）：0.35 秒里往后靠一点、塌下去一点、颜色暗一点，
+        // 头上往右上飘 z、绕两圈小星星，4 秒后淡出（随角色前进被甩到画面左侧）。原来是压扁变灰的残骸。
         private void DrawEnemyWreck(Enemy e)
         {
             float x = e.x - worldX;
             if (x < StageX - e.canvas || x > StageX + StageW + e.canvas) return;
-            float fade = Mathf.Clamp01(1 - (combat.Elapsed - e.deadAt - 4) / 2);
+            float age = combat.Elapsed - e.deadAt, fade = Mathf.Clamp01(1 - (age - 4) / 2);
             if (fade <= 0) return;
-            float feetY = GroundY + 8 + (e.depth - .5f) * 18;
+            float feetY = GroundY + 4 + (e.depth - .5f) * 18, settle = Mathf.SmoothStep(0, 1, Mathf.Clamp01(age / .35f));
+            if (Fade.On && age < 1 && fadeSplashed.Add(e.id)) Fade.Splash(x, feetY - e.canvas * .3f, (e.boss ? 460 : e.elite ? 340 : 260) + e.canvas * .3f);   // 11-25 褪色试验：想起来的机器人原地晕开一圈颜色
+            float lean = 9 * settle, sx = 1 + .04f * settle, sy = 1 - .1f * settle;
             Matrix4x4 old = GUI.matrix;
-            GUIUtility.RotateAroundPivot(-9, Ui.P(x, feetY));
-            GUIUtility.ScaleAroundPivot(new Vector2(1.05f, .28f), Ui.P(x, feetY));
-            Color wreck = new Color(.42f, .44f, .47f, .75f * fade);
-            bool drawn = StageArt.DrawEnemy(e, StageArt.Pose.Idle, x, feetY, e.canvas, wreck) || ActorView.Enemy(x, feetY, e.canvas, e.Art, e.boss, wreck);
+            GUIUtility.RotateAroundPivot(lean, Ui.P(x, feetY));
+            GUIUtility.ScaleAroundPivot(new Vector2(sx, sy), Ui.P(x, feetY));
+            Color sleepy = Color.Lerp(Color.white, new Color(.74f, .77f, .9f), settle); sleepy.a = fade;
+            bool drawn = StageArt.DrawEnemy(e, StageArt.Pose.Idle, x, feetY, e.canvas, sleepy) || ActorView.Enemy(x, feetY, e.canvas, e.Art, e.boss, sleepy);
             GUI.matrix = old;
-            if (!drawn) Ui.Fill(x - e.canvas * .25f, feetY - 34, e.canvas * .5f, 34, Ui.Alpha(Ui.Grey, fade));
+            if (!drawn) { Ui.Fill(x - e.canvas * .25f, feetY - 34, e.canvas * .5f, 34, Ui.Alpha(Ui.Grey, fade)); return; }
+            // 头顶的位置跟着身子一起转、一起缩
+            Vector2 hf = StageArt.HeadFrac(e), h = new Vector2((hf.x - .5f) * e.canvas * sx, (hf.y - .875f) * e.canvas * sy);
+            float r = lean * Mathf.Deg2Rad, hx = x + h.x * Mathf.Cos(r) - h.y * Mathf.Sin(r), hy = feetY + h.x * Mathf.Sin(r) + h.y * Mathf.Cos(r);
+            Color ink = new Color(.11f, .14f, .34f);
+            float za = fade * Mathf.Clamp01((age - .3f) / .4f);
+            for (int k = 0; k < 3; k++)
+            {
+                float ph = Mathf.Repeat(age * .55f + k / 3f, 1f), a = Mathf.Sin(ph * Mathf.PI) * za;
+                if (a <= .02f) continue;
+                Skin.OutlineText(hx + 10 + ph * 26, hy - 26 - ph * 46, 40, 30, "z", 13 + ph * 11, new Color(1, 1, 1, a), new Color(ink.r, ink.g, ink.b, a), TextAnchor.MiddleLeft, true, false, 1.5f);
+            }
+            float sa = fade * Mathf.Clamp01((age - .15f) / .3f) * Mathf.Clamp01(1 - (age - 2.6f) / .6f);   // 星星转两秒多就散了
+            if (sa > .02f)
+                for (int k = 0; k < 3; k++)
+                {
+                    float ang = age * 3.2f + k * 2.094f, rx = Mathf.Max(18, e.canvas * .12f), ry = Mathf.Max(5, e.canvas * .03f);
+                    Skin.OutlineText(hx + Mathf.Cos(ang) * rx - 12, hy - 4 + Mathf.Sin(ang) * ry - 12, 24, 24, "★", 15, new Color(1f, .84f, .3f, sa), new Color(ink.r, ink.g, ink.b, sa), TextAnchor.MiddleCenter, true, false, 1.5f);
+                }
         }
 
         // ---------- v0.16 快速转场（挂机不打断）----------
@@ -301,6 +348,12 @@ namespace ThreadZero
         private void TransitionUnder()
         {
             if (transitionLeft <= 0 || !transitionSwapped || bareStage == 3) return;   // 11-24 透明挂机条：不画旧关卡的背景
+            float fadeSat = Fade.StageSat; bool fadeNo = Fade.NoBlooms;   // 11-25 褪色试验：刚打完的旧关是全彩的
+            if (Fade.On) { Fade.NoBlooms = true; Fade.StageSat = transitionFrom < model.state.unlockedRegion ? 1 : .06f; }
+            try { TransitionUnderScene(); } finally { Fade.StageSat = fadeSat; Fade.NoBlooms = fadeNo; }
+        }
+        private void TransitionUnderScene()
+        {
             int oldScene = SceneOf(transitionFrom);
             float p = TransitionP;
             if (transitionKind == TransPush)
@@ -387,12 +440,12 @@ namespace ThreadZero
             float slide = t < .15f ? 1 - Mathf.SmoothStep(0, 1, t / .15f) : t > 1.65f ? Mathf.SmoothStep(0, 1, (t - 1.65f) / .25f) : 0;
             int r = CurrentCode; StageKind sk = KindOf(r);
             string sub = stageTagNote.Length > 0 ? stageTagNote : sk == StageKind.Boss ? "首领关" : sk == StageKind.Elite ? "精英关" : "";
-            float w = 500, x = -w * slide, y = 120;
+            float w = 500, x = Mathf.Max(0, 96 - (1 - HudEase) * 110) - w * slide, y = 120;   // v0.40 导航栏露出来时让开它（原来左边一截字被挡住）
             Ui.Fill(x, y, w, 92, Ui.Alpha(Ui.Ink, .92f)); Ui.Fill(x, y, 6, 92, Ui.Orange);
             Ui.Text(x + 24, y + 6, 110, 56, CodeLabel(r), 34, Ui.Panel, TextAnchor.MiddleLeft, true, true);
             Ui.Text(x + 124, y + 6, 240, 56, NameLabel(r), 22, Ui.Panel, TextAnchor.MiddleLeft, true);
             if (sub.Length > 0) Ui.Text(x + 300, y + 6, 180, 56, sub, 15, Ui.Orange, TextAnchor.MiddleRight, true);
-            Ui.Text(x + 26, y + 58, w - 40, 26, LineOf(r), 14, Ui.MuteOnInk, TextAnchor.MiddleLeft);
+            Ui.FitText(x + 26, y + 58, w - 40, 26, LineOf(r), 14, Ui.MuteOnInk, TextAnchor.MiddleLeft);   // v0.38 译文长时缩字号
         }
 
         // v0.16 地面怪和角色用同一套步伐：
@@ -636,7 +689,7 @@ namespace ThreadZero
             if (model.Has(Effect.Thruster)) { names.Add("推进"); live.Add(combat.dashFlash > 0); }
             if (model.Has(Effect.Guard)) { names.Add("护盾"); live.Add(combat.guardFlash > 0 || combat.guardCharge > 0); }
             if (model.Has(Effect.Leech)) { names.Add("汲取"); live.Add(false); }
-            if (model.Has(Effect.Execute)) { names.Add("处决"); live.Add(combat.enemyHealth < combat.enemyMaxHealth * Balance.ExecuteThreshold); }
+            if (model.Has(Effect.Execute)) { names.Add("收尾"); live.Add(combat.enemyHealth < combat.enemyMaxHealth * Balance.ExecuteThreshold); }
             if (names.Count == 0) { names.Add("常规攻击"); live.Add(false); }
             for (int i = 0; i < names.Count; i++)
             {
@@ -897,7 +950,7 @@ namespace ThreadZero
             {
                 float lx = c.x + r + 14, ly = c.y - 34;
                 Ui.Fill(lx, ly, 200, 40, Ui.Alpha(Ui.Ink, .92f * a)); Ui.Fill(lx, ly, 4, 40, o);
-                Ui.Text(lx + 14, ly, 186, 20, "义体接入 · " + implantShown.part, 12, Ui.Alpha(Ui.Orange, a), TextAnchor.MiddleLeft, true);
+                Ui.Text(lx + 14, ly, 186, 20, "飞升装备 · " + implantShown.part, 12, Ui.Alpha(Ui.Orange, a), TextAnchor.MiddleLeft, true);
                 Ui.Text(lx + 14, ly + 18, 186, 22, implantShown.name, 15, Ui.Alpha(Ui.Panel, a), TextAnchor.MiddleLeft, true);
             }
         }
@@ -915,8 +968,8 @@ namespace ThreadZero
             int have = model.state.implants.Count;
             Ui.Text(x + 40, y + 20, 400, 26, "机械飞升  " + have + " / " + Catalog.AscensionTotal, 18, Ui.Alpha(Ui.Orange, a), TextAnchor.MiddleLeft, true);
             for (int i = 0; i < Catalog.AscensionTotal; i++) Ui.Fill(x + w - 40 - (Catalog.AscensionTotal - i) * 34, y + 26, 26, 14, Ui.Alpha(i < have ? Ui.Orange : Ui.Steel, a));
-            Ui.Text(x + 40, y + 56, w - 80, 56, "装上义体：" + implantShown.name, 40, Ui.Alpha(Ui.Panel, a), TextAnchor.MiddleLeft, true);
-            Ui.Text(x + 40, y + 120, w - 80, 48, implantShown.desc + "  身上又多了一根「线」。", 17, Ui.Alpha(Ui.MuteOnInk, a), TextAnchor.MiddleLeft, false, false, true);
+            Ui.FitText(x + 40, y + 56, w - 80, 56, "装上飞升装备：" + implantShown.name, 40, Ui.Alpha(Ui.Panel, a), TextAnchor.MiddleLeft, true);
+            Ui.Text(x + 40, y + 120, w - 80, 48, implantShown.desc + "  又多接上了一根「线」。", 17, Ui.Alpha(Ui.MuteOnInk, a), TextAnchor.MiddleLeft, false, false, true);
         }
 
         // ---------- v0.20 拿到织网碎片（回声层每过一层、重复打主线首领）：角色头顶冒一个「+N 织网碎片」 ----------
@@ -948,7 +1001,7 @@ namespace ThreadZero
             if (open < .95f) return;
             Ui.Text(x + 40, y + 20, w - 80, 26, "机械飞升 " + (model.Ascension * 100).ToString("0") + "%", 18, Ui.Alpha(Ui.Orange, a), TextAnchor.MiddleLeft, true);
             for (int i = 0; i < Catalog.AscensionStageAt.Length; i++) Ui.Fill(x + w - 40 - (Catalog.AscensionStageAt.Length - i) * 44, y + 26, 36, 14, Ui.Alpha(i < stageShown ? Ui.Orange : Ui.Steel, a));
-            Ui.Text(x + 40, y + 58, w - 80, 60, Catalog.AscensionStageNames[stageShown - 1], done ? 46 : 40, Ui.Alpha(Ui.Panel, a), TextAnchor.MiddleLeft, true);
+            Ui.FitText(x + 40, y + 58, w - 80, 60, Catalog.AscensionStageNames[stageShown - 1], done ? 46 : 40, Ui.Alpha(Ui.Panel, a), TextAnchor.MiddleLeft, true);
             Ui.Text(x + 40, y + 126, w - 80, done ? 90 : 56, Catalog.AscensionStageLines[stageShown - 1], 18, Ui.Alpha(Ui.MuteOnInk, a), TextAnchor.UpperLeft, false, false, true);
             if (done) Ui.Text(x + 40, y + h - 46, w - 80, 26, "获得称号「零号」", 16, Ui.Alpha(Ui.Orange, a), TextAnchor.MiddleLeft, true);
         }

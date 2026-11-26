@@ -1,32 +1,15 @@
 # 义体、飞升阶段、部位、关卡名、章节名、关卡描述、首领名（GameModel.cs）
 绞盘机械臂§ウインチ義腕§Winch Arm§윈치 기계팔
-闸门看守的绞盘核心改成的机械臂。攻速 +15%。§「水門番」のウインチコアを改造した義腕。攻撃速度 +15%。§A mechanical arm rebuilt from the Gatekeeper's winch core. Attack Speed +15%.§수문 감시자의 윈치 코어로 만든 기계팔. 공격 속도 +15%.
 绞盘加压：攻速再 +5%§ウインチ加圧：攻撃速度さらに +5%§Winch Boost: Attack Speed +5% more§윈치 가압: 공격 속도 추가 +5%
 全功率绞盘：攻击 +12§フルパワーウインチ：攻撃 +12§Full-Power Winch: Attack +12§풀파워 윈치: 공격 +12
 调度义眼§管制義眼§Dispatch Eye§관제 의안
-总调度吊臂的调度镜头改成的义眼。暴击 +6%，攻击 +4。§「総管制クレーン」の管制レンズを改造した義眼。会心 +6%、攻撃 +4。§An artificial eye rebuilt from the Dispatch Crane's control lens. Crit +6%, Attack +4.§총관제 크레인의 관제 렌즈로 만든 의안. 치명타 +6%, 공격 +4.
 弱点标定：暴击伤害 +20%§弱点標定：会心ダメージ +20%§Weak Point Lock: Crit Damage +20%§약점 조준: 치명타 피해 +20%
 全域调度：暴击再 +6%§全域管制：会心さらに +6%§Total Dispatch: Crit +6% more§전역 관제: 치명타 추가 +6%
 中继脊柱§中継脊柱§Relay Spine§중계 척추
-断讯监视者的中继骨架改成的脊柱支架。生命 +60，防御 +6。§「断信の監視者」の中継フレームを改造した脊柱フレーム。体力 +60、防御 +6。§A spinal brace rebuilt from the Silent Watcher's relay frame. HP +60, Defense +6.§단신 감시자의 중계 골격으로 만든 척추 지지대. 체력 +60, 방어 +6.
-屏蔽椎节：防御 +10§遮断椎節：防御 +10§Shielded Vertebrae: Defense +10§차폐 척추마디: 방어 +10
 全段中继：生命 +300§全段中継：体力 +300§Full Relay: HP +300§전 구간 중계: 체력 +300
-冷核心脏§冷却コア心臓§Cold-Core Heart§냉각 코어 심장
-镜面审计官的冷却核心改成的人工心脏。生命 +120，攻速 +5%。§「鏡面監査官」の冷却コアを改造した人工心臓。体力 +120、攻撃速度 +5%。§An artificial heart rebuilt from the Mirror Auditor's cooling core. HP +120, Attack Speed +5%.§거울 감사관의 냉각 코어로 만든 인공 심장. 체력 +120, 공격 속도 +5%.
 冷却循环：生命 +200§冷却循環：体力 +200§Coolant Loop: HP +200§냉각 순환: 체력 +200
-零度泵：攻速 +8%§零度ポンプ：攻撃速度 +8%§Zero-Degree Pump: Attack Speed +8%§영도 펌프: 공격 속도 +8%
-织网接口§織網インターフェース§Weave Interface§직조 인터페이스
-织网母体的协议接口，接在后脑。攻击 +10，暴击 +5%，幸运 +5。§「織網の母体」のプロトコル端子。後頭部に接続する。攻撃 +10、会心 +5%、幸運 +5。§The Weave Matrix's protocol port, plugged into the back of the head. Attack +10, Crit +5%, Luck +5.§직조 모체의 프로토콜 단자. 뒤통수에 연결한다. 공격 +10, 치명타 +5%, 행운 +5.
 协议握手：幸运 +10§プロトコル・ハンドシェイク：幸運 +10§Protocol Handshake: Luck +10§프로토콜 핸드셰이크: 행운 +10
 零号协议：攻击 +20§零号プロトコル：攻撃 +20§Protocol Zero: Attack +20§제로 프로토콜: 공격 +20
-第一阶段 · 机械呼吸§第一段階・機械呼吸§Stage 1 · Mechanical Breath§1단계 · 기계 호흡
-第二阶段 · 替换关节§第二段階・置換関節§Stage 2 · Replaced Joints§2단계 · 교체 관절
-第三阶段 · 织网接口§第三段階・織網インターフェース§Stage 3 · Weave Interface§3단계 · 직조 인터페이스
-飞升完成 · 零号§昇華完了・零号§Ascension Complete · Zero§승화 완료 · 제로
-肺换成了机械的，双手也是。回收员第一次可以不戴维生面罩睡觉。§肺が機械になった。両手も。回収員は初めて、生命維持マスクを外して眠れた。§The lungs are mechanical now, and so are both hands. For the first time, the Recycler can sleep without a life-support mask.§폐가 기계로 바뀌었다. 두 손도. 회수원은 처음으로 생명 유지 마스크 없이 잠들 수 있었다.
-关节换成了织网的标准件，背上多了一对散热鳍。全力运转的时候，它们烧得通红。§関節は織網の規格部品に置き換わり、背中に放熱フィンが一対増えた。全力で動くと、真っ赤に焼ける。§The joints are standard Weave parts now, and a pair of heat fins juts from the back. At full power, they glow red-hot.§관절은 직조망의 표준 부품으로 바뀌었고, 등에는 방열 핀 한 쌍이 생겼다. 전력으로 움직이면 새빨갛게 달아오른다.
-后脑接上了织网接口。每一根线缆里的声音，回收员都听得见。§後頭部に織網インターフェースが繋がった。どのケーブルの声も、回収員には聞こえる。§A Weave interface is plugged into the back of the head. The Recycler can hear the voice in every cable.§뒤통수에 직조 인터페이스가 연결되었다. 모든 케이블 속 목소리가 회수원에게 들린다.
-最后一块零件装好的时候，零织协议认出了回收员：第零号。从今天起，这座城由你来回收。§最後のパーツがはまった時、零織プロトコルは回収員を認識した――第零号。今日から、この街を回収するのはお前だ。§When the last part clicked into place, the Zero Weave Protocol recognized the Recycler: Number Zero. From today, this city is yours to reclaim.§마지막 부품이 끼워지는 순간, 제로 위브 프로토콜이 회수원을 알아보았다. 제0호. 오늘부터 이 도시는 네가 회수한다.
 武器§武器§Weapon§무기
 头部§頭部§Head§머리
 外套§アウター§Coat§외투
@@ -37,39 +20,20 @@
 装甲片§装甲片§Armor Plates§장갑판
 动力件§動力部品§Power Parts§동력 부품
 护腿件§脚部装甲片§Leg Plates§다리 장갑
-排污口§排水口§Outfall§배수구
-积水暗渠§冠水暗渠§Flooded Culvert§침수 암거
-棚户下层§バラック下層§Shanty Underlevel§판자촌 하층
-晒衣走道§物干し通路§Laundry Walkway§빨래 통로
-泵站入口§ポンプ場入口§Pump Station Gate§펌프장 입구
-压力管廊§圧力管廊§Pressure Gallery§압력 관로
 抽水总闸§排水総水門§Main Drain Gate§배수 총수문
-货运坡道§貨物スロープ§Cargo Ramp§화물 경사로
-高架轨线§高架軌道§Elevated Track§고가 궤도
 货柜堆场§コンテナヤード§Container Yard§컨테이너 야적장
-吊装通道§吊り上げ通路§Hoist Passage§인양 통로
 分拣仓§仕分け倉庫§Sorting Bay§분류 창고
 传送干线§搬送幹線§Conveyor Trunk§컨베이어 간선
 总调度塔§総管制塔§Dispatch Tower§총관제탑
-中继屋顶§中継屋上§Relay Rooftop§중계 옥상
 天线森林§アンテナの森§Antenna Forest§안테나 숲
-屏蔽走廊§遮断回廊§Shielded Corridor§차폐 회랑
-断讯网桥§断信ブリッジ§Dead-Signal Bridge§단신 브리지
 干扰站§妨害局§Jammer Station§방해국
-冷却井§冷却井戸§Cooling Well§냉각정
 监视穹顶§監視ドーム§Watch Dome§감시 돔
 镜面街口§鏡面街の入口§Mirror Street§거울 거리 입구
 空中花园§空中庭園§Sky Garden§공중 정원
-审计长廊§監査回廊§Audit Gallery§감사 회랑
-玻璃天桥§ガラスの空中橋§Glass Skybridge§유리 구름다리
 冷却中枢§冷却中枢§Cooling Core§냉각 중추
-镜像大厅§鏡像ホール§Hall of Mirrors§거울 홀
 审计之庭§監査の庭§Court of Audit§감사의 뜰
 织网边缘§織網の縁§Weave's Edge§직조망 가장자리
-线缆深渊§ケーブルの深淵§Cable Abyss§케이블 심연
 协议回廊§プロトコル回廊§Protocol Corridor§프로토콜 회랑
-零号机房§零号サーバールーム§Server Room Zero§제로 서버실
-母线井§母線シャフト§Busbar Shaft§모선 갱
 织网心室§織網の心室§Weave Ventricle§직조 심실
 零号核心§零号コア§Core Zero§제로 코어
 废液沟渠§廃液溝§Waste Ditch§폐액 도랑
@@ -87,41 +51,7 @@
 信号禁区§信号禁区§Dead Zone§신호 금지 구역
 镜面上城§鏡面上層街§Mirror Uptown§거울 상층 도시
 零号织网§零号織網§Weave Zero§제로 직조망
-回收员从沉降区最底部的排污口爬了出来§回収員は沈降区の最下層、排水口から這い出した§The Recycler crawled out of the outfall at the very bottom of the Sinkzone§회수원은 침강 구역 맨 밑바닥의 배수구에서 기어 나왔다
-巡逻机开始成群出现，封锁比传言中更严§巡回機が群れで現れ始めた。封鎖は噂以上に厳しい§Patrol drones start showing up in swarms. The lockdown is tighter than the rumors said§순찰기가 떼로 나타나기 시작했다. 봉쇄는 소문보다 삼엄하다
-棚屋里的人都不见了，只剩下衣服§バラックの住人は皆消えて、服だけが残っていた§Everyone in the shacks is gone. Only their clothes are left§판잣집 사람들은 모두 사라지고, 옷만 남았다
-悬空走道上挂满无主的旧衣§宙に浮いた通路には、持ち主のいない古着が吊るされている§The hanging walkways are full of old clothes nobody owns anymore§허공의 통로마다 주인 없는 헌 옷이 걸려 있다
-广播里第一次出现「零号协议」§放送で初めて「零号プロトコル」という言葉が流れた§For the first time, the broadcast mentions "Protocol Zero"§방송에 처음으로 「제로 프로토콜」이 등장했다
-管廊尽头就是整个沉降区的闸门§管廊の突き当たりが、沈降区全体の水門だ§At the end of the gallery stands the gate of the whole Sinkzone§관로 끝이 바로 침강 구역 전체의 수문이다
-闸门看守：这一层的管理者§水門番：この層の管理者§The Gatekeeper: warden of this level§수문 감시자: 이 층의 관리자
-沉降区之上，是彻夜不停的雨中货运线§沈降区の上には、雨の中で夜通し動く貨物線がある§Above the Sinkzone runs a freight line that never stops, all night, in the rain§침강 구역 위에는 비 속에서 밤새 멈추지 않는 화물선이 있다
-无人货机沿着高架轨道来回巡逻§無人貨物機が高架軌道を行き来して巡回している§Unmanned cargo drones patrol back and forth along the elevated track§무인 화물기가 고가 궤도를 오가며 순찰한다
-货柜垒到看不见顶，里面有东西在走动§コンテナは見上げても頂が見えないほど積まれ、中で何かが動いている§The containers are stacked out of sight, and something is moving inside§컨테이너가 끝이 안 보이게 쌓여 있고, 안에서 무언가 움직인다
-吊装通道的探照灯一直跟着回收员§吊り上げ通路のサーチライトが、ずっと回収員を追ってくる§The searchlights of the hoist passage keep following the Recycler§인양 통로의 탐조등이 회수원을 계속 따라온다
-分拣仓把一切都当作货物处理，包括人§仕分け倉庫は何もかもを貨物として扱う。人間さえも§The sorting bay treats everything as cargo, people included§분류 창고는 모든 것을 화물로 취급한다. 사람까지도
-传送干线的尽头亮着总调度塔的灯§搬送幹線の果てに、総管制塔の灯りがともっている§At the end of the conveyor trunk, the lights of the Dispatch Tower are on§컨베이어 간선 끝에 총관제탑의 불빛이 켜져 있다
-总调度吊臂：整条货运线的管理者§総管制クレーン：貨物線全体の管理者§The Dispatch Crane: warden of the whole freight line§총관제 크레인: 화물선 전체의 관리자
-货运线之上是信号禁区，屋顶上长满了天线§貨物線の上は信号禁区。屋上はアンテナで埋め尽くされている§Above the freight line lies the Dead Zone, its rooftops overgrown with antennas§화물선 위는 신호 금지 구역. 옥상마다 안테나가 빽빽하다
-每一根天线都在低声重复同一段广播§どのアンテナも、同じ放送を小声で繰り返している§Every antenna whispers the same broadcast over and over§모든 안테나가 같은 방송을 낮게 되풀이한다
-中继塔之间的走廊被屏蔽甲兵封死了§中継塔の間の回廊は、遮断甲兵に塞がれている§The corridors between the relay towers are sealed off by Shield Troopers§중계탑 사이의 회랑은 차폐 갑병들이 막아섰다
-雨停了，回收员第一次看见了天色§雨が止み、回収員は初めて空の色を見た§The rain stopped. For the first time, the Recycler saw the color of the sky§비가 그치고, 회수원은 처음으로 하늘빛을 보았다
-干扰站把所有信号都切成了噪音§妨害局は、あらゆる信号をノイズに切り刻んでいる§The jammer station chops every signal into noise§방해국은 모든 신호를 잡음으로 잘라 버린다
-冷却井深处，干扰中继还在嗡嗡作响§冷却井戸の奥で、妨害中継器がまだ唸っている§Deep in the cooling well, a jamming relay is still humming§냉각정 깊은 곳에서 방해 중계기가 아직 웅웅거린다
-断讯监视者：切断整座城市声音的东西§断信の監視者：街じゅうの声を断ち切ったもの§The Silent Watcher: the thing that cut off the whole city's voice§단신 감시자: 도시 전체의 목소리를 끊어 버린 것
-信号禁区之上，是从来不下雨的镜面上城§信号禁区の上には、決して雨の降らない鏡面上層街がある§Above the Dead Zone is Mirror Uptown, where it never rains§신호 금지 구역 위에는 비가 내리지 않는 거울 상층 도시가 있다
-这里的人从来不往下看§ここの人間は、決して下を見ない§People here never look down§이곳 사람들은 절대 아래를 내려다보지 않는다
-审计长廊的镜面卫兵只认通行证§監査回廊の鏡面衛兵は、通行証しか認めない§The Mirror Guards of the Audit Gallery only recognize passes§감사 회랑의 거울 경비병은 통행증만 인정한다
-玻璃天桥下面，是回收员一路爬上来的整座城§ガラスの空中橋の下に広がるのは、回収員がここまで登ってきた街のすべてだ§Below the glass skybridge lies the whole city the Recycler climbed up through§유리 구름다리 아래로, 회수원이 기어오른 도시 전체가 펼쳐진다
-上城的一切都靠冷却中枢维持体温§上層街のすべては、冷却中枢が体温を保っている§Everything in Uptown keeps its temperature thanks to the Cooling Core§상층 도시의 모든 것은 냉각 중추가 체온을 유지시킨다
-镜像大厅里，回收员有一千个倒影§鏡像ホールの中で、回収員には千の映り身がある§In the Hall of Mirrors, the Recycler has a thousand reflections§거울 홀 안에서 회수원은 천 개의 그림자를 가진다
-镜面审计官：决定谁有资格留在上城的东西§鏡面監査官：誰が上層街に残れるかを決めるもの§The Mirror Auditor: the thing that decides who gets to stay in Uptown§거울 감사관: 누가 상층 도시에 남을 자격이 있는지 정하는 것
-上城的地板下面，是把整座城织在一起的网§上層街の床下にあるのは、街全体を織り上げている網だ§Beneath Uptown's floors is the web that weaves the whole city together§상층 도시의 바닥 아래에는 도시 전체를 엮어 낸 그물이 있다
-每一根线缆都连着一个被回收的人§どのケーブルも、回収された誰かに繋がっている§Every cable is connected to someone who was reclaimed§모든 케이블이 회수된 누군가와 이어져 있다
-协议回廊里巡逻的是第一代织网守卫§プロトコル回廊を巡回するのは、第一世代の織網守衛だ§The Protocol Corridor is patrolled by first-generation Weave Guards§프로토콜 회랑을 순찰하는 것은 1세대 직조 수호병이다
-零号机房：一切协议开始的地方§零号サーバールーム：すべてのプロトコルが始まった場所§Server Room Zero: where every protocol began§제로 서버실: 모든 프로토콜이 시작된 곳
-母线井里流动的不是电，是记忆§母線シャフトを流れているのは電気ではない。記憶だ§What flows through the busbar shaft isn't electricity. It's memory§모선 갱을 흐르는 것은 전기가 아니라 기억이다
 织网心室在模仿一颗跳动的心脏§織網の心室は、脈打つ心臓を真似ている§The Weave Ventricle is imitating a beating heart§직조 심실은 뛰는 심장을 흉내 내고 있다
-织网母体：零织协议本身§織網の母体：零織プロトコルそのもの§The Weave Matrix: the Zero Weave Protocol itself§직조 모체: 제로 위브 프로토콜 그 자체
 闸门看守§水門番§Gatekeeper§수문 감시자
 总调度吊臂§総管制クレーン§Dispatch Crane§총관제 크레인
 断讯监视者§断信の監視者§Silent Watcher§단신 감시자

@@ -1,0 +1,126 @@
+{
+ "scale": 5.0,
+ "weapon_class": "dagger",
+ "parts": {
+  "head": {
+   "file": "head.png",
+   "pivot": [
+    31.22,
+    40.97
+   ],
+   "eye": [
+    8.2,
+    -15.0
+   ]
+  },
+  "torso": {
+   "file": "torso.png",
+   "pivot": [
+    26.21,
+    52.64
+   ]
+  },
+  "arm": {
+   "file": "arm.png",
+   "pivot": [
+    11.67,
+    6.84
+   ],
+   "hand": [
+    12.33,
+    53.52
+   ]
+  },
+  "arm_far": {
+   "file": "arm_far.png",
+   "pivot": [
+    11.84,
+    6.88
+   ],
+   "hand": [
+    12.39,
+    53.85
+   ]
+  },
+  "hand": {
+   "file": "hand.png",
+   "pivot": [
+    11.4,
+    3.84
+   ]
+  },
+  "hand_far": {
+   "file": "hand_far.png",
+   "pivot": [
+    10.79,
+    3.81
+   ]
+  },
+  "leg_near": {
+   "file": "leg_near.png",
+   "pivot": [
+    12.0,
+    15.75
+   ]
+  },
+  "leg_far": {
+   "file": "leg_far.png",
+   "pivot": [
+    10.68,
+    15.09
+   ]
+  },
+  "pack": {
+   "file": "pack.png",
+   "pivot": [
+    23.46,
+    21.37
+   ]
+  },
+  "weapon": {
+   "file": "weapon.png",
+   "pivot": [
+    7,
+    6
+   ],
+   "tip": [
+    7,
+    38
+   ]
+  }
+ },
+ "rig": {
+  "hip": [
+   -2.5,
+   -47.8
+  ],
+  "head": [
+   -6.44,
+   -48.46
+  ],
+  "pack": [
+   -20.93,
+   -28.63
+  ],
+  "leg_near": [
+   -8.26,
+   0
+  ],
+  "leg_far": [
+   8.62,
+   0
+  ]
+ },
+ "rig_version": 2,
+ "proportion_profile": "kid_v17",
+ "shoulder": [
+  -20.04,
+  -36.34
+ ],
+ "shoulderF": [
+  13.22,
+  -36.34
+ ],
+ "far_shade": 0.9,
+ "note": "11-26 新主角「喷漆小子」（Gemini 卡40 拆件 v2，make_kid.py 生成）。1 单位 = 5 贴图像素；rig_version 2：旧装备的头 / 外套 / 背包 / 下装外观先不画。weapon.png 暂用旧初始武器放大 1.25 倍。"
+}

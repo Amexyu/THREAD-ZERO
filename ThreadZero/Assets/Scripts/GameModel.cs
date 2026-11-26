@@ -139,15 +139,15 @@ namespace ThreadZero
         // v0.16 机械飞升：5 章各一件义体（后面 4 件先占位，做到那一章再定数值和外观）。
         public const int AscensionTotal = 5;
         public static readonly ImplantDef[] Implants = {
-            new ImplantDef("arm_l", "绞盘机械臂", "手臂", "闸门看守的绞盘核心改成的机械臂。攻速 +15%。", new Stats(0, 0, 0, .15f))
+            new ImplantDef("arm_l", "绞盘臂套", "臂套", "闸门看守回家前留下的绞盘核心，改成了臂套，单手就能拎起机器人。攻速 +15%。", new Stats(0, 0, 0, .15f))
                 .Traits("绞盘加压：攻速再 +5%", new Stats(0, 0, 0, .05f), "全功率绞盘：攻击 +12", new Stats(0, 12, 0)),
-            new ImplantDef("eye_r", "调度义眼", "义眼", "总调度吊臂的调度镜头改成的义眼。暴击 +6%，攻击 +4。", new Stats(0, 4, 0, 0, .06f))
+            new ImplantDef("eye_r", "调度护目镜", "护目镜", "总调度吊臂下班回家前，把调度镜头送给了回收员。暴击 +6%，攻击 +4。", new Stats(0, 4, 0, 0, .06f))
                 .Traits("弱点标定：暴击伤害 +20%", new Stats { critDamage = .2f }, "全域调度：暴击再 +6%", new Stats(0, 0, 0, 0, .06f)),
-            new ImplantDef("spine", "中继脊柱", "脊柱", "断讯监视者的中继骨架改成的脊柱支架。生命 +60，防御 +6。", new Stats(60, 0, 6))
-                .Traits("屏蔽椎节：防御 +10", new Stats(0, 0, 10), "全段中继：生命 +300", new Stats(300, 0, 0)),
-            new ImplantDef("heart", "冷核心脏", "心脏", "镜面审计官的冷却核心改成的人工心脏。生命 +120，攻速 +5%。", new Stats(120, 0, 0, .05f))
-                .Traits("冷却循环：生命 +200", new Stats(200, 0, 0), "零度泵：攻速 +8%", new Stats(0, 0, 0, .08f)),
-            new ImplantDef("port", "织网接口", "接口", "织网母体的协议接口，接在后脑。攻击 +10，暴击 +5%，幸运 +5。", new Stats(0, 10, 0, 0, .05f, 5))
+            new ImplantDef("spine", "中继背架", "背架", "断讯监视者回家前留下的中继天线，改成了背架，全城的广播都收得到。生命 +60，防御 +6。", new Stats(60, 0, 6))
+                .Traits("屏蔽背板：防御 +10", new Stats(0, 0, 10), "全段中继：生命 +300", new Stats(300, 0, 0)),
+            new ImplantDef("heart", "冷核喷气背包", "喷气背包", "镜面审计官盖完通行章，把冷却核心改成了喷气背包。生命 +120，攻速 +5%。", new Stats(120, 0, 0, .05f))
+                .Traits("冷却循环：生命 +200", new Stats(200, 0, 0), "零度喷口：攻速 +8%", new Stats(0, 0, 0, .08f)),
+            new ImplantDef("port", "织网耳机", "耳机", "织网母体留下的耳机，戴上就能听见全城。攻击 +10，暴击 +5%，幸运 +5。", new Stats(0, 10, 0, 0, .05f, 5))
                 .Traits("协议握手：幸运 +10", new Stats(0, 0, 0, 0, 0, 10), "零号协议：攻击 +20", new Stats(0, 20, 0)),
         };
         /// v0.20 机械飞升：义体最高等级、每升一级基础效果 +30%（10 级 = 3.7 倍）。
@@ -156,12 +156,12 @@ namespace ThreadZero
         public static int ImplantIndex(string id) { for (int i = 0; i < Implants.Length; i++) if (Implants[i].id == id) return i; return -1; }
         /// v0.20 机械飞升的阶段（机械飞升_设计.md）：飞升度到 30 / 60 / 90 / 100% 各一段。文字是草稿，外观等主角的分阶段部件画好再换。
         public static readonly int[] AscensionStageAt = { 30, 60, 90, 100 };
-        public static readonly string[] AscensionStageNames = { "第一阶段 · 机械呼吸", "第二阶段 · 替换关节", "第三阶段 · 织网接口", "飞升完成 · 零号" };
+        public static readonly string[] AscensionStageNames = { "第一阶段 · 装上臂套", "第二阶段 · 背起天线", "第三阶段 · 喷气点火", "飞升完成 · 起飞" };   // v0.38 世界观 A：飞升 = 字面上的「飞上去」
         public static readonly string[] AscensionStageLines = {
-            "肺换成了机械的，双手也是。回收员第一次可以不戴维生面罩睡觉。",
-            "关节换成了织网的标准件，背上多了一对散热鳍。全力运转的时候，它们烧得通红。",
-            "后脑接上了织网接口。每一根线缆里的声音，回收员都听得见。",
-            "最后一块零件装好的时候，零织协议认出了回收员：第零号。从今天起，这座城由你来回收。" };
+            "绞盘臂套和调度护目镜都戴好了，回收员单手就能把机器人拎回家。",
+            "背上的中继背架竖起了天线，全城的广播回收员都收得到。",
+            "冷核喷气背包第一次点火，回收员一下跳过了整条街——离飞起来只差一点。",
+            "戴上织网耳机，零号认出了回收员：「欢迎回来，第零号。」喷气背包全开——从今天起，城里哪里都飞得到。" };
         /// 从 level 升到 level + 1 要多少织网碎片 / 零件（1→2：8 片，9→10：约 100 片；5 件全满约 1700 片 ≈ 回声层 150～200 层）。
         public static int ImplantShardCost(int level) { return (int)Math.Round(8 * Math.Pow(1.37, Math.Max(0, level - 1))); }
         public static int ImplantScrapCost(int level) { return 60 * level * (level + 1); }
@@ -173,27 +173,27 @@ namespace ThreadZero
         // v0.8：六个关卡 = 三个街区 × 两层。后三关是同一街区的深层，敌人更强，掉落等级更高。
         public const int Districts = 3;
         // v0.14：region = 第一章的第几关（0..6 = 1-1..1-7）。名字是场景占位名，正式关卡名待定。
-        public static readonly string[] RegionNames = { "排污口", "积水暗渠", "棚户下层", "晒衣走道", "泵站入口", "压力管廊", "抽水总闸",
-                                                         "货运坡道", "高架轨线", "货柜堆场", "吊装通道", "分拣仓", "传送干线", "总调度塔",
-                                                         "中继屋顶", "天线森林", "屏蔽走廊", "断讯网桥", "干扰站", "冷却井", "监视穹顶",
-                                                         "镜面街口", "空中花园", "审计长廊", "玻璃天桥", "冷却中枢", "镜像大厅", "审计之庭",
-                                                         "织网边缘", "线缆深渊", "协议回廊", "零号机房", "母线井", "织网心室", "零号核心" };
-        public static readonly string[] SceneNames = { "废液沟渠", "叠层棚户", "泵站管廊", "抽水总闸", "高架货轨", "货柜堆场", "分拣仓内", "总调度塔",
-                                                        "天线屋顶", "中继塔廊", "干扰站内", "监视穹顶",
+        public static readonly string[] RegionNames = { "老城水道", "涂鸦水渠", "彩色水巷", "晾衣栈道", "小抽水站", "管道迷宫", "抽水总闸",
+                                                         "高架轻轨", "桥下小卖亭", "货柜码头", "灯塔栈桥", "分拣仓", "传送干线", "总调度塔",
+                                                         "天线屋顶", "天线森林", "中继塔廊", "彩虹天桥", "屋顶广播站", "录音间", "监视穹顶",
+                                                         "镜面街口", "检票长街", "空中花园", "喷泉广场", "冷却中枢", "风扇长廊", "审计之庭",
+                                                         "织网边缘", "云上线轴", "协议回廊", "灯笼长廊", "母线机房", "纺车工坊", "零号核心" };   // v0.38 世界观 A：关卡名跟新场景对上
+        public static readonly string[] SceneNames = { "老城水道", "彩色水巷", "小抽水站", "大水闸", "高架轻轨", "货柜码头", "分拣仓", "总调度塔",
+                                                        "天线屋顶", "中继塔廊", "屋顶广播站", "监视穹顶",
                                                         "镜面街区", "空中花园", "冷却中枢", "审计之庭", "织网边缘", "协议回廊", "母线机房", "零号核心" };
-        public static readonly string[] ChapterNames = { "沉降区", "物流高架", "信号禁区", "镜面上城", "零号织网" };
-        /// 每关一句叙事（企划书 · 第一章逐关设计），转场的关卡条和选关页用。
+        public static readonly string[] ChapterNames = { "沉降区", "物流高架", "信号屋顶", "镜面上城", "零号织网" };
+        /// 每关一句叙事，转场的关卡条和选关页用。v0.38 世界观 A「机器人离家出走的夏天」：回收机器人集体离家出走，回收员把它们一只只接回家。
         public static readonly string[] StageLines = {
-            "回收员从沉降区最底部的排污口爬了出来", "巡逻机开始成群出现，封锁比传言中更严", "棚屋里的人都不见了，只剩下衣服",
-            "悬空走道上挂满无主的旧衣", "广播里第一次出现「零号协议」", "管廊尽头就是整个沉降区的闸门", "闸门看守：这一层的管理者",
-            "沉降区之上，是彻夜不停的雨中货运线", "无人货机沿着高架轨道来回巡逻", "货柜垒到看不见顶，里面有东西在走动",
-            "吊装通道的探照灯一直跟着回收员", "分拣仓把一切都当作货物处理，包括人", "传送干线的尽头亮着总调度塔的灯", "总调度吊臂：整条货运线的管理者",
-            "货运线之上是信号禁区，屋顶上长满了天线", "每一根天线都在低声重复同一段广播", "中继塔之间的走廊被屏蔽甲兵封死了",
-            "雨停了，回收员第一次看见了天色", "干扰站把所有信号都切成了噪音", "冷却井深处，干扰中继还在嗡嗡作响", "断讯监视者：切断整座城市声音的东西",
-            "信号禁区之上，是从来不下雨的镜面上城", "这里的人从来不往下看", "审计长廊的镜面卫兵只认通行证",
-            "玻璃天桥下面，是回收员一路爬上来的整座城", "上城的一切都靠冷却中枢维持体温", "镜像大厅里，回收员有一千个倒影", "镜面审计官：决定谁有资格留在上城的东西",
-            "上城的地板下面，是把整座城织在一起的网", "每一根线缆都连着一个被回收的人", "协议回廊里巡逻的是第一代织网守卫",
-            "零号机房：一切协议开始的地方", "母线井里流动的不是电，是记忆", "织网心室在模仿一颗跳动的心脏", "织网母体：零织协议本身" };
+            "回收员从老城水道出发，第一只离家出走的机器人正在水里打滚", "扫地机器人把水渠当成了泳池，到处都是水花", "彩色小楼之间的水巷里，机器人在堵别人家的排水管",
+            "晾衣绳上挂满了机器人偷来的袜子", "抽水站的水泵被它们拧到了最大档", "管道尽头就是整条水道的总闸", "闸门看守：不肯开闸——它怕水一放，渠里的小鱼没地方去",
+            "水道之上是高架轻轨，太阳雨下个不停", "货运机器人集体罢工，躲在桥下的小卖亭边看雨", "货柜垒得比灯塔还高，里面传出打呼噜的声音",
+            "灯塔的红灯一闪一闪，像在给罢工的机器人打拍子", "分拣机把什么都当成包裹，连回收员都被贴了快递单", "传送带的尽头亮着总调度塔的灯", "总调度吊臂：下雨也坚持加班，把什么都当货物吊走，包括你",
+            "雨停了，屋顶上挂起了一道彩虹", "每一根天线都在重复同一段广播", "栏杆上绑满了收音机，一台比一台开得大声",
+            "从天桥的格栅往下看，整座城都在晒太阳", "广播站的录音机里，存着全城的声音", "卷盘一直在转，却没有人在听", "断讯监视者：把全城的声音都收起来存着——因为零号睡着了，没人听",
+            "信号屋顶之上，是从来不下雨的镜面上城", "上城的机器人只认通行证，闸机一个比一个挑剔", "喷泉、玫瑰和温室——这里连花都要排队检票",
+            "三层喷泉准点喷水，连水花都排得整整齐齐", "上城的一切都靠冷却中枢的五台大风扇吹着", "冷却液咕嘟咕嘟冒泡，机器人在风扇前面乘凉", "镜面审计官：决定谁有资格上来——回收员得先「买票」",
+            "镜面上城之上，是云里的零号织网", "一根根毛线从云里拉出来，把整座城织在了一起", "织网在做梦，回廊的刺绣上绣满了城里人忘掉的小事",
+            "纸灯笼一盏接一盏亮起来，像是有人在等谁回家", "纺车一直在转，把梦纺成线", "机柜都穿上了毛衣——零号怕冷，也怕孤单", "织网母体：零号的梦。这位城市管家太久没人跟它说话，睡着了" };
         public static string StageCode(int region) { return Chapters.ChapterOf(region) + "-" + (region % Chapters.StagesPerChapter + 1); }
         /// 某件装备在第一章哪几关掉落（按 District 轮换），例如 "1-1 / 1-4 / 1-7"。
         public static string SourceStages(string id)
@@ -222,8 +222,8 @@ namespace ThreadZero
         public static string ChapterNumber(int chapter) { return "一二三四五六七八九"[Math.Max(0, Math.Min(8, chapter - 1))].ToString(); }
         public static readonly string[] BossNamesByChapter = { "闸门看守", "总调度吊臂", "断讯监视者", "镜面审计官", "织网母体" };
         public static string BossName(int chapter) { return BossNamesByChapter[Math.Max(0, Math.Min(BossNamesByChapter.Length - 1, chapter - 1))]; }
-        public static readonly string[] TalentNames = { "", "击杀回复", "连击", "先手", "背水" };
-        public static readonly string[] TalentTexts = { "", "击杀敌人回复 1.5% 最大生命", "每第 4 次普攻追加 40% 攻击的伤害", "对满血的敌人伤害 +25%", "生命低于 40% 时受到的伤害 −12%" };
+        public static readonly string[] TalentNames = { "", "回收回血", "连击", "先手", "背水" };
+        public static readonly string[] TalentTexts = { "", "每回收一只机器人回复 1.5% 最大生命", "每第 4 次普攻追加 40% 攻击的伤害", "对满血的敌人伤害 +25%", "生命低于 40% 时受到的伤害 −12%" };
         public static readonly string[] StatNames = { "生命", "攻击", "防御", "攻速", "暴击", "幸运", "暴击伤害", "特效伤害", "首领伤害", "零件回收" };
         public static readonly float[] Multipliers = Balance.Qualities.Select(q=>q.multiplier).ToArray();
         public static readonly EquipmentBase[] All = {
@@ -270,8 +270,8 @@ namespace ThreadZero
             new EquipmentBase("b9", "折叠货梯", Slot.Back, 4, new Stats(19, 0, 2.8f, 0, 0, 3)),
             // ---- v0.16 下装：l0 初始，l1–l4 第一章，l5–l9 第二章。下装偏生命 / 防御，少量攻速和幸运。----
             new EquipmentBase("l0", "回收员工装裤", Slot.Legs, 0, new Stats(12, 0, 2)),
-            new EquipmentBase("l1", "排污防水裤", Slot.Legs, 1, new Stats(14, 0, 2)),
-            new EquipmentBase("l2", "棚户补丁裤", Slot.Legs, 2, new Stats(12, 1, 1, 0, 0, 2)),
+            new EquipmentBase("l1", "水道防水裤", Slot.Legs, 1, new Stats(14, 0, 2)),
+            new EquipmentBase("l2", "水巷补丁裤", Slot.Legs, 2, new Stats(12, 1, 1, 0, 0, 2)),
             new EquipmentBase("l3", "护膝战术裤", Slot.Legs, 3, new Stats(16, 0, 3)),
             new EquipmentBase("l4", "管廊液压腿甲", Slot.Legs, 4, new Stats(12, 1, 1, .03f)),
             new EquipmentBase("l5", "荧光雨裤", Slot.Legs, 0, new Stats(20, 0, 3, 0, 0, 2)),
@@ -414,7 +414,7 @@ namespace ThreadZero
             switch(e) { case Effect.Arc: return "电弧：每三次攻击追加伤害";
                 case Effect.Leech: return "汲取：造成伤害恢复生命";
                 case Effect.Guard: return "护盾：减伤蓄能，强化下一次攻击";
-                case Effect.Execute: return "处决：敌人低血时提高伤害";
+                case Effect.Execute: return "收尾：敌人低血时提高伤害";   // v0.40 世界观 A：机器人不会被「处决」
                 case Effect.Drone: return "无人机：每 2.4 秒自动射击，标记增伤";
                 case Effect.Mark: return "标记：定时锁定目标，目标多受伤害，联动无人机与电弧";
                 case Effect.Thruster: return "推进：每 4 秒突袭，近战武器强化冲击";
@@ -439,13 +439,13 @@ namespace ThreadZero
         /// power：前排 = 自身血量占主角最大生命的比例；后排 = 每发伤害占主角攻击的比例；支援 = 每次回复 / 护盾占最大生命的比例。
         public static readonly RobotDef[] Robots = {
             new RobotDef("r0", "回收无人机", 2, 2, EnemyRole.Swarmer, null, .03f, 8, "每 8 秒给主角回复 3% 生命"),
-            new RobotDef("r1", "改装装卸机", 0, 2, EnemyRole.Brute, "brute2", .5f, 0, "替主角挡下 35% 的伤害"),
-            new RobotDef("r2", "改装炮车", 1, 2, EnemyRole.Ranged, "ranged2", .3f, 2, "每 2 秒炮击目标"),
-            new RobotDef("r3", "改装甲兵", 0, 3, EnemyRole.Brute, "brute3", .75f, 0, "替主角挡下 35% 的伤害，血更厚"),
-            new RobotDef("r4", "改装折光炮台", 1, 4, EnemyRole.Ranged, "ranged4", .28f, 2, "每 2 秒射击，打穿目标身后的一只", true),
-            new RobotDef("r5", "改装镜面无人机", 2, 4, EnemyRole.Swarmer, "swarm4", .06f, 10, "每 10 秒给主角 6% 生命的护盾"),
-            new RobotDef("r6", "改装母线炮", 1, 5, EnemyRole.Ranged, "ranged5", .55f, 3, "每 3 秒重炮一发"),
-            new RobotDef("r7", "改装协议守卫", 0, 5, EnemyRole.Brute, "brute5", 1f, 0, "替主角挡下 35% 的伤害，血最厚"),
+            new RobotDef("r1", "改装叉车", 0, 2, EnemyRole.Brute, "brute2", .5f, 0, "替主角挡下 35% 的伤害"),
+            new RobotDef("r2", "改装行李箱坦克", 1, 2, EnemyRole.Ranged, "ranged2", .3f, 2, "每 2 秒炮击目标"),
+            new RobotDef("r3", "改装空调外机", 0, 3, EnemyRole.Brute, "brute3", .75f, 0, "替主角挡下 35% 的伤害，血更厚"),
+            new RobotDef("r4", "改装台灯炮塔", 1, 4, EnemyRole.Ranged, "ranged4", .28f, 2, "每 2 秒射击，打穿目标身后的一只", true),
+            new RobotDef("r5", "改装粉饼盒", 2, 4, EnemyRole.Swarmer, "swarm4", .06f, 10, "每 10 秒给主角 6% 生命的护盾"),
+            new RobotDef("r6", "改装爆米花炮塔", 1, 5, EnemyRole.Ranged, "ranged5", .55f, 3, "每 3 秒重炮一发"),
+            new RobotDef("r7", "改装火锅推车", 0, 5, EnemyRole.Brute, "brute5", 1f, 0, "替主角挡下 35% 的伤害，血最厚"),
         };
         public const int BlueprintNeed = 10, RobotAssembleCores = 2;
         public static int RobotAssembleScrap(int i) { return 150 * Robots[i].chapter; }

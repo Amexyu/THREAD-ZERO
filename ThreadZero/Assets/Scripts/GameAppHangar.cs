@@ -8,7 +8,7 @@ namespace ThreadZero
     public sealed partial class GameApp
     {
         // 每台机器人的图纸从哪种怪身上掉（只是给玩家看的提示，实际掉落规则见 GameModel.BlueprintDrop）
-        private static readonly string[] RobotMob = { "", "叉臂装卸机", "轨道炮车", "屏蔽甲兵", "折光炮台", "镜面无人机", "母线炮", "协议守卫" };
+        private static readonly string[] RobotMob = { "", "购物车叉车", "行李箱坦克", "空调外机", "台灯炮塔", "粉饼盒飞弹", "爆米花炮塔", "火锅推车" };
         private static readonly string[] EnemyRoleNames = { "冲锋", "重型", "远程" };
 
         // ---------- 战斗画面 ----------

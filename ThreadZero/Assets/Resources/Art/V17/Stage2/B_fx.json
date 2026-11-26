@@ -1,0 +1,89 @@
+{
+ "lamps": [],
+ "windows": [],
+ "flows": [],
+ "steam": [],
+ "drips": [],
+ "water": [
+  {
+   "layer": 2,
+   "v0": 0.935,
+   "v1": 0.995,
+   "count": 12,
+   "color": {
+    "r": 0,
+    "g": 0,
+    "b": 0,
+    "a": 0
+   }
+  }
+ ],
+ "blinks": [
+  {
+   "layer": 1,
+   "u": 0.7722,
+   "v": 0.086,
+   "r": 0.006,
+   "period": 2.2,
+   "duty": 0.4,
+   "phase": 0,
+   "color": {
+    "r": 1,
+    "g": 0.22,
+    "b": 0.16,
+    "a": 1
+   }
+  },
+  {
+   "layer": 1,
+   "u": 0.7722,
+   "v": 0.38,
+   "r": 0.006,
+   "period": 2.2,
+   "duty": 0.4,
+   "phase": 0.5,
+   "color": {
+    "r": 1,
+    "g": 0.22,
+    "b": 0.16,
+    "a": 1
+   }
+  }
+ ],
+ "rain": [
+  {
+   "layer": 0,
+   "count": 90,
+   "angle": 12,
+   "speed": 1400,
+   "len": 44,
+   "width": 1.4,
+   "alpha": 0.2,
+   "v1": 1
+  }
+ ],
+ "props": [
+  {
+   "layer": 1,
+   "body": "B_hang_box",
+   "wheel": "",
+   "x0": 908,
+   "spacing": 1774.51,
+   "baseV": 0.523,
+   "height": 0.337,
+   "wheelU": 0.5,
+   "wheelV": 0.5,
+   "wheelSize": 0.3,
+   "wheelSpeed": 0,
+   "hubR": 0,
+   "gaugeU": -1,
+   "gaugeV": 0,
+   "gaugeR": 0,
+   "motion": "swing",
+   "amp": 2.0,
+   "period": 5.0,
+   "pivotU": 0.5,
+   "pivotV": 0
+  }
+ ]
+}

@@ -8,9 +8,10 @@ namespace ThreadZero
     {
         private static readonly string[] EpilogueLines = {
             "零号织网的最深处没有敌人，只有一颗在呼吸的核心。",
-            "回收员把最后一根线缆接上的时候，整座城的声音同时安静了下来——不是被吞没，是被听见了。",
-            "零织协议不再追捕回收员。它在等第零号的下一道指令。" };
-        private Texture2D epilogueArt; private bool epilogueTried; private float epilogueAt;
+            "回收员接上最后一根线缆，零号醒了，第一次听见了整座城——不是被吞没，是被听见了。",
+            "机器人都回了家，全城办了一场涂鸦节。",
+            "零号问回收员下一道指令。回收员说：「一起把城刷成彩色的。」" };   // v0.38 世界观 A（四行：插图下面最多放得下四行）
+        private Texture2D epilogueArt, epilogueArtB; private bool epilogueTried; private float epilogueAt;
 
         private void OpenEpilogue()
         {
@@ -22,14 +23,15 @@ namespace ThreadZero
 
         private void EpilogueModal()
         {
-            if (!epilogueTried) { epilogueTried = true; epilogueArt = Resources.Load<Texture2D>("Art/V16/Ascension/epilogue"); }
+            if (!epilogueTried) { epilogueTried = true; epilogueArt = Resources.Load<Texture2D>("Art/V16/Ascension/epilogue"); epilogueArtB = Resources.Load<Texture2D>("Art/V16/Ascension/epilogue_b"); }
+            Texture2D art = UiTheme.BrightArt && epilogueArtB != null ? epilogueArtB : epilogueArt;   // v0.40 B「晴天涂鸦」：亮色的尾声插画
             float t = clock - epilogueAt, fade = Mathf.Clamp01(t / .8f);
             Ui.FillScreen(Ui.Alpha(Ui.Ink, .97f * fade));
             const float w = 1200, h = 675, x = 800 - w / 2, y = 36;   // 16:9，插图下面留三行字和按钮
-            if (epilogueArt != null)
+            if (art != null)
             {
                 Color old = GUI.color; GUI.color = new Color(1, 1, 1, fade);
-                GUI.DrawTexture(Ui.R(x, y, w, h), epilogueArt, ScaleMode.ScaleAndCrop);
+                GUI.DrawTexture(Ui.R(x, y, w, h), art, ScaleMode.ScaleAndCrop);
                 GUI.color = old;
             }
             float ty = y + h + 20;
@@ -37,7 +39,7 @@ namespace ThreadZero
             for (int i = 0; i < EpilogueLines.Length; i++)   // 一句一句淡入
             {
                 float a = Mathf.Clamp01((t - 1f - i * 1.1f) / .7f);
-                Ui.Text(x, ty + 36 + i * 30, 780, 28, EpilogueLines[i], 17, Ui.Alpha(Ui.Panel, a), TextAnchor.MiddleLeft);
+                Ui.FitText(x, ty + 36 + i * 30, 780, 28, EpilogueLines[i], 17, Ui.Alpha(Ui.Panel, a), TextAnchor.MiddleLeft);
             }
             float ba = Mathf.Clamp01((t - 1f - EpilogueLines.Length * 1.1f) / .5f);
             if (ba > 0 && Ui.Button(x + w - 220, ty + 52, 220, 60, "继续回收", 1, true, 18)) navigation.Close();

@@ -1,0 +1,233 @@
+{
+ "scale": 5.0,
+ "weapon_class": "dagger",
+ "rig_version": 3,
+ "far_shade": 0.72,
+ "bar_lift": 8,
+ "proportion_profile": "kid_standard_a3",
+ "parts": {
+  "torso": {
+   "file": "torso.png",
+   "pivot": [
+    34.54,
+    68.59
+   ]
+  },
+  "head": {
+   "file": "head.png",
+   "pivot": [
+    29.56,
+    39.02
+   ],
+   "eye": [
+    9.27,
+    -13.66
+   ]
+  },
+  "upper": {
+   "file": "upper.png",
+   "pivot": [
+    9.76,
+    5.17
+   ],
+   "hand": [
+    9.27,
+    23.22
+   ]
+  },
+  "fore": {
+   "file": "fore.png",
+   "pivot": [
+    10.54,
+    9.37
+   ],
+   "hand": [
+    12.98,
+    27.41
+   ]
+  },
+  "hand": {
+   "file": "hand.png",
+   "pivot": [
+    5.66,
+    1.07
+   ]
+  },
+  "upper_far": {
+   "file": "upper_far.png",
+   "pivot": [
+    9.76,
+    5.17
+   ],
+   "hand": [
+    9.27,
+    23.22
+   ]
+  },
+  "fore_far": {
+   "file": "fore_far.png",
+   "pivot": [
+    10.54,
+    9.37
+   ],
+   "hand": [
+    12.98,
+    27.41
+   ]
+  },
+  "hand_far": {
+   "file": "hand_far.png",
+   "pivot": [
+    5.66,
+    1.07
+   ]
+  },
+  "thigh": {
+   "file": "thigh.png",
+   "pivot": [
+    5.76,
+    5.76
+   ],
+   "hand": [
+    5.76,
+    24.29
+   ]
+  },
+  "shin": {
+   "file": "shin.png",
+   "pivot": [
+    5.37,
+    5.37
+   ],
+   "hand": [
+    5.56,
+    23.71
+   ]
+  },
+  "foot": {
+   "file": "foot.png",
+   "pivot": [
+    6.73,
+    11.32
+   ],
+   "tip": [
+    20.0,
+    16.2
+   ]
+  },
+  "thigh_far": {
+   "file": "thigh_far.png",
+   "pivot": [
+    5.76,
+    5.76
+   ],
+   "hand": [
+    5.76,
+    24.29
+   ]
+  },
+  "shin_far": {
+   "file": "shin_far.png",
+   "pivot": [
+    5.37,
+    5.37
+   ],
+   "hand": [
+    5.37,
+    23.71
+   ]
+  },
+  "foot_far": {
+   "file": "foot_far.png",
+   "pivot": [
+    6.73,
+    11.32
+   ],
+   "tip": [
+    20.0,
+    16.2
+   ]
+  },
+  "pack": {
+   "file": "pack.png",
+   "pivot": [
+    0,
+    0
+   ]
+  },
+  "arm": {
+   "file": "upper.png",
+   "pivot": [
+    9.76,
+    5.17
+   ],
+   "hand": [
+    9.27,
+    23.22
+   ]
+  },
+  "arm_far": {
+   "file": "upper_far.png",
+   "pivot": [
+    9.76,
+    5.17
+   ],
+   "hand": [
+    9.27,
+    23.22
+   ]
+  },
+  "leg_near": {
+   "file": "thigh.png",
+   "pivot": [
+    5.76,
+    5.76
+   ],
+   "hand": [
+    5.76,
+    24.29
+   ]
+  },
+  "leg_far": {
+   "file": "thigh_far.png",
+   "pivot": [
+    5.76,
+    5.76
+   ],
+   "hand": [
+    5.76,
+    24.29
+   ]
+  }
+ },
+ "shoulder": [
+  -7.8,
+  -43.9
+ ],
+ "shoulderF": [
+  -6.63,
+  -43.71
+ ],
+ "rig": {
+  "hip": [
+   -2.44,
+   -47.32
+  ],
+  "head": [
+   7.8,
+   -54.15
+  ],
+  "pack": [
+   0,
+   0
+  ],
+  "leg_near": [
+   -3.9,
+   3.9
+  ],
+  "leg_far": [
+   3.9,
+   3.9
+  ]
+ }
+}

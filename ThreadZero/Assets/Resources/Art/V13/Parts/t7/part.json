@@ -1,0 +1,22 @@
+{
+ "scale": 5.0,
+ "weapon_class": "coil",
+ "weapon": {
+  "file": "weapon.png",
+  "pivot": [
+   19.55,
+   11.44
+  ],
+  "tip": [
+   7.15,
+   70.76
+  ]
+ },
+ "paint": {
+  "file": "paint.png",
+  "pivot": [
+   19.55,
+   11.44
+  ]
+ }
+}

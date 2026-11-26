@@ -177,7 +177,7 @@ namespace ThreadZero
             for (int k = 2; k >= 1; k--)
             {
                 float back = t - k * .035f; if (back <= 0) continue;
-                Blit(Build(Compute(anim, back)).wpn, weapon, false, QC(qWeapon, (k == 1 ? .3f : .16f) * tint.a), flat);
+                Blit(PoseBones(anim, back).wpn, weapon, false, QC(qWeapon, (k == 1 ? .3f : .16f) * tint.a), flat);
             }
         }
 
@@ -196,6 +196,7 @@ namespace ThreadZero
         private static void ArmorEdges(Bones b, Color tint)
         {
             if (fxMode == 0) return;
+            if (K3) { ArmorEdge(b.pack, pack, false, qBack, tint); ArmorEdge(b.torso, torso, false, qCoat, tint); ArmorEdge(b.head, head, false, qHead, tint); return; }   // rig 3 的腿和袖子是网格变形，不画整块光边
             ArmorEdge(b.pack, pack, false, qBack, tint); ArmorEdge(b.legF, legF, false, qLegs, tint); ArmorEdge(b.legN, legN, false, qLegs, tint);
             ArmorEdge(b.armF, armFar ?? arm, armFar == null, qCoat, tint); ArmorEdge(b.torso, torso, false, qCoat, tint); ArmorEdge(b.armN, arm, false, qCoat, tint);
             ArmorEdge(b.head, head, false, qHead, tint);

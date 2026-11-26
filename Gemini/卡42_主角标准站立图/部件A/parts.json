@@ -1,0 +1,114 @@
+{
+ "scale": 5.0,
+ "weapon_class": "dagger",
+ "rig_version": 2,
+ "far_shade": 0.72,
+ "proportion_profile": "kid_standard_a",
+ "parts": {
+  "torso": {
+   "file": "torso.png",
+   "pivot": [
+    36.98,
+    68.59
+   ]
+  },
+  "head": {
+   "file": "head.png",
+   "pivot": [
+    29.56,
+    39.02
+   ],
+   "eye": [
+    9.27,
+    -13.66
+   ]
+  },
+  "arm": {
+   "file": "arm.png",
+   "pivot": [
+    12.0,
+    3.71
+   ],
+   "hand": [
+    14.93,
+    41.76
+   ]
+  },
+  "arm_far": {
+   "file": "arm_far.png",
+   "pivot": [
+    12.0,
+    3.71
+   ],
+   "hand": [
+    14.93,
+    41.76
+   ]
+  },
+  "hand": {
+   "file": "hand.png",
+   "pivot": [
+    7.61,
+    1.56
+   ]
+  },
+  "hand_far": {
+   "file": "hand_far.png",
+   "pivot": [
+    7.61,
+    1.56
+   ]
+  },
+  "leg_near": {
+   "file": "leg_near.png",
+   "pivot": [
+    9.07,
+    5.27
+   ]
+  },
+  "leg_far": {
+   "file": "leg_far.png",
+   "pivot": [
+    13.56,
+    5.27
+   ]
+  },
+  "pack": {
+   "file": "pack.png",
+   "pivot": [
+    0,
+    0
+   ]
+  }
+ },
+ "shoulder": [
+  -9.27,
+  -45.37
+ ],
+ "shoulderF": [
+  -8.29,
+  -45.17
+ ],
+ "rig": {
+  "hip": [
+   -2.93,
+   -47.32
+  ],
+  "head": [
+   5.37,
+   -54.15
+  ],
+  "pack": [
+   0,
+   0
+  ],
+  "leg_near": [
+   -4.88,
+   4.88
+  ],
+  "leg_far": [
+   1.46,
+   4.88
+  ]
+ }
+}

@@ -7,5 +7,4 @@
 洗炼 · 进入第四章后开放§リフォージ・第四章で開放§Reforge · Unlocks in Chapter 4§재련 · 4장에서 개방
 重校 · 第四章开放§再調整・第四章で開放§Recalibrate · Unlocks in Chapter 4§재조정 · 4장에서 개방
 工坊的改造板还有买得起的节点，点上再打会轻松不少。§工房の改造ボードに、まだ買えるノードがある。取ってから挑むとだいぶ楽になる。§There are Mod Board nodes you can afford in the Workshop. Grab them before you retry.§공방의 개조판에 아직 살 수 있는 노드가 있다. 찍고 나서 도전하면 훨씬 수월하다.
-整备页左边的义体可以升级了，碎片已经够了。§整備ページ左の義体が強化できる。織網片はもう足りている。§The implants on the left of the Loadout page can be upgraded. You already have enough shards.§정비 페이지 왼쪽의 의체를 강화할 수 있다. 직조 조각은 이미 충분하다.
 开着自动推进会先回刷前一关攒零件，升级装备、升改造板变强后再自动挑战。§オート進行がオンなら、前のステージを周回してパーツを貯め、装備強化や改造で強くなってから自動で挑戦する。§With auto-advance on, you'll farm the previous stage for parts and retry automatically after upgrading.§자동 진행이 켜져 있으면 이전 스테이지를 반복해 부품을 모으고, 장비와 개조판을 강화해 강해진 뒤 자동으로 도전한다.

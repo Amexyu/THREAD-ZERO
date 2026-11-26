@@ -163,6 +163,7 @@ namespace ThreadZero
         {
             float delta = Time.unscaledDeltaTime;
             clock += delta * slowMo;   // 慢放录像时画面特效也一起慢下来
+            LayeredRigView.AnimClock = clock;   // 11-26 rig 3 换动作的过渡用同一个时钟
             WakeCheck();
             StripTick();   // 11-24 挂机条：悬停出标签、拖动跟着挪、冒气泡
             WindowTick();  // 11-24 21:11 窗口模式下记住窗口大小；挂机窗退出卡住的保险
@@ -313,6 +314,26 @@ namespace ThreadZero
         private void OnApplicationQuit() { Save(); Loc.DumpMissing(); }
         /// 测试用：切语言（0 中文 1 日文 2 英文 3 韩文）；DumpLoc 把这次没翻到的句子写进 Logs/Loc/。
         public void TestLang(int i) { Loc.Set((Loc.Lang)i); }
+        public void TestTheme(int i) { UiTheme.Set(i); }
+        /// 11-25「褪色之城」试验：sat &lt; 0 关；0..1 开并手动指定舞台饱和度；&gt; 1 开并按关卡进度自动算。
+        public void TestFade(float sat) { Fade.On = sat >= 0; Fade.Manual = sat >= 0 && sat <= 1; if (Fade.Manual) Fade.StageSat = sat; }
+        public void TestFadeSplash(float x, float y, float r) { Fade.Splash(x, y, r); }
+        /// 11-26 新主角开关：0 = 旧的初始外观；1 = 喷漆小子（Art/V17/Kid）；2 = 比例改后（Kid_b）；3 = 侧身（Kid_c）。
+        private int poseSheet = -1;
+        public void TestPoseSheet(int anim) { poseSheet = anim; LayeredRigView.LiveT0 = LayeredRigView.AnimClock >= 0 ? LayeredRigView.AnimClock : Time.time; }
+        public void TestAttackVariant(int v) { LayeredRigView.AttackVariant = v; }
+        public void TestOldAttack(int on) { LayeredRigView.OldAttack = on != 0; }   // 测试对照：旧普攻   // 测试：普攻固定用第几招
+        public void TestLegacyGrip(int on) { LayeredRigView.LegacyGrip = on != 0; }   // 测试对照：握持 / 远侧手改之前的样子   // 测试：白底上画一个动作的 12 帧（检查 rig 3 的握持 / 关节），-1 关
+        public void TestKid(int v) { LayeredRigView.UseKid = v != 0; LayeredRigView.KidVariant = v == 2 ? "_b" : v == 3 ? "_c" : v == 4 ? "_1" : v == 5 ? "3" : ""; LayeredRigView.Reload(); }   // 1 = 标准站立图 A（默认），4 = 最早的正面版，5 = 卡44 rig 3（整条腿 / 袖子网格变形 + 重做的跑步）
+        /// 11-26 测试：直接穿上一件指定编号的装备（试各种武器的动作用）。
+        public void TestWear(string id) { if (Catalog.Find(id) == null) return; Item it = model.Create(id, Quality.Rare, 1); model.state.items.Add(it); model.Unlock(id); model.Equip(it.uid); combat.SyncLoadout(); combat.ClampHealth(); }
+        /// 11-26 上色工具试色：0 按武器效果；1 红 2 白 3 蓝 4 黄 5 橙 6 绿 7 紫。
+        public void TestPaint(int i)
+        {
+            Effect[] e = { Effect.Execute, Effect.Execute, Effect.Guard, Effect.Thruster, Effect.Arc, Effect.Drone, Effect.Leech, Effect.Mark };
+            LayeredRigView.PaintOverride = i <= 0 ? default(Color) : LayeredRigView.PaintOf(e[Mathf.Clamp(i, 1, 7)]);
+        }
+        public void TestScreen(int s) { navigation.Close(); Go((GameScreen)Mathf.Clamp(s, 0, 3)); }
         public void DumpLoc() { Loc.DumpMissing(); }
 
         // ---------- 测试存档 ----------
@@ -448,8 +469,8 @@ namespace ThreadZero
             bool boss = Chapters.Stage(model.state.retryRegion).kind == StageKind.Boss;
             if (single && !boss) return "卡关提示：这一关的怪成群地来，单体武器很吃亏。换一把标着「群伤」的武器（整备页武器详情里看，手炮、重锤、撞杆矛、霰弹、线圈这几类）会轻松很多。";
             if (model.AnyPerkBuyable) return "卡关提示：工坊的改造板还有买得起的节点，点上再打会轻松不少。";   // 11-24 节点和义体是后几章最吃的两样（提升来源对照）
-            if (model.AnyImplantUpgradable) return "卡关提示：整备页左边的义体可以升级了，碎片已经够了。";
-            if (model.EchoUnlocked && model.state.retryStreak >= 5) return "卡关提示：可以先去零号深网刷一会（选关最下面）——每层都有掉落，还能攒织网碎片升义体。";
+            if (model.AnyImplantUpgradable) return "卡关提示：整备页左边的飞升装备可以升级了，碎片已经够了。";
+            if (model.EchoUnlocked && model.state.retryStreak >= 5) return "卡关提示：可以先去零号深网刷一会（选关最下面）——每层都有掉落，还能攒织网碎片升飞升装备。";
             if (model.ReforgeUnlocked) return "卡关提示：工坊可以洗炼词条，把用不上的词条换成攻击、暴击或生命。";
             return "卡关提示：开着自动推进会先回刷前一关攒零件，升级装备、升改造板变强后再自动挑战。";
         }
@@ -553,18 +574,19 @@ namespace ThreadZero
             if (modal && navigation.HasModal) Modal();
             Ui.Blocked = false;
             ExhibitPanels();
+            if (poseSheet >= 0) LayeredRigView.PoseSheet(model, poseSheet);
         }
 
         private void Rail()
         {
-            Ui.Fill(0, 0, 96, 900, Ui.Ink);
+            Ui.Fill(0, 0, 96, 900, Ui.RailInk);
             Ui.Fill(20, 20, 56, 56, Ui.Orange);
             Ui.Text(20, 20, 56, 56, "TZ", 30, Ui.Ink, TextAnchor.MiddleCenter, true, true);
             string[] names = { "行动", "整备", "衣柜", "工坊" };
             for (int i = 0; i < 4; i++)
             {
                 float y = 112 + i * 92; bool active = (int)navigation.Screen == i, hover = Ui.Hover(0, y, 96, 84);
-                Color background = active ? Ui.Panel : hover ? Ui.Tile2 : Ui.Ink, color = active ? Ui.Ink : hover ? Ui.Panel : Ui.MuteOnInk;
+                Color background = active ? Ui.Panel : hover ? Ui.RailHover : Ui.RailInk, color = active ? Ui.Ink : hover ? Ui.Panel : Ui.MuteOnInk;
                 Ui.Fill(0, y, 96, 84, background);
                 if (i == 0) Ui.IconAction(48, y + 30, color, background);
                 else if (i == 1) Ui.IconGrid(48, y + 30, color);
@@ -584,14 +606,14 @@ namespace ThreadZero
             if (!ExhibitMode)
             {
                 bool idle = Ui.Hover(8, 724, 80, 84);
-                Ui.Fill(8, 724, 80, 84, idle ? Ui.Tile2 : Ui.Ink);
+                Ui.Fill(8, 724, 80, 84, idle ? Ui.RailHover : Ui.RailInk);
                 Ui.Frame(24, 740, 48, 30, 2, idle ? Ui.Panel : Ui.MuteOnInk); Ui.Fill(28, 760, 40, 6, idle ? Ui.Orange : Ui.MuteOnInk);   // 小图标：一个窗口，下沿一条
                 Ui.Text(8, 776, 80, 24, "挂机", 14, idle ? Ui.Panel : Ui.MuteOnInk, TextAnchor.MiddleCenter);
                 if (Ui.Click(8, 724, 80, 84)) EnterCompact(LastCompact);
             }
             bool over = Ui.Hover(20, 824, 56, 56);
-            Ui.Fill(20, 824, 56, 56, over ? Ui.Tile2 : Ui.Ink); Ui.Frame(20, 824, 56, 56, 1, over ? Ui.Panel : Ui.Steel);
-            Ui.IconGear(48, 852, over ? Ui.Panel : Ui.MuteOnInk, over ? Ui.Tile2 : Ui.Ink);
+            Ui.Fill(20, 824, 56, 56, over ? Ui.RailHover : Ui.RailInk); Ui.Frame(20, 824, 56, 56, 1, over ? Ui.Panel : Ui.Steel);
+            Ui.IconGear(48, 852, over ? Ui.Panel : Ui.MuteOnInk, over ? Ui.RailHover : Ui.RailInk);
             if (Ui.Click(20, 824, 56, 56)) navigation.Open(GameModal.Settings);
         }
 

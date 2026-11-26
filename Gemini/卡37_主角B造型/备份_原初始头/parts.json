@@ -1,0 +1,119 @@
+{
+ "scale": 4,
+ "weapon_class": "dagger",
+ "shoulder": [
+  -22,
+  -26
+ ],
+ "shoulderF": [
+  20,
+  -26
+ ],
+ "parts": {
+  "head": {
+   "file": "head.png",
+   "pivot": [
+    42,
+    68
+   ]
+  },
+  "torso": {
+   "file": "torso.png",
+   "pivot": [
+    30,
+    46
+   ]
+  },
+  "arm": {
+   "file": "arm.png",
+   "pivot": [
+    14,
+    9
+   ],
+   "hand": [
+    14,
+    29
+   ]
+  },
+  "hand": {
+   "file": "hand.png",
+   "pivot": [
+    9,
+    9
+   ]
+  },
+  "pack": {
+   "file": "pack.png",
+   "pivot": [
+    18.98,
+    33
+   ]
+  },
+  "leg_near": {
+   "file": "leg_near.png",
+   "pivot": [
+    12,
+    6
+   ]
+  },
+  "leg_far": {
+   "file": "leg_far.png",
+   "pivot": [
+    12,
+    6
+   ]
+  },
+  "weapon": {
+   "file": "weapon.png",
+   "pivot": [
+    7,
+    6
+   ],
+   "tip": [
+    7,
+    38
+   ]
+  },
+  "arm_far": {
+   "file": "arm_far.png",
+   "pivot": [
+    7.25,
+    8.75
+   ],
+   "hand": [
+    9.58,
+    26.85
+   ]
+  },
+  "hand_far": {
+   "file": "hand_far.png",
+   "pivot": [
+    5.75,
+    5.25
+   ]
+  }
+ },
+ "rig": {
+  "hip": [
+   -5,
+   -26
+  ],
+  "head": [
+   0,
+   -39
+  ],
+  "pack": [
+   -21,
+   -16
+  ],
+  "leg_near": [
+   -11,
+   0
+  ],
+  "leg_far": [
+   11,
+   0
+  ]
+ },
+ "proportion_profile": "s1_revised"
+}

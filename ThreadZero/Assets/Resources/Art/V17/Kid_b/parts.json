@@ -1,0 +1,126 @@
+{
+ "scale": 5.0,
+ "weapon_class": "dagger",
+ "parts": {
+  "head": {
+   "file": "head.png",
+   "pivot": [
+    31.22,
+    40.97
+   ],
+   "eye": [
+    8.2,
+    -15.0
+   ]
+  },
+  "torso": {
+   "file": "torso.png",
+   "pivot": [
+    22.02,
+    49.09
+   ]
+  },
+  "arm": {
+   "file": "arm.png",
+   "pivot": [
+    10.5,
+    6.02
+   ],
+   "hand": [
+    11.1,
+    47.1
+   ]
+  },
+  "arm_far": {
+   "file": "arm_far.png",
+   "pivot": [
+    10.66,
+    6.05
+   ],
+   "hand": [
+    11.15,
+    47.39
+   ]
+  },
+  "hand": {
+   "file": "hand.png",
+   "pivot": [
+    7.98,
+    2.69
+   ]
+  },
+  "hand_far": {
+   "file": "hand_far.png",
+   "pivot": [
+    7.55,
+    2.67
+   ]
+  },
+  "leg_near": {
+   "file": "leg_near.png",
+   "pivot": [
+    12.0,
+    10.46
+   ]
+  },
+  "leg_far": {
+   "file": "leg_far.png",
+   "pivot": [
+    10.68,
+    10.46
+   ]
+  },
+  "pack": {
+   "file": "pack.png",
+   "pivot": [
+    23.46,
+    21.37
+   ]
+  },
+  "weapon": {
+   "file": "weapon.png",
+   "pivot": [
+    7,
+    6
+   ],
+   "tip": [
+    7,
+    38
+   ]
+  }
+ },
+ "rig": {
+  "hip": [
+   -2.5,
+   -57.74
+  ],
+  "head": [
+   -5.41,
+   -45.16
+  ],
+  "pack": [
+   -17.58,
+   -26.52
+  ],
+  "leg_near": [
+   -6.94,
+   0
+  ],
+  "leg_far": [
+   7.24,
+   0
+  ]
+ },
+ "rig_version": 2,
+ "proportion_profile": "kid_v17",
+ "shoulder": [
+  -16.83,
+  -33.77
+ ],
+ "shoulderF": [
+  11.1,
+  -33.77
+ ],
+ "far_shade": 0.9,
+ "note": "11-26 比例改后：身体收窄 16%、卫衣短 6%、短裤短 38%、条纹袜长 80%、袖子短 12%、拳头小 30%（卡40 fix_kid.py）"
+}
